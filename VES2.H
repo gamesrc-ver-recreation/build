@@ -8,8 +8,10 @@
 #include <conio.h>
 #include <dos.h>
 
+#if (LIBVER_BUILDREV >= 20000614L)
 #pragma pack(push,1);
 
+#endif
 typedef struct
 {
 	char VESASignature[4];
@@ -50,9 +52,13 @@ typedef struct
 	short flags, es, ds, fs, gs, ip, cs, sp, ss;
 } _RMREGS;
 
+#if (LIBVER_BUILDREV < 20000614L)
+long VESABuf_len = 1024, VESABuf_sel = 0, VESABuf_rseg;
+#else
 #pragma pack(pop);
 
 long VESABuf_sel = 0, VESABuf_rseg;
+#endif
 short modelist[256];
 static char *screen = NULL, vesachecked = 0;
 long xres, yres, bytesperline, frameplace, imageSize, maxpages;
@@ -65,7 +71,9 @@ static long ves2lastx[MAXYDIM];
 static long davesapageshift;
 static VBE_vgaInfo vgaInfo;
 long globlinplace;
+#ifdef (LIBVER_BUILDREV >= 20000614L)
 static long backlinaddress = 0;  //Save address for free operation (0x801)
+#endif
 
 #pragma aux qlimitrate =\
 	"mov dx, 0x3da",\
@@ -244,7 +252,11 @@ void VBE_callESDI(RMREGS *regs, void *buffer, long size)
 
 	if (!VESABuf_sel)  //Init Real mode buffer
 	{
+#if (LIBVER_BUILDREV < 20000614L)
+		r.w.ax = 0x100; r.w.bx = (VESABuf_len+15)>>4;
+#else
 		r.w.ax = 0x100; r.w.bx = 1024>>4;
+#endif
 		backupsegs(); int386(0x31,&r,&r); restoresegs();
 		if (r.w.cflag) { printf("DPMI_allocRealSeg failed!\n"); exit(0); }
 		VESABuf_sel = r.w.dx;
@@ -287,7 +299,11 @@ GetPtrToLFB(long physAddr)
 	r.w.si = LIMIT>>16; r.w.di = LIMIT&0xffff;
 	backupsegs(); int386(0x31,&r,&r); restoresegs();
 	if (r.x.cflag) { printf("DPMI_mapPhysicalToLinear() failed!\n"); exit(0); }
+#if (LIBVER_BUILDREV < 20000614L)
+	globlinplace = ((long)r.w.bx<<16)+r.w.cx;
+#else
 	backlinaddress = globlinplace = ((long)r.w.bx<<16)+r.w.cx;
+#endif
 
 	r.w.ax = 7; r.w.bx = sel;
 	r.w.cx = globlinplace>>16; r.w.dx = globlinplace&0xffff;
@@ -417,8 +433,13 @@ setvesa(long x, long y)
 			linearmode = 1;
 			buffermode = (maxpages<=1);
 			imageSize = bytesperline*yres;
+#if (LIBVER_BUILDREV < 20000614L)
+			frameplace = globlinplace;
+
+#else
 			if (!buffermode) frameplace = globlinplace;
 							else frameplace = FP_OFF(screen);
+#endif
 			j = 0;
 			for(i=0;i<maxpages;i++)
 			{
@@ -658,6 +679,9 @@ void setvisualpage(long dapagenum)
 
 uninitvesa()
 {
+#if (LIBVER_BUILDREV < 20000614L)
+	VESABuf_len = 1024;
+#else
 	if (backlinaddress)
 	{
 		union REGS r;
@@ -668,6 +692,7 @@ uninitvesa()
 		if (r.x.cflag) { printf("Free Physical Address failed!\n"); }
 		backlinaddress = 0;
 	}
+#endif
 	VESABuf_sel = 0;
 	vesachecked = 0;
 }
@@ -688,6 +713,7 @@ VBE_setPalette(long start, long num, char *dapal)
 	long i, j, k;
 	char palquick[768];
 
+#if (LIBVER_BUILDREV >= 20000614L)
 	if (stereomode == 1)
 	{
 		if ((unsigned)((blackband&255)-start) < (unsigned)num)
@@ -703,6 +729,7 @@ VBE_setPalette(long start, long num, char *dapal)
 			dapal[(((whiteband&255)-start)<<2)+2] = 255;
 		}
 	}
+#endif
 	if ((vgacompatible) || (vgaInfo.VESAVersion < 0x200) || (vidoption != 1))
 	{
 		j = 0; k = (start<<2);

@@ -18,11 +18,13 @@
 #include <i86.h>
 #include "build.h"
 #include "pragmas.h"
+#ifdef (LIBVER_BUILDREV >= 20000614L)
 
 long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
 volatile long stereomode = 0, visualpage, activepage, whiteband, blackband;
 volatile char oa1, o3c2, ortca, ortcb, overtbits, laststereoint;
 
+#endif
 #include "ves2.h"
 
 #pragma intrinsic(min);
@@ -76,6 +78,13 @@ long transarea = 0, totalarea = 0, beforedrawrooms = 1;
 
 static long oxdimen = -1, oviewingrange = -1, oxyaspect = -1;
 
+#if (LIBVER_BUILDREV < 20000614L)
+long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
+volatile long stereomode = 0, visualpage, activepage, whiteband, blackband;
+volatile char oa1, o3c2, ortca, ortcb, overtbits, laststereoint;
+(interrupt *oldstereohandler)();
+
+#endif
 static long curbrightness = 0;
 
 	//Textured Map variables
@@ -249,8 +258,13 @@ static long mirrorsx1, mirrorsy1, mirrorsx2, mirrorsy2;
 
 long totalclocklock;
 
+#if (LIBVER_BUILDREV < 20000614L)
+extern long setbytesperline(long);
+#pragma aux setbytesperline parm [eax];
+#else
 extern long mmxoverlay();
 #pragma aux mmxoverlay modify [eax ebx ecx edx];
+#endif
 extern long sethlinesizes(long,long,long);
 #pragma aux sethlinesizes parm [eax][ebx][ecx];
 extern long setpalookupaddress(char *);
@@ -455,7 +469,11 @@ drawrooms(long daposx, long daposy, long daposz,
 			setaspect((long)divscale16(xdimen,windowx2-windowx1+1),yxaspect);
 		}
 
+#if (LIBVER_BUILDREV < 20000614L)
+		if ((activepage&1) == 0)
+#else
 		if ((!(activepage&1)) ^ inpreparemirror)
+#endif
 		{
 			for(i=windowx1;i<windowx1+(stereopixelwidth<<1);i++) { startumost[i] = 1, startdmost[i] = 0; }
 			for(;i<windowx2+1+(stereopixelwidth<<1);i++) { startumost[i] = windowy1, startdmost[i] = windowy2+1; }
@@ -528,12 +546,14 @@ drawrooms(long daposx, long daposy, long daposz,
 			if (xb2[i] > mirrorsx2) mirrorsx2 = xb2[i];
 		}
 
+#if (LIBVER_BUILDREV >= 20000614L)
 		if (stereomode)
 		{
 			mirrorsx1 += (stereopixelwidth<<1);
 			mirrorsx2 += (stereopixelwidth<<1);
 		}
 
+#endif
 		for(i=0;i<mirrorsx1;i++)
 			if (umost[i] <= dmost[i])
 				{ umost[i] = 1; dmost[i] = 0; numhits--; }
@@ -1791,6 +1811,7 @@ maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 	faketimerhandler();
 }
 
+#if (LIBVER_BUILDREV >= 20000614L)
 transmaskvline (long x)
 {
 	long vplc, vinc, p, i, palookupoffs, shade, bufplc;
@@ -1888,6 +1909,7 @@ transmaskvline2 (long x)
 	faketimerhandler();
 }
 
+#endif
 transmaskwallscan(long x1, long x2)
 {
 	long x, startx;
@@ -2085,7 +2107,12 @@ setgamemode(char davidoption, long daxdim, long daydim)
 	if (getkensmessagecrc(FP_OFF(kensmessage)) != 0x56c764d4)
 		{ setvmode(0x3); printf("Nice try.\n"); exit(0); }
 
+#if (LIBVER_BUILDREV < 20000614L)
+	ostereomode = stereomode;
+	if (stereomode) uninitstereo();
+#else
 	ostereomode = stereomode; if (stereomode) setstereo(0L);
+#endif
 
 	activepage = visualpage = 0;
 	switch(vidoption)
@@ -2146,7 +2173,11 @@ setgamemode(char davidoption, long daxdim, long daydim)
 
 	if (searchx < 0) { searchx = halfxdimen; searchy = (ydimen>>1); }
 
+#if (LIBVER_BUILDREV < 20000614L)
+	if (ostereomode) initstereo();
+#else
 	if (ostereomode) setstereo(ostereomode);
+#endif
 
 	qsetmode = 200;
 	return(0);
@@ -2155,15 +2186,26 @@ setgamemode(char davidoption, long daxdim, long daydim)
 
 hline (long xr, long yp)
 {
+#if (LIBVER_BUILDREV < 20000614L)
+	long xl, x, y, ox, oy, r, p, shade;
+#else
 	long xl, r, s;
+#endif
 
 	xl = lastx[yp]; if (xl > xr) return;
 	r = horizlookup2[yp-globalhoriz+horizycent];
 	asm1 = globalx1*r;
 	asm2 = globaly2*r;
+#if (LIBVER_BUILDREV >= 20000614L)
 	s = ((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8);
+#endif
 
+#if (LIBVER_BUILDREV < 20000614L)
+	hlineasm4(xr-xl,0L,(long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8,
+		globalx2*r+globalypanning,globaly1*r+globalxpanning,
+#else
 	hlineasm4(xr-xl,0L,s,globalx2*r+globalypanning,globaly1*r+globalxpanning,
+#endif
 		ylookup[yp]+xr+frameoffset);
 }
 
@@ -2188,13 +2230,115 @@ slowhline (long xr, long yp)
 	transarea += (xr-xl);
 }
 
+#if (LIBVER_BUILDREV < 20000614L)
+transmaskvline (long x)
+{
+	long vplc, vinc, p, i, palookupoffs, shade, bufplc;
+	short y1v, y2v;
+
+	if ((x < 0) || (x >= xdimen)) return;
+
+	y1v = max(uwall[x],startumost[x+windowx1]-windowy1);
+	y2v = min(dwall[x],startdmost[x+windowx1]-windowy1);
+	y2v--;
+	if (y2v < y1v) return;
+
+	palookupoffs = FP_OFF(palookup[globalpal]) + (getpalookup((long)mulscale16(swall[x],globvis),globalshade)<<8);
+
+	vinc = swall[x]*globalyscale;
+	vplc = globalzd + vinc*(y1v-globalhoriz+1);
+
+	i = lwall[x]+globalxpanning;
+	if (i >= tilesizx[globalpicnum]) i %= tilesizx[globalpicnum];
+	bufplc = waloff[globalpicnum]+i*tilesizy[globalpicnum];
+
+	p = ylookup[y1v]+x+frameoffset;
+
+	tvlineasm1(vinc,palookupoffs,y2v-y1v,vplc,bufplc,p);
+
+	transarea += y2v-y1v;
+}
+
+transmaskvline2 (long x)
+{
+	long i, y1, y2, x2;
+	short y1ve[2], y2ve[2];
+
+	if ((x < 0) || (x >= xdimen)) return;
+	if (x == xdimen-1) { transmaskvline(x); return; }
+
+	x2 = x+1;
+
+	y1ve[0] = max(uwall[x],startumost[x+windowx1]-windowy1);
+	y2ve[0] = min(dwall[x],startdmost[x+windowx1]-windowy1)-1;
+	if (y2ve[0] < y1ve[0]) { transmaskvline(x2); return; }
+	y1ve[1] = max(uwall[x2],startumost[x2+windowx1]-windowy1);
+	y2ve[1] = min(dwall[x2],startdmost[x2+windowx1]-windowy1)-1;
+	if (y2ve[1] < y1ve[1]) { transmaskvline(x); return; }
+
+	palookupoffse[0] = FP_OFF(palookup[globalpal]) + (getpalookup((long)mulscale16(swall[x],globvis),globalshade)<<8);
+	palookupoffse[1] = FP_OFF(palookup[globalpal]) + (getpalookup((long)mulscale16(swall[x2],globvis),globalshade)<<8);
+
+	setuptvlineasm2(globalshiftval,palookupoffse[0],palookupoffse[1]);
+
+	vince[0] = swall[x]*globalyscale;
+	vince[1] = swall[x2]*globalyscale;
+	vplce[0] = globalzd + vince[0]*(y1ve[0]-globalhoriz+1);
+	vplce[1] = globalzd + vince[1]*(y1ve[1]-globalhoriz+1);
+
+	i = lwall[x] + globalxpanning;
+	if (i >= tilesizx[globalpicnum]) i %= tilesizx[globalpicnum];
+	bufplce[0] = waloff[globalpicnum]+i*tilesizy[globalpicnum];
+
+	i = lwall[x2] + globalxpanning;
+	if (i >= tilesizx[globalpicnum]) i %= tilesizx[globalpicnum];
+	bufplce[1] = waloff[globalpicnum]+i*tilesizy[globalpicnum];
+
+	y1 = max(y1ve[0],y1ve[1]);
+	y2 = min(y2ve[0],y2ve[1]);
+
+	i = x+frameoffset;
+
+	if (y1ve[0] != y1ve[1])
+	{
+		if (y1ve[0] < y1)
+			vplce[0] = tvlineasm1(vince[0],palookupoffse[0],y1-y1ve[0]-1,vplce[0],bufplce[0],ylookup[y1ve[0]]+i);
+		else
+			vplce[1] = tvlineasm1(vince[1],palookupoffse[1],y1-y1ve[1]-1,vplce[1],bufplce[1],ylookup[y1ve[1]]+i+1);
+	}
+
+	if (y2 > y1)
+	{
+		asm1 = vince[1];
+		asm2 = ylookup[y2]+i+1;
+		tvlineasm2(vplce[1],vince[0],bufplce[0],bufplce[1],vplce[0],ylookup[y1]+i);
+		transarea += ((y2-y1)<<1);
+	}
+	else
+	{
+		asm1 = vplce[0];
+		asm2 = vplce[1];
+	}
+
+	if (y2ve[0] > y2ve[1])
+		tvlineasm1(vince[0],palookupoffse[0],y2ve[0]-y2-1,asm1,bufplce[0],ylookup[y2+1]+i);
+	else if (y2ve[0] < y2ve[1])
+		tvlineasm1(vince[1],palookupoffse[1],y2ve[1]-y2-1,asm2,bufplce[1],ylookup[y2+1]+i+1);
+
+	faketimerhandler();
+}
+
+#else /* LIBVER_BUILDREV */
 long dommxoverlay = 1;
+#endif /* LIBVER_BUILDREV */
 initengine()
 {
 	long i, j;
 
+#if (LIBVER_BUILDREV >= 20000614L)
 	if (dommxoverlay) mmxoverlay();
 
+#endif
 	loadtables();
 
 	xyaspect = -1;
@@ -2247,8 +2391,10 @@ uninitengine()
 	if (vidoption == 1) uninitvesa();
 	if (artfil != -1) kclose(artfil);
 
+#ifdef (LIBVER_BUILDREV >= 20000614L)
 	if (stereomode) setstereo(0L);
 
+#endif
 	if (transluc != NULL) { kkfree(transluc); transluc = NULL; }
 	if (pic != NULL) { kkfree(pic); pic = NULL; }
 	if (screen != NULL)
@@ -2297,16 +2443,34 @@ nextpage()
 					if (stereomode)
 					{
 						stereonextpage();
+#if (LIBVER_BUILDREV < 20000614L)
+						if (origbuffermode == 0)
+						{
+							buffermode = 0;
+							transarea = 0;
+							totalarea = 0;
+						}
+#else
 						if (!origbuffermode) buffermode = transarea = totalarea = 0;
+#endif
 					}
 					else
 					{
 						visualpage = activepage;
 						setvisualpage(visualpage);
+#if (LIBVER_BUILDREV < 20000614L)
+						if (origbuffermode == 0)
+#else
 						if (!origbuffermode)
+#endif
 						{
 							buffermode = ((transarea<<3) > totalarea);
+#if (LIBVER_BUILDREV < 20000614L)
+							transarea = 0;
+							totalarea = 0;
+#else
 							transarea = totalarea = 0;
+#endif
 						}
 						activepage++; if (activepage >= numpages) activepage = 0;
 						setactivepage(activepage);
@@ -3095,6 +3259,9 @@ drawsprite (long snum)
 	sectnum = tspr->sectnum; sec = &sector[sectnum];
 	globalpal = tspr->pal;
 	globalshade = tspr->shade;
+#if (LIBVER_BUILDREV < 20000614L)
+
+#endif
 	if (cstat&2)
 	{
 		if (cstat&512) settransreverse(); else settransnormal();
@@ -3961,10 +4128,16 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	sprsinang = sintable[dasprang&2047];
 
 	i = klabs(dmulscale6(dasprx-globalposx,cosang,daspry-globalposy,sinang));
+#if (LIBVER_BUILDREV < 20000614L)
+	setupdrawslab(ylookup[1],FP_OFF(palookup[dapal]) + (long)(getpalookup(mulscale21(globvis,i),(long)dashade)<<8));
+#else
 	j = (long)(getpalookup((long)mulscale21(globvis,i),(long)dashade)<<8);
 	setupdrawslab(ylookup[1],FP_OFF(palookup[dapal])+j);
+#endif
 	j = 1310720;
+#if (LIBVER_BUILDREV >= 20000614L)
 	j *= min(daxscale,dayscale); j >>= 6;  //New hacks (for sized-down voxels)
+#endif
 	for(k=0;k<MAXVOXMIPS;k++)
 	{
 		if (i < j) { i = k; break; }
@@ -4493,8 +4666,13 @@ cansee(long x1, long y1, long z1, short sect1, long x2, long y2, long z2, short 
 			y31 = wal->y-y1; y34 = wal->y-wal2->y;
 
 			bot = y21*x34-x21*y34; if (bot <= 0) continue;
+#if (LIBVER_BUILDREV < 20000614L)
+			t = y21*x31-x21*y31; if ((t < 0) || (t >= bot)) continue;
+			t = y31*x34-x31*y34; if ((t < 0) || (t >= bot)) continue;
+#else
 			t = y21*x31-x21*y31; if ((unsigned)t >= (unsigned)bot) continue;
 			t = y31*x34-x31*y34; if ((unsigned)t >= (unsigned)bot) continue;
+#endif
 
 			nexts = wal->nextsector;
 			if ((nexts < 0) || (wal->cstat&32)) return(0);
@@ -6481,7 +6659,11 @@ rotatesprite (long sx, long sy, long z, short a, short picnum, signed char dasha
 
 	if ((cx1 > cx2) || (cy1 > cy2)) return;
 	if (z <= 16) return;
+#if (LIBVER_BUILDREV < 20000614L)
+	if (picanm[picnum]&192) picnum += animateoffs(picnum,49152);
+#else
 	if (picanm[picnum]&192) picnum += animateoffs(picnum,(short)0xc000);
+#endif
 	if ((tilesizx[picnum] <= 0) || (tilesizy[picnum] <= 0)) return;
 
 	if (((dastat&128) == 0) || (numpages < 2) || (beforedrawrooms != 0))
@@ -8507,14 +8689,23 @@ parascan (long dax1, long dax2, long sectnum, char dastat, long bunch)
 	globalhoriz = globalhorizbak;
 }
 
+#if (LIBVER_BUILDREV < 20000614L)
+interrupt stereohandler()
+#else
 interrupt stereohandler1()
+#endif
 {
 		//VR flag
 	if (kinp(0x3c2)&128)
 	{
+#if (LIBVER_BUILDREV < 20000614L)
+		koutpw(0x3d4,((long)overtbits<<8)+0x11);
+#else
 		laststereoint = 0;
 		koutpw(0x3d4,((long)(overtbits)<<8)+0x11);
+#endif
 		koutp(0x3d5,overtbits+16);
+#if (LIBVER_BUILDREV >= 20000614L)
 	}
 	if (laststereoint == 1)
 	{
@@ -8532,10 +8723,13 @@ interrupt stereohandler2()
 		//VR flag
 	if (kinp(0x3c2)&128)
 	{
+#endif /* LIBVER_BUILDREV */
 		laststereoint = 0;
+#if (LIBVER_BUILDREV >= 20000614L)
 		koutp(0x378,0xfb+((visualpage&1^1)<<2));
 		koutpw(0x3d4,((long)overtbits<<8)+0x11);
 		koutp(0x3d5,overtbits+16);
+#endif
 	}
 	if (laststereoint == 1)
 	{
@@ -8548,6 +8742,9 @@ interrupt stereohandler2()
 	koutp(0x20,0x20);
 }
 
+#if (LIBVER_BUILDREV < 20000614L)
+initstereo()
+#else
 stereonextpage()
 {
 	koutp(0x70,0xc); kinp(0x71);
@@ -8574,12 +8771,14 @@ stereonextpage()
 }
 
 setstereo(long dastereomode)
+#endif /* LIBVER_BUILDREV */
 {
 	long i, dist, blackdist, whitedist, t1, t2, numlines;
 	char c1, c2;
 
 	if ((vidoption != 1) || (numpages < 2)) return;
 
+#if (LIBVER_BUILDREV >= 20000614L)
 	if (stereomode)  //---------------Uninitialize old stereo mode
 	{
 		if ((xdim == 320) && (ydim == 200))
@@ -8616,9 +8815,19 @@ setstereo(long dastereomode)
 	//------------------------------------- Initialize new stereo mode
 	stereomode = dastereomode; if (!stereomode) return;
 
+#endif /* LIBVER_BUILDREV */
 	activepage = (visualpage & ~1)+2;
 	if (activepage >= numpages-1) activepage = 0;
 
+#if (LIBVER_BUILDREV < 20000614L)
+	blackdist = 0x7fffffff; whitedist = 0x80000000;
+	koutp(0x3c7,0);
+	for(i=0;i<256;i++)
+	{
+		dist = (kinp(0x3c9)&255)+(kinp(0x3c9)&255)+(kinp(0x3c9)&255);
+		if (dist < blackdist) { blackdist = dist; blackband = i; }
+		if (dist > whitedist) { whitedist = dist; whiteband = i; }
+#else
 	if (stereomode == 1)
 	{
 		blackdist = 0x7fffffff; whitedist = 0x80000000;
@@ -8631,7 +8840,12 @@ setstereo(long dastereomode)
 		}
 		blackband += (blackband<<8); blackband += (blackband<<16);
 		whiteband += (whiteband<<8); whiteband += (whiteband<<16);
+#endif
 	}
+#if (LIBVER_BUILDREV < 20000614L)
+	blackband += (blackband<<8); blackband += (blackband<<16);
+	whiteband += (whiteband<<8); whiteband += (whiteband<<16);
+#endif
 
 	if ((xdim == 320) && (ydim == 200))
 	{
@@ -8642,13 +8856,20 @@ setstereo(long dastereomode)
 
 		//Init RTC
 	_disable();
+#if (LIBVER_BUILDREV < 20000614L)
+	oldstereohandler = _dos_getvect(0x70); _dos_setvect(0x70,stereohandler);
+	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,0x28); //+8 = 256hz
+#else
 	if (stereomode == 1) installbistereohandlers(stereohandler1);
 	if (stereomode == 2) installbistereohandlers(stereohandler2);
 	koutp(0x70,0xa); ortca = kinp(0x71);
 	if (stereomode == 1) koutp(0x71,0x28); //+8 = 256hz
 	if (stereomode == 2) koutp(0x71,0x26); //+6 = 1024hz
+#endif
 	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,0x42);
+#if (LIBVER_BUILDREV >= 20000614L)
 	koutp(0x70,0xc); kinp(0x71);
+#endif
 	oa1 = kinp(0xa1); koutp(0xa1,oa1&~1);
 	_enable();
 
@@ -8657,8 +8878,23 @@ setstereo(long dastereomode)
 	overtbits = kinp(0x3d5) & ~(16+32);
 	koutp(0x3d5,overtbits);
 	koutp(0x3d5,overtbits+16);
+#if (LIBVER_BUILDREV < 20000614L)
+
+	stereomode = 1;
+#endif
 }
 
+#if (LIBVER_BUILDREV < 20000614L)
+uninitstereo()
+{
+	long i;
+
+	if ((xdim == 320) && (ydim == 200))
+	{
+			//back to 70 hz
+		koutp(0x3c2,o3c2);
+	}
+#else
 #define RTCBUFSIZ 16
 static unsigned short rtcopmsel, rtcormseg, rtcormoff;
 static unsigned long rtcopmoff;
@@ -8675,22 +8911,71 @@ static char rtcrmbuffer[RTCBUFSIZ] =
 	0x58,          //pop ax
 	0xcf           //iret
 };
+#endif
 
+#if (LIBVER_BUILDREV < 20000614L)
+		//Uninit VR flag
+	koutpw(0x3d4,(((long)overtbits+32)<<8)+0x11);
+#else
 void *engconvalloc32 (unsigned long size)
 {
 	 union REGS r;
+#endif
 
+#if (LIBVER_BUILDREV < 20000614L)
+		//Uninit RTC
+	_disable();
+	koutp(0xa1,(kinp(0xa1)&~1)|(oa1&1));
+	koutp(0x70,0xa); koutp(0x71,ortca);
+	koutp(0x70,0xb); koutp(0x71,ortcb);
+	_dos_setvect(0x70, oldstereohandler);
+	_enable();
+#else
 	 r.x.eax = 0x0100;           //DPMI allocate DOS memory
 	 r.x.ebx = ((size+15)>>4);   //Number of paragraphs requested
 	 int386(0x31,&r,&r);
+#endif
 
+#if (LIBVER_BUILDREV < 20000614L)
+	stereomode = 0;
+	ostereopixelwidth = -1;
+	setview(windowx1,windowy1,windowx2,windowy2);
+	for(i=0;i<numpages;i++)
+	{
+		setactivepage(i);
+		clearbuf(ylookup[ydim-1]+frameplace,xdim>>2,blackband);
+	}
+	setactivepage(activepage);
+#else
 	 if (r.x.cflag != 0)         //Failed
 		 return ((unsigned long)0);
 	 return ((void *)((r.x.eax&0xffff)<<4));   //Returns full 32-bit offset
+#endif
 }
 
+#if (LIBVER_BUILDREV < 20000614L)
+stereonextpage()
+#else
 installbistereohandlers(void far *stereohan)
+#endif
 {
+#if (LIBVER_BUILDREV < 20000614L)
+	koutpw(0x70,0x420b);
+	if ((activepage&1) == 0)
+	{
+		clearbuf(ylookup[ydim-1]+frameplace,xdim>>4,whiteband);
+		clearbuf(ylookup[ydim-1]+frameplace+(xdim>>2),(xdim>>2)-(xdim>>4),blackband);
+		activepage++;
+		setactivepage(activepage);
+		return;
+	}
+	clearbuf(ylookup[ydim-1]+frameplace,(xdim>>2)-(xdim>>4),whiteband);
+	clearbuf(ylookup[ydim-1]+frameplace+xdim-(xdim>>2),xdim>>4,blackband);
+	if (activepage < numpages-1) activepage++; else activepage = 0;
+	setactivepage(activepage);
+	if (visualpage < numpages-2) visualpage += 2;
+									else visualpage += 2-numpages;
+#else /* LIBVER_BUILDREV */
 	char *ptr;
 	union REGS r;
 	struct SREGS sr;
@@ -8753,6 +9038,7 @@ uninstallbistereohandlers()
 	r.x.ecx = (unsigned long)rtcormseg;     //CX:DX == real mode &handler
 	r.x.edx = (unsigned long)rtcormoff;
 	int386(0x31,&r,&r);
+#endif /* LIBVER_BUILDREV */
 }
 
 loopnumofsector(short sectnum, short wallnum)

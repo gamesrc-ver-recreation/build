@@ -6,7 +6,11 @@
 #define MAXWALLS 8192
 #define MAXSPRITES 4096
 
+#if (LIBVER_BUILDREV < 20000614L)
+#define MAXTILES 6144
+#else
 #define MAXTILES 9216
+#endif
 #define MAXSTATUS 1024
 #define MAXPLAYERS 16
 #define MAXXDIM 1600
@@ -26,8 +30,10 @@
 	#define EXTERN extern
 #endif
 
+#if (LIBVER_BUILDREV >= 20000614L)
 #pragma pack(push,1);
 
+#endif
 //ceilingstat/floorstat:
 //   bit 0: 1 = parallaxing, 0 = not                                 "P"
 //   bit 1: 1 = groudraw, 0 = not
@@ -111,8 +117,10 @@ typedef struct
 	short ang, owner, xvel, yvel, zvel;
 	short lotag, hitag, extra;
 } spritetype;
+#if (LIBVER_BUILDREV >= 20000614L)
 
 #pragma pack(pop);
+#endif
 
 EXTERN sectortype sector[MAXSECTORS];
 EXTERN walltype wall[MAXWALLS];

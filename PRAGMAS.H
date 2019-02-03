@@ -4,11 +4,19 @@
 
 static long dmval;
 
+#if (LIBVER_BUILDREV < 20000614L)
+#pragma aux sqr =\
+	"imul eax, eax",\
+   parm nomemory [eax]\
+	modify exact [eax]\
+   value [eax]
+#else /* LIBVER_BUILDREV */
 #pragma aux sqr =\
 	"imul eax, eax",\
 	parm nomemory [eax]\
 	modify exact [eax]\
 	value [eax]
+#endif
 
 #pragma aux scale =\
 	"imul edx",\
