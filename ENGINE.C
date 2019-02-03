@@ -7354,8 +7354,13 @@ drawmapview (long dax, long day, long zoome, short ang)
 
 	clearbuf((long)(&gotsector[0]),(long)((numsectors+31)>>5),0L);
 
+#ifdef (LIBVER_BUILDREV < 19970522L)
+	cx1 = (windowx1<<16); cy1 = (windowy1<<16);
+	cx2 = ((windowx2+1)<<16)-1; cy2 = ((windowy2+1)<<16)-1;
+#else
 	cx1 = (windowx1<<12); cy1 = (windowy1<<12);
 	cx2 = ((windowx2+1)<<12)-1; cy2 = ((windowy2+1)<<12)-1;
+#endif
 	zoome <<= 8;
 	bakgxvect = divscale28(sintable[(1536-ang)&2047],zoome);
 	bakgyvect = divscale28(sintable[(2048-ang)&2047],zoome);
@@ -7373,8 +7378,13 @@ drawmapview (long dax, long day, long zoome, short ang)
 			for(w=sec->wallnum,wal=&wall[startwall];w>0;w--,wal++)
 			{
 				ox = wal->x - dax; oy = wal->y - day;
+#ifdef (LIBVER_BUILDREV < 19970522L)
+				x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
+				y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
+#else
 				x = dmulscale16(ox,xvect,-oy,yvect) + (xdim<<11);
 				y = dmulscale16(oy,xvect2,ox,yvect2) + (ydim<<11);
+#endif
 				i |= getclipmask(x-cx1,cx2-x,y-cy1,cy2-y);
 				rx1[npoints] = x;
 				ry1[npoints] = y;
@@ -7382,7 +7392,11 @@ drawmapview (long dax, long day, long zoome, short ang)
 				npoints++;
 			}
 			if ((i&0xf0) != 0xf0) continue;
+#ifdef (LIBVER_BUILDREV < 19970522L)
+			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<15),xyaspect)+(ydim<<15);
+#else
 			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<11),xyaspect)+(ydim<<11);
+#endif
 			if (i&0x0f)
 			{
 				npoints = clippoly(npoints,i);
@@ -7431,7 +7445,11 @@ drawmapview (long dax, long day, long zoome, short ang)
 				i = 1048576/i;
 				globalx1 = mulscale10(dmulscale10(ox,bakgxvect,oy,bakgyvect),i);
 				globaly1 = mulscale10(dmulscale10(ox,bakgyvect,-oy,bakgxvect),i);
+#ifdef (LIBVER_BUILDREV < 19970522L)
+				ox = (bakx1>>8)-(xdim<<7); oy = (baky1>>8)-(ydim<<7);
+#else
 				ox = (bakx1>>4)-(xdim<<7); oy = (baky1>>4)-(ydim<<7);
+#endif
 				globalposx = dmulscale28(-oy,globalx1,-ox,globaly1);
 				globalposy = dmulscale28(-ox,globalx1,oy,globaly1);
 				globalx2 = -globalx1;
@@ -7511,20 +7529,35 @@ drawmapview (long dax, long day, long zoome, short ang)
 			i = 0;
 
 			ox = x1 - dax; oy = y1 - day;
+#ifdef (LIBVER_BUILDREV < 19970522L)
+			x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
+			y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
+#else
 			x = dmulscale16(ox,xvect,-oy,yvect) + (xdim<<11);
 			y = dmulscale16(oy,xvect2,ox,yvect2) + (ydim<<11);
+#endif
 			i |= getclipmask(x-cx1,cx2-x,y-cy1,cy2-y);
 			rx1[0] = x; ry1[0] = y;
 
 			ox = x2 - dax; oy = y2 - day;
+#ifdef (LIBVER_BUILDREV < 19970522L)
+			x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
+			y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
+#else
 			x = dmulscale16(ox,xvect,-oy,yvect) + (xdim<<11);
 			y = dmulscale16(oy,xvect2,ox,yvect2) + (ydim<<11);
+#endif
 			i |= getclipmask(x-cx1,cx2-x,y-cy1,cy2-y);
 			rx1[1] = x; ry1[1] = y;
 
 			ox = x3 - dax; oy = y3 - day;
+#ifdef (LIBVER_BUILDREV < 19970522L)
+			x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
+			y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
+#else
 			x = dmulscale16(ox,xvect,-oy,yvect) + (xdim<<11);
 			y = dmulscale16(oy,xvect2,ox,yvect2) + (ydim<<11);
+#endif
 			i |= getclipmask(x-cx1,cx2-x,y-cy1,cy2-y);
 			rx1[2] = x; ry1[2] = y;
 
@@ -7534,7 +7567,11 @@ drawmapview (long dax, long day, long zoome, short ang)
 			rx1[3] = x; ry1[3] = y;
 
 			if ((i&0xf0) != 0xf0) continue;
+#ifdef (LIBVER_BUILDREV < 19970522L)
+			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<15),xyaspect)+(ydim<<15);
+#else
 			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<11),xyaspect)+(ydim<<11);
+#endif
 			if (i&0x0f)
 			{
 				npoints = clippoly(npoints,i);
@@ -7576,7 +7613,11 @@ drawmapview (long dax, long day, long zoome, short ang)
 				globaly1 = mulscale(globaly1,xspan,ox);
 			}
 
+#ifdef (LIBVER_BUILDREV < 19970522L)
+			bakx1 = (bakx1>>8)-(xdim<<7); baky1 = (baky1>>8)-(ydim<<7);
+#else
 			bakx1 = (bakx1>>4)-(xdim<<7); baky1 = (baky1>>4)-(ydim<<7);
+#endif
 			globalposx = dmulscale28(-baky1,globalx1,-bakx1,globaly1);
 			globalposy = dmulscale28(bakx1,globalx2,-baky1,globaly2);
 
@@ -7603,7 +7644,11 @@ clippoly (long npoints, long clipstat)
 	cy1 = windowy1;
 	cx2 = windowx2+1;
 	cy2 = windowy2+1;
+#ifdef (LIBVER_BUILDREV < 19970522L)
+	cx1 <<= 16; cy1 <<= 16; cx2 <<= 16; cy2 <<= 16;
+#else
 	cx1 <<= 12; cy1 <<= 12; cx2 <<= 12; cy2 <<= 12;
+#endif
 
 	if (clipstat&0xa)   //Need to clip top or left
 	{
@@ -7807,7 +7852,11 @@ fillpolygon(long npoints)
 	miny = 0x7fffffff; maxy = 0x80000000;
 	for(z=npoints-1;z>=0;z--)
 		{ y = ry1[z]; miny = min(miny,y); maxy = max(maxy,y); }
+#ifdef (LIBVER_BUILDREV < 19970522L)
+	miny = (miny>>16); maxy = (maxy>>16);
+#else
 	miny = (miny>>12); maxy = (maxy>>12);
+#endif
 	if (miny < 0) miny = 0;
 	if (maxy >= ydim) maxy = ydim-1;
 	ptr = smost;    //They're pointers! - watch how you optimize this thing
@@ -7820,11 +7869,29 @@ fillpolygon(long npoints)
 	for(z=npoints-1;z>=0;z--)
 	{
 		zz = xb1[z];
+#ifdef (LIBVER_BUILDREV < 19970522L)
+		y1 = ry1[z]; day1 = (y1>>16);
+		y2 = ry1[zz]; day2 = (y2>>16);
+#else
 		y1 = ry1[z]; day1 = (y1>>12);
 		y2 = ry1[zz]; day2 = (y2>>12);
+#endif
 		if (day1 != day2)
 		{
 			x1 = rx1[z]; x2 = rx1[zz];
+#ifdef (LIBVER_BUILDREV < 19970522L)
+			xinc = divscale16(x2-x1,y2-y1);
+			if (day2 > day1)
+			{
+				x1 += mulscale16((day1<<16)+65535-y1,xinc);
+				for(y=day1;y<day2;y++) { *dotp2[y]++ = (x1>>16); x1 += xinc; }
+			}
+			else
+			{
+				x2 += mulscale16((day2<<16)+65535-y2,xinc);
+				for(y=day2;y<day1;y++) { *dotp1[y]++ = (x2>>16); x2 += xinc; }
+			}
+#else /* LIBVER_BUILDREV */
 			xinc = divscale12(x2-x1,y2-y1);
 			if (day2 > day1)
 			{
@@ -7836,6 +7903,7 @@ fillpolygon(long npoints)
 				x2 += mulscale12((day2<<12)+4095-y2,xinc);
 				for(y=day2;y<day1;y++) { *dotp1[y]++ = (x2>>12); x2 += xinc; }
 			}
+#endif /* LIBVER_BUILDREV */
 		}
 	}
 
