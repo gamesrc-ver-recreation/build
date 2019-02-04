@@ -258,7 +258,7 @@ static long mirrorsx1, mirrorsy1, mirrorsx2, mirrorsy2;
 
 long totalclocklock;
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19971004L)
 extern long setbytesperline(long);
 #pragma aux setbytesperline parm [eax];
 #else
@@ -2335,7 +2335,7 @@ initengine()
 {
 	long i, j;
 
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19971004L)
 	if (dommxoverlay) mmxoverlay();
 
 #endif

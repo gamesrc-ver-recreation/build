@@ -8,7 +8,7 @@
 #include <conio.h>
 #include <dos.h>
 
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19971004L)
 #pragma pack(push,1);
 
 #endif
@@ -52,11 +52,13 @@ typedef struct
 	short flags, es, ds, fs, gs, ip, cs, sp, ss;
 } _RMREGS;
 
+#if (LIBVER_BUILDREV >= 19971004L)
+#pragma pack(pop);
+
+#endif
 #if (LIBVER_BUILDREV < 20000614L)
 long VESABuf_len = 1024, VESABuf_sel = 0, VESABuf_rseg;
 #else
-#pragma pack(pop);
-
 long VESABuf_sel = 0, VESABuf_rseg;
 #endif
 short modelist[256];

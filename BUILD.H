@@ -6,7 +6,7 @@
 #define MAXWALLS 8192
 #define MAXSPRITES 4096
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19971004L)
 #define MAXTILES 6144
 #else
 #define MAXTILES 9216
@@ -30,7 +30,7 @@
 	#define EXTERN extern
 #endif
 
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19971004L)
 #pragma pack(push,1);
 
 #endif
@@ -117,7 +117,7 @@ typedef struct
 	short ang, owner, xvel, yvel, zvel;
 	short lotag, hitag, extra;
 } spritetype;
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19971004L)
 
 #pragma pack(pop);
 #endif
