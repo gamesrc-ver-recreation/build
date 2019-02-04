@@ -56,7 +56,7 @@ typedef struct
 #pragma pack(pop);
 
 #endif
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 long VESABuf_len = 1024, VESABuf_sel = 0, VESABuf_rseg;
 #else
 long VESABuf_sel = 0, VESABuf_rseg;
@@ -73,7 +73,7 @@ static long ves2lastx[MAXYDIM];
 static long davesapageshift;
 static VBE_vgaInfo vgaInfo;
 long globlinplace;
-#ifdef (LIBVER_BUILDREV >= 20000614L)
+#ifdef (LIBVER_BUILDREV >= 19970602L)
 static long backlinaddress = 0;  //Save address for free operation (0x801)
 #endif
 
@@ -254,7 +254,7 @@ void VBE_callESDI(RMREGS *regs, void *buffer, long size)
 
 	if (!VESABuf_sel)  //Init Real mode buffer
 	{
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 		r.w.ax = 0x100; r.w.bx = (VESABuf_len+15)>>4;
 #else
 		r.w.ax = 0x100; r.w.bx = 1024>>4;
@@ -301,7 +301,7 @@ GetPtrToLFB(long physAddr)
 	r.w.si = LIMIT>>16; r.w.di = LIMIT&0xffff;
 	backupsegs(); int386(0x31,&r,&r); restoresegs();
 	if (r.x.cflag) { printf("DPMI_mapPhysicalToLinear() failed!\n"); exit(0); }
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	globlinplace = ((long)r.w.bx<<16)+r.w.cx;
 #else
 	backlinaddress = globlinplace = ((long)r.w.bx<<16)+r.w.cx;
@@ -435,7 +435,7 @@ setvesa(long x, long y)
 			linearmode = 1;
 			buffermode = (maxpages<=1);
 			imageSize = bytesperline*yres;
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 			frameplace = globlinplace;
 
 #else
@@ -681,7 +681,7 @@ void setvisualpage(long dapagenum)
 
 uninitvesa()
 {
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	VESABuf_len = 1024;
 #else
 	if (backlinaddress)
@@ -715,7 +715,7 @@ VBE_setPalette(long start, long num, char *dapal)
 	long i, j, k;
 	char palquick[768];
 
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 	if (stereomode == 1)
 	{
 		if ((unsigned)((blackband&255)-start) < (unsigned)num)

@@ -18,7 +18,7 @@
 #include <i86.h>
 #include "build.h"
 #include "pragmas.h"
-#ifdef (LIBVER_BUILDREV >= 20000614L)
+#ifdef (LIBVER_BUILDREV >= 19970602L)
 
 long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
 volatile long stereomode = 0, visualpage, activepage, whiteband, blackband;
@@ -78,7 +78,7 @@ long transarea = 0, totalarea = 0, beforedrawrooms = 1;
 
 static long oxdimen = -1, oviewingrange = -1, oxyaspect = -1;
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
 volatile long stereomode = 0, visualpage, activepage, whiteband, blackband;
 volatile char oa1, o3c2, ortca, ortcb, overtbits, laststereoint;
@@ -469,7 +469,7 @@ drawrooms(long daposx, long daposy, long daposz,
 			setaspect((long)divscale16(xdimen,windowx2-windowx1+1),yxaspect);
 		}
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 		if ((activepage&1) == 0)
 #else
 		if ((!(activepage&1)) ^ inpreparemirror)
@@ -546,7 +546,7 @@ drawrooms(long daposx, long daposy, long daposz,
 			if (xb2[i] > mirrorsx2) mirrorsx2 = xb2[i];
 		}
 
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 		if (stereomode)
 		{
 			mirrorsx1 += (stereopixelwidth<<1);
@@ -1811,7 +1811,7 @@ maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 	faketimerhandler();
 }
 
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 transmaskvline (long x)
 {
 	long vplc, vinc, p, i, palookupoffs, shade, bufplc;
@@ -2107,7 +2107,7 @@ setgamemode(char davidoption, long daxdim, long daydim)
 	if (getkensmessagecrc(FP_OFF(kensmessage)) != 0x56c764d4)
 		{ setvmode(0x3); printf("Nice try.\n"); exit(0); }
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	ostereomode = stereomode;
 	if (stereomode) uninitstereo();
 #else
@@ -2173,7 +2173,7 @@ setgamemode(char davidoption, long daxdim, long daydim)
 
 	if (searchx < 0) { searchx = halfxdimen; searchy = (ydimen>>1); }
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	if (ostereomode) initstereo();
 #else
 	if (ostereomode) setstereo(ostereomode);
@@ -2186,7 +2186,7 @@ setgamemode(char davidoption, long daxdim, long daydim)
 
 hline (long xr, long yp)
 {
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	long xl, x, y, ox, oy, r, p, shade;
 #else
 	long xl, r, s;
@@ -2196,11 +2196,11 @@ hline (long xr, long yp)
 	r = horizlookup2[yp-globalhoriz+horizycent];
 	asm1 = globalx1*r;
 	asm2 = globaly2*r;
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 	s = ((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8);
 #endif
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	hlineasm4(xr-xl,0L,(long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8,
 		globalx2*r+globalypanning,globaly1*r+globalxpanning,
 #else
@@ -2230,7 +2230,7 @@ slowhline (long xr, long yp)
 	transarea += (xr-xl);
 }
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 transmaskvline (long x)
 {
 	long vplc, vinc, p, i, palookupoffs, shade, bufplc;
@@ -2391,7 +2391,7 @@ uninitengine()
 	if (vidoption == 1) uninitvesa();
 	if (artfil != -1) kclose(artfil);
 
-#ifdef (LIBVER_BUILDREV >= 20000614L)
+#ifdef (LIBVER_BUILDREV >= 19970602L)
 	if (stereomode) setstereo(0L);
 
 #endif
@@ -2443,7 +2443,7 @@ nextpage()
 					if (stereomode)
 					{
 						stereonextpage();
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 						if (origbuffermode == 0)
 						{
 							buffermode = 0;
@@ -2458,14 +2458,14 @@ nextpage()
 					{
 						visualpage = activepage;
 						setvisualpage(visualpage);
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 						if (origbuffermode == 0)
 #else
 						if (!origbuffermode)
 #endif
 						{
 							buffermode = ((transarea<<3) > totalarea);
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 							transarea = 0;
 							totalarea = 0;
 #else
@@ -4128,14 +4128,14 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	sprsinang = sintable[dasprang&2047];
 
 	i = klabs(dmulscale6(dasprx-globalposx,cosang,daspry-globalposy,sinang));
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	setupdrawslab(ylookup[1],FP_OFF(palookup[dapal]) + (long)(getpalookup(mulscale21(globvis,i),(long)dashade)<<8));
 #else
 	j = (long)(getpalookup((long)mulscale21(globvis,i),(long)dashade)<<8);
 	setupdrawslab(ylookup[1],FP_OFF(palookup[dapal])+j);
 #endif
 	j = 1310720;
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 	j *= min(daxscale,dayscale); j >>= 6;  //New hacks (for sized-down voxels)
 #endif
 	for(k=0;k<MAXVOXMIPS;k++)
@@ -4666,7 +4666,7 @@ cansee(long x1, long y1, long z1, short sect1, long x2, long y2, long z2, short 
 			y31 = wal->y-y1; y34 = wal->y-wal2->y;
 
 			bot = y21*x34-x21*y34; if (bot <= 0) continue;
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 			t = y21*x31-x21*y31; if ((t < 0) || (t >= bot)) continue;
 			t = y31*x34-x31*y34; if ((t < 0) || (t >= bot)) continue;
 #else
@@ -6659,7 +6659,7 @@ rotatesprite (long sx, long sy, long z, short a, short picnum, signed char dasha
 
 	if ((cx1 > cx2) || (cy1 > cy2)) return;
 	if (z <= 16) return;
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	if (picanm[picnum]&192) picnum += animateoffs(picnum,49152);
 #else
 	if (picanm[picnum]&192) picnum += animateoffs(picnum,(short)0xc000);
@@ -8757,7 +8757,7 @@ parascan (long dax1, long dax2, long sectnum, char dastat, long bunch)
 	globalhoriz = globalhorizbak;
 }
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 interrupt stereohandler()
 #else
 interrupt stereohandler1()
@@ -8766,14 +8766,14 @@ interrupt stereohandler1()
 		//VR flag
 	if (kinp(0x3c2)&128)
 	{
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 		koutpw(0x3d4,((long)overtbits<<8)+0x11);
 #else
 		laststereoint = 0;
 		koutpw(0x3d4,((long)(overtbits)<<8)+0x11);
 #endif
 		koutp(0x3d5,overtbits+16);
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 	}
 	if (laststereoint == 1)
 	{
@@ -8793,7 +8793,7 @@ interrupt stereohandler2()
 	{
 #endif /* LIBVER_BUILDREV */
 		laststereoint = 0;
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 		koutp(0x378,0xfb+((visualpage&1^1)<<2));
 		koutpw(0x3d4,((long)overtbits<<8)+0x11);
 		koutp(0x3d5,overtbits+16);
@@ -8810,7 +8810,7 @@ interrupt stereohandler2()
 	koutp(0x20,0x20);
 }
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 initstereo()
 #else
 stereonextpage()
@@ -8846,7 +8846,7 @@ setstereo(long dastereomode)
 
 	if ((vidoption != 1) || (numpages < 2)) return;
 
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 	if (stereomode)  //---------------Uninitialize old stereo mode
 	{
 		if ((xdim == 320) && (ydim == 200))
@@ -8887,7 +8887,7 @@ setstereo(long dastereomode)
 	activepage = (visualpage & ~1)+2;
 	if (activepage >= numpages-1) activepage = 0;
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	blackdist = 0x7fffffff; whitedist = 0x80000000;
 	koutp(0x3c7,0);
 	for(i=0;i<256;i++)
@@ -8910,7 +8910,7 @@ setstereo(long dastereomode)
 		whiteband += (whiteband<<8); whiteband += (whiteband<<16);
 #endif
 	}
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	blackband += (blackband<<8); blackband += (blackband<<16);
 	whiteband += (whiteband<<8); whiteband += (whiteband<<16);
 #endif
@@ -8924,7 +8924,7 @@ setstereo(long dastereomode)
 
 		//Init RTC
 	_disable();
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	oldstereohandler = _dos_getvect(0x70); _dos_setvect(0x70,stereohandler);
 	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,0x28); //+8 = 256hz
 #else
@@ -8935,7 +8935,7 @@ setstereo(long dastereomode)
 	if (stereomode == 2) koutp(0x71,0x26); //+6 = 1024hz
 #endif
 	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,0x42);
-#if (LIBVER_BUILDREV >= 20000614L)
+#if (LIBVER_BUILDREV >= 19970602L)
 	koutp(0x70,0xc); kinp(0x71);
 #endif
 	oa1 = kinp(0xa1); koutp(0xa1,oa1&~1);
@@ -8946,13 +8946,13 @@ setstereo(long dastereomode)
 	overtbits = kinp(0x3d5) & ~(16+32);
 	koutp(0x3d5,overtbits);
 	koutp(0x3d5,overtbits+16);
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 
 	stereomode = 1;
 #endif
 }
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 uninitstereo()
 {
 	long i;
@@ -8981,7 +8981,7 @@ static char rtcrmbuffer[RTCBUFSIZ] =
 };
 #endif
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 		//Uninit VR flag
 	koutpw(0x3d4,(((long)overtbits+32)<<8)+0x11);
 #else
@@ -8990,7 +8990,7 @@ void *engconvalloc32 (unsigned long size)
 	 union REGS r;
 #endif
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 		//Uninit RTC
 	_disable();
 	koutp(0xa1,(kinp(0xa1)&~1)|(oa1&1));
@@ -9004,7 +9004,7 @@ void *engconvalloc32 (unsigned long size)
 	 int386(0x31,&r,&r);
 #endif
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	stereomode = 0;
 	ostereopixelwidth = -1;
 	setview(windowx1,windowy1,windowx2,windowy2);
@@ -9021,13 +9021,13 @@ void *engconvalloc32 (unsigned long size)
 #endif
 }
 
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 stereonextpage()
 #else
 installbistereohandlers(void far *stereohan)
 #endif
 {
-#if (LIBVER_BUILDREV < 20000614L)
+#if (LIBVER_BUILDREV < 19970602L)
 	koutpw(0x70,0x420b);
 	if ((activepage&1) == 0)
 	{
