@@ -73,7 +73,7 @@ static long ves2lastx[MAXYDIM];
 static long davesapageshift;
 static VBE_vgaInfo vgaInfo;
 long globlinplace;
-#ifdef (LIBVER_BUILDREV >= 19970602L)
+#if (LIBVER_BUILDREV >= 19970602L)
 static long backlinaddress = 0;  //Save address for free operation (0x801)
 #endif
 

@@ -18,7 +18,7 @@
 #include <i86.h>
 #include "build.h"
 #include "pragmas.h"
-#ifdef (LIBVER_BUILDREV >= 19970602L)
+#if (LIBVER_BUILDREV >= 19970602L)
 
 long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
 volatile long stereomode = 0, visualpage, activepage, whiteband, blackband;
@@ -2391,7 +2391,7 @@ uninitengine()
 	if (vidoption == 1) uninitvesa();
 	if (artfil != -1) kclose(artfil);
 
-#ifdef (LIBVER_BUILDREV >= 19970602L)
+#if (LIBVER_BUILDREV >= 19970602L)
 	if (stereomode) setstereo(0L);
 
 #endif
@@ -7354,7 +7354,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 
 	clearbuf((long)(&gotsector[0]),(long)((numsectors+31)>>5),0L);
 
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 	cx1 = (windowx1<<16); cy1 = (windowy1<<16);
 	cx2 = ((windowx2+1)<<16)-1; cy2 = ((windowy2+1)<<16)-1;
 #else
@@ -7378,7 +7378,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 			for(w=sec->wallnum,wal=&wall[startwall];w>0;w--,wal++)
 			{
 				ox = wal->x - dax; oy = wal->y - day;
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 				x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
 				y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
 #else
@@ -7392,7 +7392,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 				npoints++;
 			}
 			if ((i&0xf0) != 0xf0) continue;
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<15),xyaspect)+(ydim<<15);
 #else
 			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<11),xyaspect)+(ydim<<11);
@@ -7445,7 +7445,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 				i = 1048576/i;
 				globalx1 = mulscale10(dmulscale10(ox,bakgxvect,oy,bakgyvect),i);
 				globaly1 = mulscale10(dmulscale10(ox,bakgyvect,-oy,bakgxvect),i);
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 				ox = (bakx1>>8)-(xdim<<7); oy = (baky1>>8)-(ydim<<7);
 #else
 				ox = (bakx1>>4)-(xdim<<7); oy = (baky1>>4)-(ydim<<7);
@@ -7529,7 +7529,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 			i = 0;
 
 			ox = x1 - dax; oy = y1 - day;
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 			x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
 			y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
 #else
@@ -7540,7 +7540,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 			rx1[0] = x; ry1[0] = y;
 
 			ox = x2 - dax; oy = y2 - day;
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 			x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
 			y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
 #else
@@ -7551,7 +7551,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 			rx1[1] = x; ry1[1] = y;
 
 			ox = x3 - dax; oy = y3 - day;
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 			x = dmulscale12(ox,xvect,-oy,yvect) + (xdim<<15);
 			y = dmulscale12(oy,xvect2,ox,yvect2) + (ydim<<15);
 #else
@@ -7567,7 +7567,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 			rx1[3] = x; ry1[3] = y;
 
 			if ((i&0xf0) != 0xf0) continue;
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<15),xyaspect)+(ydim<<15);
 #else
 			bakx1 = rx1[0]; baky1 = mulscale16(ry1[0]-(ydim<<11),xyaspect)+(ydim<<11);
@@ -7613,7 +7613,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 				globaly1 = mulscale(globaly1,xspan,ox);
 			}
 
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 			bakx1 = (bakx1>>8)-(xdim<<7); baky1 = (baky1>>8)-(ydim<<7);
 #else
 			bakx1 = (bakx1>>4)-(xdim<<7); baky1 = (baky1>>4)-(ydim<<7);
@@ -7644,7 +7644,7 @@ clippoly (long npoints, long clipstat)
 	cy1 = windowy1;
 	cx2 = windowx2+1;
 	cy2 = windowy2+1;
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 	cx1 <<= 16; cy1 <<= 16; cx2 <<= 16; cy2 <<= 16;
 #else
 	cx1 <<= 12; cy1 <<= 12; cx2 <<= 12; cy2 <<= 12;
@@ -7852,7 +7852,7 @@ fillpolygon(long npoints)
 	miny = 0x7fffffff; maxy = 0x80000000;
 	for(z=npoints-1;z>=0;z--)
 		{ y = ry1[z]; miny = min(miny,y); maxy = max(maxy,y); }
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 	miny = (miny>>16); maxy = (maxy>>16);
 #else
 	miny = (miny>>12); maxy = (maxy>>12);
@@ -7869,7 +7869,7 @@ fillpolygon(long npoints)
 	for(z=npoints-1;z>=0;z--)
 	{
 		zz = xb1[z];
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 		y1 = ry1[z]; day1 = (y1>>16);
 		y2 = ry1[zz]; day2 = (y2>>16);
 #else
@@ -7879,7 +7879,7 @@ fillpolygon(long npoints)
 		if (day1 != day2)
 		{
 			x1 = rx1[z]; x2 = rx1[zz];
-#ifdef (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L)
 			xinc = divscale16(x2-x1,y2-y1);
 			if (day2 > day1)
 			{
