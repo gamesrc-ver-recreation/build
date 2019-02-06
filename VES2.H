@@ -742,6 +742,9 @@ VBE_setPalette(long start, long num, char *dapal)
 			palquick[j+2] = dapal[k];
 			j += 3; k += 4;
 		}
+#if (LIBVER_BUILDREV < 19970212L)
+		setpalettequick(start,num,palquick);
+#else
 		//setpalettequick(start,num,palquick);
 		koutp(0x3c8,start);
 		for(i=(num>>1);i>0;i--)
@@ -758,6 +761,7 @@ VBE_setPalette(long start, long num, char *dapal)
 			while (kinp(0x3da)&1); while (!(kinp(0x3da)&1));
 										  koutp(0x3c9,dapal[1]); koutp(0x3c9,dapal[0]);
 		}
+#endif /* LIBVER_BUILDREV */
 		return(1);
 	}
 

@@ -253,9 +253,11 @@ short searchsector, searchwall, searchstat;     //search output
 static char artfilename[20];
 static long numtilefiles, artfil = -1, artfilnum, artfilplc;
 
+#if (LIBVER_BUILDREV >= 19970212L)
 static char inpreparemirror = 0;
 static long mirrorsx1, mirrorsy1, mirrorsx2, mirrorsy2;
 
+#endif
 long totalclocklock;
 
 #if (LIBVER_BUILDREV < 19971004L)
@@ -535,6 +537,7 @@ drawrooms(long daposx, long daposy, long daposz,
 
 	scansector(globalcursectnum);
 
+#if (LIBVER_BUILDREV >= 19970212L)
 	if (inpreparemirror)
 	{
 		inpreparemirror = 0;
@@ -569,6 +572,7 @@ drawrooms(long daposx, long daposy, long daposz,
 		mirrorsy1 = min(umost[mirrorsx1],umost[mirrorsx2]);
 		mirrorsy2 = max(dmost[mirrorsx1],dmost[mirrorsx2]);
 	}
+#endif /* LIBVER_BUILDREV */
 
 	while ((numbunches > 0) && (numhits > 0))
 	{
@@ -8098,6 +8102,10 @@ squarerotatetile(short tilenume)
 	}
 }
 
+#if (LIBVER_BUILDREV < 19970212L)
+static long mirthoriz, mirbakdaz;
+static short mirbakdasector;
+#endif
 preparemirror(long dax, long day, long daz, short daang, long dahoriz, short dawall, short dasector, long *tposx, long *tposy, short *tang)
 {
 	long i, j, x, y, dx, dy;
@@ -8110,11 +8118,57 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 	*tposy = (y<<1) + scale(dy,i,j) - day;
 	*tang = (((getangle(dx,dy)<<1)-daang)&2047);
 
+#if (LIBVER_BUILDREV < 19970212L)
+	mirbakdaz = daz; mirbakdasector = dasector;
+	if ((daz > sector[dasector].ceilingz) && (daz < sector[dasector].floorz))
+	{
+			//Draw pink pixels on horizon to get mirror l&r bounds.
+		mirthoriz = scale(dahoriz-100,windowx2-windowx1,320)+((windowy1+windowy2)>>1);
+		if ((daz<<1) > sector[dasector].ceilingz+sector[dasector].floorz)
+			mirthoriz--; else mirthoriz++;
+		mirthoriz = min(max(mirthoriz,windowy1),windowy2);
+		clearbufbyte(frameplace+ylookup[mirthoriz]+windowx1,windowx2-windowx1+1,0xffffffff);
+	}
+#else
 	inpreparemirror = 1;
+#endif
 }
 
 completemirror()
 {
+#if (LIBVER_BUILDREV < 19970212L)
+	long i, j, k, l, x1, y1, x2, y2, dy, templong;
+	char *ptr;
+
+		//Get pink pixels on horizon to get mirror l&r bounds.
+	x1 = 0; x2 = windowx2-windowx1;
+	if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
+	{
+		ptr = (char *)frameplace+ylookup[mirthoriz]+windowx1;
+		while ((ptr[x1] == 255) && (x2 >= x1)) x1++;
+		while ((ptr[x2] == 255) && (x2 >= x1)) x2--;
+		if (x1 > 0) x1--;
+		if (x2 < windowx2-windowx1) x2++;
+		x2 |= 3;
+		if (x2 > windowx2-windowx1) x2 = windowx2-windowx1;
+	}
+
+	if (x2 >= x1)  //Flip window x-wise
+	{
+		transarea += (x2-x1)*(windowy2-windowy1);
+
+		ptr = (char *)frameplace+ylookup[windowy1]+windowx1;
+		y1 = windowx2-windowx1-x2; x2 -= x1; y2 = x2+1;
+		for(dy=windowy2-windowy1;dy>=0;dy--)
+		{
+			copybufbyte(&ptr[x1+1],&tempbuf[0],y2);
+			tempbuf[x2] = tempbuf[x2-1];
+			copybufreverse(&tempbuf[x2],&ptr[y1],y2);
+			ptr += ylookup[1];
+			faketimerhandler();
+		}
+	}
+#else /* LIBVER_BUILDREV */
 	long i, dy, p;
 
 		//Can't reverse with uninitialized data
@@ -8135,6 +8189,7 @@ completemirror()
 		p += ylookup[1];
 		faketimerhandler();
 	}
+#endif /* LIBVER_BUILDREV */
 }
 
 sectorofwall(short theline)
