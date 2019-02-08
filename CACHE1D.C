@@ -1,6 +1,7 @@
 // "Build Engine & Tools" Copyright (c) 1993-1997 Ken Silverman
 // Ken Silverman's official web site: "http://www.advsys.net/ken"
 // See the included license file "BUILDLIC.TXT" for license info.
+// This file has been modified from Ken Silverman's original release
 
 #include <dos.h>
 #include <stdio.h>
@@ -34,7 +35,11 @@
 //           After calling uninitcache, it is still ok to call allocache
 //           without first calling initcache.
 
+#if (LIBVER_BUILDREV < 20000614L)
+#define MAXCACHEOBJECTS 6144
+#else
 #define MAXCACHEOBJECTS 9216
+#endif
 
 static long cachesize = 0;
 long cachecount = 0;
@@ -43,6 +48,11 @@ long cachestart = 0, cacnum = 0, agecount = 0;
 typedef struct { long *hand, leng; char *lock; } cactype;
 cactype cac[MAXCACHEOBJECTS];
 static long lockrecip[200];
+#if (LIBVER_BUILDREV < 20000614L) // VERSIONS RESTORATION - HACK
+#define reportandexit_wrapper(errormessage) do { printf(errormessage "\n"); reportandexit(); } while (0)
+#else
+#define reportandexit_wrapper(errormessage) reportandexit(errormessage)
+#endif
 
 initcache(long dacachestart, long dacachesize)
 {
@@ -68,12 +78,12 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	{
 		printf("Cachesize: %ld\n",cachesize);
 		printf("*Newhandle: 0x%x, Newbytes: %ld, *Newlock: %d\n",newhandle,newbytes,*newlockptr);
-		reportandexit("BUFFER TOO BIG TO FIT IN CACHE!");
+		reportandexit_wrapper("BUFFER TOO BIG TO FIT IN CACHE!");
 	}
 
 	if (*newlockptr == 0)
 	{
-		reportandexit("ALLOCACHE CALLED WITH LOCK OF 0!");
+		reportandexit_wrapper("ALLOCACHE CALLED WITH LOCK OF 0!");
 	}
 
 		//Find best place
@@ -101,7 +111,7 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	//printf("%ld %ld %ld\n",besto,newbytes,*newlockptr);
 
 	if (bestval == 0x7fffffff)
-		reportandexit("CACHE SPACE ALL LOCKED UP!");
+		reportandexit_wrapper("CACHE SPACE ALL LOCKED UP!");
 
 		//Suck things out
 	for(sucklen=-newbytes,suckz=bestz;sucklen<0;sucklen+=cac[suckz++].leng)
@@ -121,7 +131,11 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	bestz++;
 	if (bestz == cacnum)
 	{
+#if (LIBVER_BUILDREV < 20000614L)
+		cacnum++;
+#else
 		cacnum++; if (cacnum > MAXCACHEOBJECTS) reportandexit("Too many objects in cache! (cacnum > MAXCACHEOBJECTS)");
+#endif
 		cac[bestz].leng = sucklen;
 		cac[bestz].lock = &zerochar;
 		return;
@@ -129,7 +143,11 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 
 	if (*cac[bestz].lock == 0) { cac[bestz].leng += sucklen; return; }
 
+#if (LIBVER_BUILDREV < 20000614L)
+	cacnum++;
+#else
 	cacnum++; if (cacnum > MAXCACHEOBJECTS) reportandexit("Too many objects in cache! (cacnum > MAXCACHEOBJECTS)");
+#endif
 	for(z=cacnum-1;z>bestz;z--) cac[z] = cac[z-1];
 	cac[bestz].leng = sucklen;
 	cac[bestz].lock = &zerochar;
@@ -177,11 +195,19 @@ agecache()
 	}
 }
 
+#if (LIBVER_BUILDREV < 20000614L) // VERSIONS RESTORATION - HACK
+reportandexit()
+#else
 reportandexit(char *errormessage)
+#endif
 {
 	long i, j;
 
 	setvmode(0x3);
+#if (LIBVER_BUILDREV < 20000614L)
+	printf("Cachesize = %ld\n",cachesize);
+	printf("Cacnum = %ld\n",cacnum);
+#endif
 	j = 0;
 	for(i=0;i<cacnum;i++)
 	{
@@ -191,10 +217,14 @@ reportandexit(char *errormessage)
 		printf("lock: %ld\n",*cac[i].lock);
 		j += cac[i].leng;
 	}
+#if (LIBVER_BUILDREV >= 20000614L)
 	printf("Cachesize = %ld\n",cachesize);
 	printf("Cacnum = %ld\n",cacnum);
+#endif
 	printf("Cache length sum = %ld\n",j);
+#if (LIBVER_BUILDREV >= 20000614L)
 	printf("ERROR: %s",errormessage);
+#endif
 	exit(0);
 }
 
