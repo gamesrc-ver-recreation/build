@@ -1,11 +1,9 @@
 ; "Build Engine & Tools" Copyright (c) 1993-1997 Ken Silverman
 ; Ken Silverman's official web site: "http://www.advsys.net/ken"
 ; See the included license file "BUILDLIC.TXT" for license info.
+; This file has been modified from Ken Silverman's original release
 
-; TTT BEGIN
 .386P
-;.586P
-; TTT END
 .8087
 ;include mmx.inc       ;Include this if using < WATCOM 11.0 WASM
 
@@ -21,28 +19,6 @@
 ;   2. Doesn't encode short jumps automatically like WASM
 ;   3. Stupidly adds wait prefix to ffree's
 
-IFDEF TTT
-EXTRN _asm1 : dword
-EXTRN _asm2 : dword
-EXTRN _asm3 : dword
-EXTRN _asm4 : dword
-EXTRN _reciptable : near
-EXTRN _fpuasm : dword
-EXTRN _globalx3 : dword
-EXTRN _globaly3 : dword
-EXTRN _ylookup : near
-
-EXTRN _vplce : near
-EXTRN _vince : near
-EXTRN _palookupoffse : near
-EXTRN _bufplce : near
-
-EXTRN _ebpbak : dword
-EXTRN _espbak : dword
-
-EXTRN _pow2char : near
-EXTRN _pow2long : near
-ELSE ; No TTT
 EXTRN _vince : near
 EXTRN _vplce : near
 
@@ -64,17 +40,10 @@ EXTRN _asm2 : dword
 EXTRN _asm3 : dword
 EXTRN _asm4 : dword
 EXTRN _reciptable : near
-ENDIF ; TTT
 
-IFDEF TTT
-CODE SEGMENT PUBLIC USE32 'DATA'
-ASSUME cs:CODE,ds:CODE
-ELSE
 CODE SEGMENT PUBLIC USE32 'CODE'
 ASSUME cs:CODE
-ENDIF
 
-; TTT WHOLE FILE - Add DS: for self-modifying code ('CODE' seg, MASM).
 ALIGN 16
 PUBLIC sethlinesizes_
 sethlinesizes_:
@@ -117,25 +86,6 @@ sethlinesizes_:
 
 	ret
 
-IFDEF TTT
-ALIGN 16
-PUBLIC prosethlinesizes_
-prosethlinesizes_:
-	mov dword ptr [prohbuf-4], ecx
-	neg eax
-	mov ecx, eax
-	sub eax, ebx
-	mov byte ptr [prohshru-1], al   ;bl = 32-al-bl
-	mov eax, -1
-	shr eax, cl
-	mov ecx, ebx
-	shl eax, cl
-	mov dword ptr [prohand-4], eax  ;((-1>>(-oal))<<obl)
-	neg ebx
-	mov byte ptr [prohshrv-1], bl   ;bl = 32-bl
-	ret
-ENDIF ; TTT
-
 ALIGN 16
 PUBLIC setvlinebpl_
 setvlinebpl_:
@@ -147,9 +97,6 @@ setvlinebpl_:
 	mov dword ptr ds:[mfixchain1s+2], eax
 	mov dword ptr ds:[tfixchain1s+2], eax
 	mov dword ptr ds:[fixchain2a+2], eax
-IFDEF TTT
-	mov dword ptr [profixchain2a+2], eax
-ENDIF
 	mov dword ptr ds:[fixchain2ma+2], eax
 	mov dword ptr ds:[fixchain2mb+2], eax
 	mov dword ptr ds:[fixchaint2a+1], eax
@@ -171,14 +118,6 @@ setpalookupaddress_:
 	mov dword ptr ds:[pal7+2], eax
 	mov dword ptr ds:[pal8+2], eax
 	ret
-
-IFDEF TTT
-ALIGN 16
-PUBLIC prosetpalookupaddress_
-prosetpalookupaddress_:
-	mov dword ptr [prohpala-4], eax
-	ret
-ENDIF ; TTT
 
 ALIGN 16
 PUBLIC setuphlineasm4_
@@ -262,13 +201,6 @@ machnegxbits1: shr eax, 32-6               ;32-xbits
 	add ebx, ebx
 	mov eax, edx
 	jc beginhline64
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 
 	mov eax, _asm1
 machxbits2: rol eax, 6                     ;xbits
@@ -286,10 +218,6 @@ machxbits2: rol eax, 6                     ;xbits
 
 	mov eax, edx
 	jmp beginhline64
-; FIXME TEST
-IFDEF TTT
-	nop
-ENDIF
 ALIGN 16
 prebeginhline64:
 	mov dword ptr [edi], ebx
@@ -298,7 +226,6 @@ beginhline64:
 hmach3a: rol eax, 6
 hmach2a: and eax, 00008888h
 hmach4a: sub esi, 88888888h
-;
 hmach1a: sbb edx, 88888888h
 	sub edi, 4
 hoffs4: mov cl, byte ptr [eax+88888888h]
@@ -338,26 +265,12 @@ skipthe4byte:
 
 	test ebp, 2
 	jz skipdrawthe2
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 	rol ebx, 16
 	mov word ptr [edi+2], bx
 	sub edi, 2
 skipdrawthe2:
 	test ebp, 1
 	jz skipdrawthe1
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 	shr ebx, 24
 	mov byte ptr [edi+3], bl
 skipdrawthe1:
@@ -368,13 +281,6 @@ skipdrawthe1:
 shorthline:
 	test ebp, ebp
 	jz endshorthline
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 begshorthline:
 	mov eax, esi
 hxsiz4: shr eax, 26
@@ -390,49 +296,6 @@ pal8: mov bl, byte ptr [ecx+88888888h]
 endshorthline:
 	pop ebp
 	ret
-
-
-	;eax: 00000000 00000000 00000000 temp----
-	;ebx: 00000000 00000000 00000000 temp----
-	;ecx: UUUUUUuu uuuuuuuu uuuuuuuu uuuuuuuu
-	;edx: VVVVVVvv vvvvvvvv vvvvvvvv vvvvvvvv
-	;esi: cnt----- -------- -------- --------
-	;edi: vid----- -------- -------- --------
-	;ebp: paloffs- -------- -------- --------
-	;esp: ???????? ???????? ???????? ????????
-IFDEF TTT
-ALIGN 16
-PUBLIC prohlineasm4_
-prohlineasm4_:
-	push ebp
-
-	lea ebp, [ecx+88888888h]
-prohpala:
-	mov ecx, esi
-	lea esi, [eax+1]
-	sub edi, esi
-
-prohbeg:
-	mov eax, ecx
-	shr eax, 20
-prohshru:
-	mov ebx, edx
-	shr ebx, 26
-prohshrv:
-	and eax, 88888888h
-prohand:
-	movzx eax, byte ptr [eax+ebx+88888888h]
-prohbuf:
-	mov al, [eax+ebp]
-	sub ecx, _asm1
-	sub edx, _asm2
-	mov [edi+esi], al
-	dec esi
-	jnz prohbeg
-
-	pop ebp
-	ret
-ENDIF ; TTT
 
 
 
@@ -465,38 +328,6 @@ setupvlineasm_:
 	mov dword ptr ds:[machvsh4+2], eax    ;(1<<shy)-1
 	pop ecx
 	ret
-
-IFDEF TTT
-ALIGN 16
-PUBLIC prosetupvlineasm_
-prosetupvlineasm_:
-		;First 2 lines for VLINEASM1, rest for VLINEASM4
-	mov byte ptr [premach3a+2], al
-	mov byte ptr [mach3a+2], al
-
-	push ecx
-	mov byte ptr [promachvsh1+2], al      ;32-shy
-	mov byte ptr [promachvsh3+2], al      ;32-shy
-	mov byte ptr [promachvsh5+2], al      ;32-shy
-	mov byte ptr [promachvsh6+2], al      ;32-shy
-	mov ah, al
-	sub ah, 16
-	mov byte ptr [promachvsh8+2], ah      ;16-shy
-	neg al
-	mov byte ptr [promachvsh7+2], al      ;shy
-	mov byte ptr [promachvsh9+2], al      ;shy
-	mov byte ptr [promachvsh10+2], al     ;shy
-	mov byte ptr [promachvsh11+2], al     ;shy
-	mov byte ptr [promachvsh12+2], al     ;shy
-	mov cl, al
-	mov eax, 1
-	shl eax, cl
-	dec eax
-	mov dword ptr [promachvsh2+2], eax    ;(1<<shy)-1
-	mov dword ptr [promachvsh4+2], eax    ;(1<<shy)-1
-	pop ecx
-	ret
-ENDIF ; TTT
 
 ALIGN 16
 PUBLIC setupmvlineasm_
@@ -595,25 +426,13 @@ settransnormal_:
 	mov byte ptr ds:[transrev4+1], 90h
 	mov byte ptr ds:[transrev5+1], 37h
 	mov byte ptr ds:[transrev6+1], 90h
-IFDEF TTT
-	mov word ptr [transrev7+0], 0f38ah
-ELSE
 	mov byte ptr ds:[transrev7+1], 0f3h
-ENDIF
 	mov byte ptr ds:[transrev8+1], 90h
-IFDEF TTT
-	mov word ptr [transrev9+0], 0f78ah
-ELSE
 	mov byte ptr ds:[transrev9+1], 0f7h
-ENDIF
 	mov byte ptr ds:[transrev10+1], 0a7h
 	mov byte ptr ds:[transrev11+1], 81h
 	mov byte ptr ds:[transrev12+2], 9fh
-IFDEF TTT
-	mov word ptr [transrev13+0], 0dc88h
-ELSE
 	mov byte ptr ds:[transrev13+1], 0e3h
-ENDIF
 	mov byte ptr ds:[transrev14+1], 81h
 	mov byte ptr ds:[transrev15+1], 9ah
 	mov byte ptr ds:[transrev16+1], 0a7h
@@ -630,25 +449,13 @@ settransreverse_:
 	mov byte ptr ds:[transrev4+1], 0b0h
 	mov byte ptr ds:[transrev5+1], 17h
 	mov byte ptr ds:[transrev6+1], 0b0h
-IFDEF TTT
-	mov word ptr [transrev7+0], 0d38ah
-ELSE
 	mov byte ptr ds:[transrev7+1], 0d3h
-ENDIF
 	mov byte ptr ds:[transrev8+1], 0b0h
-IFDEF TTT
-	mov word ptr [transrev9+0], 0d78ah
-ELSE
 	mov byte ptr ds:[transrev9+1], 0d7h
-ENDIF
 	mov byte ptr ds:[transrev10+1], 87h
 	mov byte ptr ds:[transrev11+1], 0a1h
 	mov byte ptr ds:[transrev12+2], 87h
-IFDEF TTT
-	mov word ptr [transrev13+0], 0e388h
-ELSE
 	mov byte ptr ds:[transrev13+1], 0dch
-ENDIF
 	mov byte ptr ds:[transrev14+1], 0a1h
 	mov byte ptr ds:[transrev15+1], 0bah
 	mov byte ptr ds:[transrev16+1], 87h
@@ -833,165 +640,6 @@ machvsh8: shl edx, 88h     ;16-sh
 
 	pop ebp
 	ret
-
-	;eax: -------temp1-------
-	;ebx: -------temp2-------
-	;ecx: ylo4      ---------
-	;edx: ylo2      ---------
-	;esi: yhi1           yhi2
-	;edi: ---videoplc/cnt----
-	;ebp: yhi3           yhi4
-	;esp:
-IFDEF TTT
-ALIGN 16
-PUBLIC provlineasm4_
-provlineasm4_:
-	push ebp
-
-	mov eax, dword ptr _ylookup[ecx*4]
-	add eax, edi
-	mov dword ptr [promachvline4end1+2], eax
-	inc eax
-	mov dword ptr [promachvline4end2+2], eax
-	inc eax
-	mov dword ptr [promachvline4end3+2], eax
-	inc eax
-	mov dword ptr [promachvline4end4+2], eax
-	sub eax, 3
-	sub edi, eax
-
-	mov eax, dword ptr _bufplce[0]
-	mov ebx, dword ptr _bufplce[4]
-	mov ecx, dword ptr _bufplce[8]
-	mov edx, dword ptr _bufplce[12]
-	mov dword ptr [promachvbuf1+3], ecx
-	mov dword ptr [promachvbuf2+3], edx
-	mov dword ptr [promachvbuf3+3], eax
-	mov dword ptr [promachvbuf4+3], ebx
-
-	mov eax, dword ptr _palookupoffse[0]
-	mov ebx, dword ptr _palookupoffse[4]
-	mov ecx, dword ptr _palookupoffse[8]
-	mov edx, dword ptr _palookupoffse[12]
-	mov dword ptr [promachvpal1+2], ecx
-	mov dword ptr [promachvpal2+2], edx
-	mov dword ptr [promachvpal3+2], eax
-	mov dword ptr [promachvpal4+2], ebx
-
-		;     ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		;edx: ³v3lo           ³v1lo           ³
-		;     ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄ´
-		;esi: ³v2hi  v2lo             ³   v3hi³
-		;     ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ´
-		;ebp: ³v0hi  v0lo             ³   v1hi³
-		;     ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÙ
-
-	mov ebp, dword ptr _vince[0]
-	mov ebx, dword ptr _vince[4]
-	mov esi, dword ptr _vince[8]
-	mov eax, dword ptr _vince[12]
-	and esi, 0fffffe00h
-	and ebp, 0fffffe00h
-promachvsh9: rol eax, 88h                 ;sh
-promachvsh10: rol ebx, 88h                ;sh
-	mov edx, eax
-	mov ecx, ebx
-	shr ecx, 16
-	and edx, 0ffff0000h
-	add edx, ecx
-	and eax, 000001ffh
-	and ebx, 000001ffh
-	add esi, eax
-	add ebp, ebx
-	;
-	mov eax, edx
-	and eax, 0ffff0000h
-	mov dword ptr [promachvinc1+2], eax
-	mov dword ptr [promachvinc2+2], esi
-	shl edx, 16
-	mov dword ptr [promachvinc3+2], edx
-	mov dword ptr [promachvinc5+2], ebp
-
-	mov ebp, dword ptr _vplce[0]
-	mov ebx, dword ptr _vplce[4]
-	mov esi, dword ptr _vplce[8]
-	mov eax, dword ptr _vplce[12]
-	and esi, 0fffffe00h
-	and ebp, 0fffffe00h
-promachvsh11: rol eax, 88h                ;sh
-promachvsh12: rol ebx, 88h                ;sh
-	mov edx, eax
-	mov ecx, ebx
-	shr ecx, 16
-	and edx, 0ffff0000h
-	add edx, ecx
-	and eax, 000001ffh
-	and ebx, 000001ffh
-	add esi, eax
-	add ebp, ebx
-
-	mov eax, esi
-	mov ecx, edx
-	shl ecx, 16
-	jmp short probeginvlineasm4
-ALIGN 16
-	nop
-	nop
-	nop
-probeginvlineasm4:
-promachvsh1: shr eax, 88h          ;32-sh
-	mov ebx, esi
-promachvsh2: and ebx, 00000088h    ;(1<<sh)-1
-promachvinc1: add edx, 88880000h
-promachvinc2: adc esi, 88888088h
-promachvbuf1: movzx eax, byte ptr [eax+88888888h]
-promachvbuf2: movzx ebx, byte ptr [ebx+88888888h]
-promachvpal1: mov al, byte ptr [eax+88888888h]
-promachvline4end3: mov byte ptr [edi+88888888h], al
-	mov eax, ebp
-promachvsh3: shr eax, 88h          ;32-sh
-promachvpal2: mov bl, byte ptr [ebx+88888888h]
-promachvline4end4: mov byte ptr [edi+88888888h], bl
-	mov ebx, ebp
-promachvsh4: and ebx, 00000088h    ;(1<<sh)-1
-promachvbuf3: movzx eax, byte ptr [eax+88888888h]
-promachvinc3: add ecx, 88888888h
-promachvbuf4: movzx ebx, byte ptr [ebx+88888888h]
-promachvinc5: adc ebp, 88888088h
-promachvpal3: mov al, byte ptr [eax+88888888h]
-promachvline4end1: mov byte ptr [edi+88888888h], al
-promachvpal4: mov bl, byte ptr [ebx+88888888h]
-promachvline4end2: mov byte ptr [edi+88888888h], bl
-profixchain2a: add edi, 88888888h
-	mov eax, esi
-	jnc short probeginvlineasm4
-
-		;     ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		;edx: ³v3lo           ³v1lo           ³
-		;     ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄ´
-		;esi: ³v2hi  v2lo             ³   v3hi³
-		;     ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ´
-		;ebp: ³v0hi  v0lo             ³   v1hi³
-		;     ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÙ
-
-	mov dword ptr _vplce[8], esi
-	mov dword ptr _vplce[0], ebp
-		;vplc2 = (esi<<(32-sh))+(edx>>sh)
-		;vplc3 = (ebp<<(32-sh))+((edx&65535)<<(16-sh))
-promachvsh5: shl esi, 88h     ;32-sh
-	mov eax, edx
-promachvsh6: shl ebp, 88h     ;32-sh
-	and edx, 0000ffffh
-promachvsh7: shr eax, 88h     ;sh
-	add esi, eax
-promachvsh8: shl edx, 88h     ;16-sh
-	add ebp, edx
-	mov dword ptr _vplce[12], esi
-	mov dword ptr _vplce[4], ebp
-
-	pop ebp
-	ret
-ENDIF ; TTT
 
 
 ALIGN 16
@@ -1436,12 +1084,6 @@ mmach2db: mov bh, byte ptr [eax+88888888h]    ;shadeoffs
 	jnc short mbeghline
 	jmp mendhline
 mskip1:                                                     ;2nd only
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-ENDIF
 	cmp ch, 255
 	je short mprebeghline
 
@@ -2183,33 +1825,14 @@ drawslab_:
 	push ebp
 	cmp eax, 2
 	je voxbegdraw2
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 	ja voxskip2
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 	xor eax, eax
 voxbegdraw1:
 	mov ebp, ebx
 	shr ebp, 16
 	add ebx, edx
 	dec ecx
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal1: mov al, byte ptr [eax+88888888h]
 	mov byte ptr [edi], al
 voxbpl1: lea edi, [edi+88888888h]
@@ -2223,12 +1846,7 @@ voxbegdraw2:
 	add ebx, edx
 	xor eax, eax
 	dec ecx
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal2: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	mov word ptr [edi], ax
@@ -2240,25 +1858,13 @@ voxbpl2: lea edi, [edi+88888888h]
 voxskip2:
 	cmp eax, 4
 	jne voxskip4
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 	xor eax, eax
 voxbegdraw4:
 	mov ebp, ebx
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal3: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	shl eax, 8
@@ -2277,22 +1883,8 @@ voxskip4:
 
 	test edi, 1
 	jz voxskipslab1
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 	cmp edi, eax
 	je voxskipslab1
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 
 	push eax
 	push ebx
@@ -2303,12 +1895,7 @@ voxbegslab1:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal4: mov al, byte ptr [eax+88888888h]
 	mov byte ptr [edi], al
 voxbpl4: add edi, 88888888h
@@ -2324,23 +1911,9 @@ voxskipslab1:
 	push eax
 	test edi, 2
 	jz voxskipslab2
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 	dec eax
 	cmp edi, eax
 	jge voxskipslab2
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 
 	push ebx
 	push ecx
@@ -2350,12 +1923,7 @@ voxbegslab2:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal5: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	mov word ptr [edi], ax
@@ -2373,13 +1941,6 @@ voxskipslab2:
 	sub eax, 3
 	cmp edi, eax
 	jge voxskipslab3
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 
 voxprebegslab3:
 	push ebx
@@ -2390,12 +1951,7 @@ voxbegslab3:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal6: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	shl eax, 8
@@ -2423,13 +1979,6 @@ voxskipslab3:
 	dec eax
 	cmp edi, eax
 	jge voxskipslab4
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 
 	push ebx
 	push ecx
@@ -2439,12 +1988,7 @@ voxbegslab4:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal7: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	mov word ptr [edi], ax
@@ -2461,25 +2005,13 @@ voxskipslab4:
 
 	cmp edi, eax
 	je voxskipslab5
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-	nop
-ENDIF
 
 voxbegslab5:
 	mov ebp, ebx
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
-; FIXME TEST
-IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
-ELSE
-	mov al, [ebp+esi]
-ENDIF
 voxpal8: mov al, byte ptr [eax+88888888h]
 	mov byte ptr [edi], al
 voxbpl8: add edi, 88888888h
@@ -2530,12 +2062,6 @@ stretchhline_:
 	inc ch
 
 	jmp begloop
-; FIXME TEST
-IFDEF TTT
-	nop
-	nop
-	nop
-ENDIF
 
 begloop:
 	mov al, [edx]
@@ -2560,87 +2086,6 @@ loinc4: sub ecx, 88888888h
 
 	pop ebp
 	ret
-
-
-IFDEF TTT
-PUBLIC mmxoverlay_
-mmxoverlay_:
-	pushfd                 ;Check if CPUID is available
-	pop eax
-	mov ebx, eax
-	xor eax, 00200000h
-	push eax
-	popfd
-	pushfd
-	pop eax
-	cmp eax, ebx
-	je pentium
-	xor eax, eax
-	dw 0a20fh
-	test eax, eax
-	jz pentium
-	mov eax, 1
-	dw 0a20fh
-	and eax, 00000f00h
-	test edx, 00800000h    ;Check if MMX is available
-	jz nommx
-	cmp eax, 00000600h     ;Check if P6 Family or not
-	jae pentiumii
-	jmp pentiummmx
-nommx:
-	cmp eax, 00000600h     ;Check if P6 Family or not
-	jae pentiumpro
-pentium:
-	ret
-
-;ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-;³                    PENTIUM II Overlays                       ³
-;ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-pentiumii:
-		;Hline overlay (MMX doens't help)
-	mov byte ptr [sethlinesizes_], 0xe9
-	mov dword ptr [sethlinesizes_+1], (offset prosethlinesizes_)-(offset sethlinesizes_)-5
-	mov byte ptr [setpalookupaddress_], 0xe9
-	mov dword ptr [setpalookupaddress_+1], (offset prosetpalookupaddress_)-(offset setpalookupaddress_)-5
-	mov byte ptr [setuphlineasm4_], 0xc3  ;ret (no code required)
-	mov byte ptr [hlineasm4_], 0xe9
-	mov dword ptr [hlineasm4_+1], (offset prohlineasm4_)-(offset hlineasm4_)-5
-
-		;Vline overlay
-	mov byte ptr [setupvlineasm_], 0xe9
-	mov dword ptr [setupvlineasm_+1], (offset prosetupvlineasm_)-(offset setupvlineasm_)-5
-	mov byte ptr [vlineasm4_], 0xe9
-	mov dword ptr [vlineasm4_+1], (offset provlineasm4_)-(offset vlineasm4_)-5
-
-	ret
-
-;ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-;³                    PENTIUM MMX Overlays                      ³
-;ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-pentiummmx:
-	ret
-
-;ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-;³                    PENTIUM PRO Overlays                      ³
-;ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-pentiumpro:
-		;Hline overlay (MMX doens't help)
-	mov byte ptr [sethlinesizes_], 0xe9
-	mov dword ptr [sethlinesizes_+1], (offset prosethlinesizes_)-(offset sethlinesizes_)-5
-	mov byte ptr [setpalookupaddress_], 0xe9
-	mov dword ptr [setpalookupaddress_+1], (offset prosetpalookupaddress_)-(offset setpalookupaddress_)-5
-	mov byte ptr [setuphlineasm4_], 0xc3  ;ret (no code required)
-	mov byte ptr [hlineasm4_], 0xe9
-	mov dword ptr [hlineasm4_+1], (offset prohlineasm4_)-(offset hlineasm4_)-5
-
-		;Vline overlay
-	mov byte ptr [setupvlineasm_], 0xe9
-	mov dword ptr [setupvlineasm_+1], (offset prosetupvlineasm_)-(offset setupvlineasm_)-5
-	mov byte ptr [vlineasm4_], 0xe9
-	mov dword ptr [vlineasm4_+1], (offset provlineasm4_)-(offset vlineasm4_)-5
-
-	ret
-ENDIF ; TTT
 
 CODE ENDS
 END
