@@ -21,6 +21,7 @@
 ;   2. Doesn't encode short jumps automatically like WASM
 ;   3. Stupidly adds wait prefix to ffree's
 
+IFDEF TTT
 EXTRN _asm1 : dword
 EXTRN _asm2 : dword
 EXTRN _asm3 : dword
@@ -41,49 +42,78 @@ EXTRN _espbak : dword
 
 EXTRN _pow2char : near
 EXTRN _pow2long : near
+ELSE ; No TTT
+EXTRN _vince : near
+EXTRN _vplce : near
 
+EXTRN _ebpbak : dword
+EXTRN _espbak : dword
+
+EXTRN _fpuasm : dword
+EXTRN _bufplce : near
+EXTRN _palookupoffse : near
+
+EXTRN _ylookup : near
+EXTRN _globalx3 : dword
+EXTRN _globaly3 : dword
+
+EXTRN _pow2char : near
+EXTRN _pow2long : near
+EXTRN _asm1 : dword
+EXTRN _asm2 : dword
+EXTRN _asm3 : dword
+EXTRN _asm4 : dword
+EXTRN _reciptable : near
+ENDIF ; TTT
+
+IFDEF TTT
 CODE SEGMENT PUBLIC USE32 'DATA'
 ASSUME cs:CODE,ds:CODE
+ELSE
+CODE SEGMENT PUBLIC USE32 'CODE'
+ASSUME cs:CODE
+ENDIF
 
+; TTT WHOLE FILE - Add DS: for self-modifying code ('CODE' seg, MASM).
 ALIGN 16
 PUBLIC sethlinesizes_
 sethlinesizes_:
-	mov byte ptr [machxbits1+2], al
-	mov byte ptr [machxbits2+2], al
-	mov byte ptr [machxbits3+2], al
+	mov byte ptr ds:[machxbits1+2], al
+	mov byte ptr ds:[machxbits2+2], al
+	mov byte ptr ds:[machxbits3+2], al
 	neg al
-	mov byte ptr [hxsiz1+2], al
-	mov byte ptr [hxsiz2+2], al
-	mov byte ptr [hxsiz3+2], al
-	mov byte ptr [hxsiz4+2], al
-	mov byte ptr [machnegxbits1+2], al
+	mov byte ptr ds:[hxsiz1+2], al
+	mov byte ptr ds:[hxsiz2+2], al
+	mov byte ptr ds:[hxsiz3+2], al
+	mov byte ptr ds:[hxsiz4+2], al
+	mov byte ptr ds:[machnegxbits1+2], al
 
-	mov byte ptr [hysiz1+3], bl
-	mov byte ptr [hysiz2+3], bl
-	mov byte ptr [hysiz3+3], bl
-	mov byte ptr [hysiz4+3], bl
-	mov byte ptr [hmach3a+2], bl
-	mov byte ptr [hmach3b+2], bl
-	mov byte ptr [hmach3c+2], bl
-	mov byte ptr [hmach3d+2], bl
+	mov byte ptr ds:[hysiz1+3], bl
+	mov byte ptr ds:[hysiz2+3], bl
+	mov byte ptr ds:[hysiz3+3], bl
+	mov byte ptr ds:[hysiz4+3], bl
+	mov byte ptr ds:[hmach3a+2], bl
+	mov byte ptr ds:[hmach3b+2], bl
+	mov byte ptr ds:[hmach3c+2], bl
+	mov byte ptr ds:[hmach3d+2], bl
 
-	mov dword ptr [hoffs1+2], ecx
-	mov dword ptr [hoffs2+2], ecx
-	mov dword ptr [hoffs3+2], ecx
-	mov dword ptr [hoffs4+2], ecx
-	mov dword ptr [hoffs5+2], ecx
-	mov dword ptr [hoffs6+2], ecx
-	mov dword ptr [hoffs7+2], ecx
-	mov dword ptr [hoffs8+2], ecx
+	mov dword ptr ds:[hoffs1+2], ecx
+	mov dword ptr ds:[hoffs2+2], ecx
+	mov dword ptr ds:[hoffs3+2], ecx
+	mov dword ptr ds:[hoffs4+2], ecx
+	mov dword ptr ds:[hoffs5+2], ecx
+	mov dword ptr ds:[hoffs6+2], ecx
+	mov dword ptr ds:[hoffs7+2], ecx
+	mov dword ptr ds:[hoffs8+2], ecx
 
 	mov edx, -1
 	mov cl, al
 	sub cl, bl
 	shr edx, cl
-	mov dword ptr [hmach2a+1], edx
-	mov dword ptr [hmach2b+1], edx
-	mov dword ptr [hmach2c+1], edx
-	mov dword ptr [hmach2d+1], edx
+	mov dword ptr ds:[hmach2a+1], edx
+	mov dword ptr ds:[hmach2b+1], edx
+	mov dword ptr ds:[hmach2c+1], edx
+	mov dword ptr ds:[hmach2d+1], edx
 
 	ret
 
@@ -109,37 +139,37 @@ ENDIF ; TTT
 ALIGN 16
 PUBLIC setvlinebpl_
 setvlinebpl_:
-	mov dword ptr [fixchain1a+2], eax
-	mov dword ptr [fixchain1b+2], eax
-	mov dword ptr [fixchain1m+2], eax
-	mov dword ptr [fixchain1t+2], eax
-	mov dword ptr [fixchain1s+2], eax
-	mov dword ptr [mfixchain1s+2], eax
-	mov dword ptr [tfixchain1s+2], eax
-	mov dword ptr [fixchain2a+2], eax
+	mov dword ptr ds:[fixchain1a+2], eax
+	mov dword ptr ds:[fixchain1b+2], eax
+	mov dword ptr ds:[fixchain1m+2], eax
+	mov dword ptr ds:[fixchain1t+2], eax
+	mov dword ptr ds:[fixchain1s+2], eax
+	mov dword ptr ds:[mfixchain1s+2], eax
+	mov dword ptr ds:[tfixchain1s+2], eax
+	mov dword ptr ds:[fixchain2a+2], eax
 IFDEF TTT
 	mov dword ptr [profixchain2a+2], eax
 ENDIF
-	mov dword ptr [fixchain2ma+2], eax
-	mov dword ptr [fixchain2mb+2], eax
-	mov dword ptr [fixchaint2a+1], eax
-	mov dword ptr [fixchaint2b+2], eax
-	mov dword ptr [fixchaint2c+2], eax
-	mov dword ptr [fixchaint2d+2], eax
-	mov dword ptr [fixchaint2e+2], eax
+	mov dword ptr ds:[fixchain2ma+2], eax
+	mov dword ptr ds:[fixchain2mb+2], eax
+	mov dword ptr ds:[fixchaint2a+1], eax
+	mov dword ptr ds:[fixchaint2b+2], eax
+	mov dword ptr ds:[fixchaint2c+2], eax
+	mov dword ptr ds:[fixchaint2d+2], eax
+	mov dword ptr ds:[fixchaint2e+2], eax
 	ret
 
 ALIGN 16
 PUBLIC setpalookupaddress_
 setpalookupaddress_:
-	mov dword ptr [pal1+2], eax
-	mov dword ptr [pal2+2], eax
-	mov dword ptr [pal3+2], eax
-	mov dword ptr [pal4+2], eax
-	mov dword ptr [pal5+2], eax
-	mov dword ptr [pal6+2], eax
-	mov dword ptr [pal7+2], eax
-	mov dword ptr [pal8+2], eax
+	mov dword ptr ds:[pal1+2], eax
+	mov dword ptr ds:[pal2+2], eax
+	mov dword ptr ds:[pal3+2], eax
+	mov dword ptr ds:[pal4+2], eax
+	mov dword ptr ds:[pal5+2], eax
+	mov dword ptr ds:[pal6+2], eax
+	mov dword ptr ds:[pal7+2], eax
+	mov dword ptr ds:[pal8+2], eax
 	ret
 
 IFDEF TTT
@@ -154,15 +184,15 @@ ALIGN 16
 PUBLIC setuphlineasm4_
 setuphlineasm4_:
 machxbits3: rol eax, 6                     ;xbits
-	mov dword ptr [hmach4a+2], eax
-	mov dword ptr [hmach4b+2], eax
+	mov dword ptr ds:[hmach4a+2], eax
+	mov dword ptr ds:[hmach4b+2], eax
 	mov bl, al
-	mov dword ptr [hmach4c+2], eax
-	mov dword ptr [hmach4d+2], eax
-	mov dword ptr [hmach1a+2], ebx
-	mov dword ptr [hmach1b+2], ebx
-	mov dword ptr [hmach1c+2], ebx
-	mov dword ptr [hmach1d+2], ebx
+	mov dword ptr ds:[hmach4c+2], eax
+	mov dword ptr ds:[hmach4d+2], eax
+	mov dword ptr ds:[hmach1a+2], ebx
+	mov dword ptr ds:[hmach1b+2], ebx
+	mov dword ptr ds:[hmach1c+2], ebx
+	mov dword ptr ds:[hmach1d+2], ebx
 	ret
 
 	;Non-256-stuffed ceiling&floor method with NO SHLD!:
@@ -233,7 +263,7 @@ machnegxbits1: shr eax, 32-6               ;32-xbits
 	mov eax, edx
 	jc beginhline64
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -242,22 +272,22 @@ ENDIF
 
 	mov eax, _asm1
 machxbits2: rol eax, 6                     ;xbits
-	mov dword ptr [hmach4a+2], eax
-	mov dword ptr [hmach4b+2], eax
-	mov dword ptr [hmach4c+2], eax
-	mov dword ptr [hmach4d+2], eax
+	mov dword ptr ds:[hmach4a+2], eax
+	mov dword ptr ds:[hmach4b+2], eax
+	mov dword ptr ds:[hmach4c+2], eax
+	mov dword ptr ds:[hmach4d+2], eax
 	mov ebx, eax
 	mov eax, _asm2
 	mov al, bl
-	mov dword ptr [hmach1a+2], eax
-	mov dword ptr [hmach1b+2], eax
-	mov dword ptr [hmach1c+2], eax
-	mov dword ptr [hmach1d+2], eax
+	mov dword ptr ds:[hmach1a+2], eax
+	mov dword ptr ds:[hmach1b+2], eax
+	mov dword ptr ds:[hmach1c+2], eax
+	mov dword ptr ds:[hmach1d+2], eax
 
 	mov eax, edx
 	jmp beginhline64
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 ENDIF
 ALIGN 16
@@ -309,7 +339,7 @@ skipthe4byte:
 	test ebp, 2
 	jz skipdrawthe2
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -322,7 +352,7 @@ skipdrawthe2:
 	test ebp, 1
 	jz skipdrawthe1
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -339,7 +369,7 @@ shorthline:
 	test ebp, ebp
 	jz endshorthline
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -410,29 +440,29 @@ ALIGN 16
 PUBLIC setupvlineasm_
 setupvlineasm_:
 		;First 2 lines for VLINEASM1, rest for VLINEASM4
-	mov byte ptr [premach3a+2], al
-	mov byte ptr [mach3a+2], al
+	mov byte ptr ds:[premach3a+2], al
+	mov byte ptr ds:[mach3a+2], al
 
 	push ecx
-	mov byte ptr [machvsh1+2], al      ;32-shy
-	mov byte ptr [machvsh3+2], al      ;32-shy
-	mov byte ptr [machvsh5+2], al      ;32-shy
-	mov byte ptr [machvsh6+2], al      ;32-shy
+	mov byte ptr ds:[machvsh1+2], al      ;32-shy
+	mov byte ptr ds:[machvsh3+2], al      ;32-shy
+	mov byte ptr ds:[machvsh5+2], al      ;32-shy
+	mov byte ptr ds:[machvsh6+2], al      ;32-shy
 	mov ah, al
 	sub ah, 16
-	mov byte ptr [machvsh8+2], ah      ;16-shy
+	mov byte ptr ds:[machvsh8+2], ah      ;16-shy
 	neg al
-	mov byte ptr [machvsh7+2], al      ;shy
-	mov byte ptr [machvsh9+2], al      ;shy
-	mov byte ptr [machvsh10+2], al     ;shy
-	mov byte ptr [machvsh11+2], al     ;shy
-	mov byte ptr [machvsh12+2], al     ;shy
+	mov byte ptr ds:[machvsh7+2], al      ;shy
+	mov byte ptr ds:[machvsh9+2], al      ;shy
+	mov byte ptr ds:[machvsh10+2], al     ;shy
+	mov byte ptr ds:[machvsh11+2], al     ;shy
+	mov byte ptr ds:[machvsh12+2], al     ;shy
 	mov cl, al
 	mov eax, 1
 	shl eax, cl
 	dec eax
-	mov dword ptr [machvsh2+2], eax    ;(1<<shy)-1
-	mov dword ptr [machvsh4+2], eax    ;(1<<shy)-1
+	mov dword ptr ds:[machvsh2+2], eax    ;(1<<shy)-1
+	mov dword ptr ds:[machvsh4+2], eax    ;(1<<shy)-1
 	pop ecx
 	ret
 
@@ -471,17 +501,17 @@ ENDIF ; TTT
 ALIGN 16
 PUBLIC setupmvlineasm_
 setupmvlineasm_:
-	mov byte ptr [maskmach3a+2], al
-	mov byte ptr [machmv13+2], al
-	mov byte ptr [machmv14+2], al
-	mov byte ptr [machmv15+2], al
-	mov byte ptr [machmv16+2], al
+	mov byte ptr ds:[maskmach3a+2], al
+	mov byte ptr ds:[machmv13+2], al
+	mov byte ptr ds:[machmv14+2], al
+	mov byte ptr ds:[machmv15+2], al
+	mov byte ptr ds:[machmv16+2], al
 	ret
 
 ALIGN 16
 PUBLIC setuptvlineasm_
 setuptvlineasm_:
-	mov byte ptr [transmach3a+2], al
+	mov byte ptr ds:[transmach3a+2], al
 	ret
 
 ALIGN 16
@@ -544,85 +574,85 @@ fixchain1m: add edi, 320
 ALIGN 16
 PUBLIC fixtransluscence_
 fixtransluscence_:
-	mov dword ptr [transmach4+2], eax
-	mov dword ptr [tmach1+2], eax
-	mov dword ptr [tmach2+2], eax
-	mov dword ptr [tmach3+2], eax
-	mov dword ptr [tmach4+2], eax
-	mov dword ptr [tran2traa+2], eax
-	mov dword ptr [tran2trab+2], eax
-	mov dword ptr [tran2trac+2], eax
-	mov dword ptr [tran2trad+2], eax
+	mov dword ptr ds:[transmach4+2], eax
+	mov dword ptr ds:[tmach1+2], eax
+	mov dword ptr ds:[tmach2+2], eax
+	mov dword ptr ds:[tmach3+2], eax
+	mov dword ptr ds:[tmach4+2], eax
+	mov dword ptr ds:[tran2traa+2], eax
+	mov dword ptr ds:[tran2trab+2], eax
+	mov dword ptr ds:[tran2trac+2], eax
+	mov dword ptr ds:[tran2trad+2], eax
 	ret
 
 ALIGN 16
 PUBLIC settransnormal_
 settransnormal_:
-	mov byte ptr [transrev0+1], 83h
-	mov byte ptr [transrev1+1], 27h
-	mov byte ptr [transrev2+1], 3fh
-	mov byte ptr [transrev3+1], 98h
-	mov byte ptr [transrev4+1], 90h
-	mov byte ptr [transrev5+1], 37h
-	mov byte ptr [transrev6+1], 90h
+	mov byte ptr ds:[transrev0+1], 83h
+	mov byte ptr ds:[transrev1+1], 27h
+	mov byte ptr ds:[transrev2+1], 3fh
+	mov byte ptr ds:[transrev3+1], 98h
+	mov byte ptr ds:[transrev4+1], 90h
+	mov byte ptr ds:[transrev5+1], 37h
+	mov byte ptr ds:[transrev6+1], 90h
 IFDEF TTT
 	mov word ptr [transrev7+0], 0f38ah
 ELSE
-	mov byte ptr [transrev7+0], 0f3h
+	mov byte ptr ds:[transrev7+1], 0f3h
 ENDIF
-	mov byte ptr [transrev8+1], 90h
+	mov byte ptr ds:[transrev8+1], 90h
 IFDEF TTT
 	mov word ptr [transrev9+0], 0f78ah
 ELSE
-	mov byte ptr [transrev9+0], 0f7h
+	mov byte ptr ds:[transrev9+1], 0f7h
 ENDIF
-	mov byte ptr [transrev10+1], 0a7h
-	mov byte ptr [transrev11+1], 81h
-	mov byte ptr [transrev12+2], 9fh
+	mov byte ptr ds:[transrev10+1], 0a7h
+	mov byte ptr ds:[transrev11+1], 81h
+	mov byte ptr ds:[transrev12+2], 9fh
 IFDEF TTT
 	mov word ptr [transrev13+0], 0dc88h
 ELSE
-	mov byte ptr [transrev13+0], 0e3h
+	mov byte ptr ds:[transrev13+1], 0e3h
 ENDIF
-	mov byte ptr [transrev14+1], 81h
-	mov byte ptr [transrev15+1], 9ah
-	mov byte ptr [transrev16+1], 0a7h
-	mov byte ptr [transrev17+1], 82h
+	mov byte ptr ds:[transrev14+1], 81h
+	mov byte ptr ds:[transrev15+1], 9ah
+	mov byte ptr ds:[transrev16+1], 0a7h
+	mov byte ptr ds:[transrev17+1], 82h
 	ret
 
 ALIGN 16
 PUBLIC settransreverse_
 settransreverse_:
-	mov byte ptr [transrev0+1], 0a3h
-	mov byte ptr [transrev1+1], 7h
-	mov byte ptr [transrev2+1], 1fh
-	mov byte ptr [transrev3+1], 0b8h
-	mov byte ptr [transrev4+1], 0b0h
-	mov byte ptr [transrev5+1], 17h
-	mov byte ptr [transrev6+1], 0b0h
+	mov byte ptr ds:[transrev0+1], 0a3h
+	mov byte ptr ds:[transrev1+1], 7h
+	mov byte ptr ds:[transrev2+1], 1fh
+	mov byte ptr ds:[transrev3+1], 0b8h
+	mov byte ptr ds:[transrev4+1], 0b0h
+	mov byte ptr ds:[transrev5+1], 17h
+	mov byte ptr ds:[transrev6+1], 0b0h
 IFDEF TTT
 	mov word ptr [transrev7+0], 0d38ah
 ELSE
-	mov byte ptr [transrev7+0], 0d3h
+	mov byte ptr ds:[transrev7+1], 0d3h
 ENDIF
-	mov byte ptr [transrev8+1], 0b0h
+	mov byte ptr ds:[transrev8+1], 0b0h
 IFDEF TTT
 	mov word ptr [transrev9+0], 0d78ah
 ELSE
-	mov byte ptr [transrev9+0], 0d7h
+	mov byte ptr ds:[transrev9+1], 0d7h
 ENDIF
-	mov byte ptr [transrev10+1], 87h
-	mov byte ptr [transrev11+1], 0a1h
-	mov byte ptr [transrev12+2], 87h
+	mov byte ptr ds:[transrev10+1], 87h
+	mov byte ptr ds:[transrev11+1], 0a1h
+	mov byte ptr ds:[transrev12+2], 87h
 IFDEF TTT
 	mov word ptr [transrev13+0], 0e388h
 ELSE
-	mov byte ptr [transrev13+0], 0dch
+	mov byte ptr ds:[transrev13+1], 0dch
 ENDIF
-	mov byte ptr [transrev14+1], 0a1h
-	mov byte ptr [transrev15+1], 0bah
-	mov byte ptr [transrev16+1], 87h
-	mov byte ptr [transrev17+1], 0a2h
+	mov byte ptr ds:[transrev14+1], 0a1h
+	mov byte ptr ds:[transrev15+1], 0bah
+	mov byte ptr ds:[transrev16+1], 87h
+	mov byte ptr ds:[transrev17+1], 0a2h
 	ret
 
 ALIGN 16
@@ -632,7 +662,7 @@ tvlineasm1_:
 	mov ebp, eax
 	xor eax, eax
 	inc ecx
-	mov dword ptr [transmach3c+2], ebx
+	mov dword ptr ds:[transmach3c+2], ebx
 	jmp short begintvline
 ALIGN 16
 begintvline:
@@ -672,26 +702,26 @@ vlineasm4_:
 
 	mov eax, dword ptr _ylookup[ecx*4]
 	add eax, edi
-	mov dword ptr [machvline4end+2], eax
+	mov dword ptr ds:[machvline4end+2], eax
 	sub edi, eax
 
 	mov eax, dword ptr _bufplce[0]
 	mov ebx, dword ptr _bufplce[4]
 	mov ecx, dword ptr _bufplce[8]
 	mov edx, dword ptr _bufplce[12]
-	mov dword ptr [machvbuf1+2], ecx
-	mov dword ptr [machvbuf2+2], edx
-	mov dword ptr [machvbuf3+2], eax
-	mov dword ptr [machvbuf4+2], ebx
+	mov dword ptr ds:[machvbuf1+2], ecx
+	mov dword ptr ds:[machvbuf2+2], edx
+	mov dword ptr ds:[machvbuf3+2], eax
+	mov dword ptr ds:[machvbuf4+2], ebx
 
 	mov eax, dword ptr _palookupoffse[0]
 	mov ebx, dword ptr _palookupoffse[4]
 	mov ecx, dword ptr _palookupoffse[8]
 	mov edx, dword ptr _palookupoffse[12]
-	mov dword ptr [machvpal1+2], ecx
-	mov dword ptr [machvpal2+2], edx
-	mov dword ptr [machvpal3+2], eax
-	mov dword ptr [machvpal4+2], ebx
+	mov dword ptr ds:[machvpal1+2], ecx
+	mov dword ptr ds:[machvpal2+2], edx
+	mov dword ptr ds:[machvpal3+2], eax
+	mov dword ptr ds:[machvpal4+2], ebx
 
 		;     ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 		;edx: ³v3lo           ³v1lo           ³
@@ -721,11 +751,11 @@ machvsh10: rol ebx, 88h                ;sh
 	;
 	mov eax, edx
 	and eax, 0ffff0000h
-	mov dword ptr [machvinc1+2], eax
-	mov dword ptr [machvinc2+2], esi
-	mov byte ptr [machvinc3+2], dl
-	mov byte ptr [machvinc4+2], dh
-	mov dword ptr [machvinc5+2], ebp
+	mov dword ptr ds:[machvinc1+2], eax
+	mov dword ptr ds:[machvinc2+2], esi
+	mov byte ptr ds:[machvinc3+2], dl
+	mov byte ptr ds:[machvinc4+2], dh
+	mov dword ptr ds:[machvinc5+2], ebp
 
 	mov ebp, dword ptr _vplce[0]
 	mov ebx, dword ptr _vplce[4]
@@ -971,32 +1001,32 @@ mvlineasm4_:
 
 	mov eax, dword ptr _bufplce[0]
 	mov ebx, dword ptr _bufplce[4]
-	mov dword ptr [machmv1+2], eax
-	mov dword ptr [machmv4+2], ebx
+	mov dword ptr ds:[machmv1+2], eax
+	mov dword ptr ds:[machmv4+2], ebx
 	mov eax, dword ptr _bufplce[8]
 	mov ebx, dword ptr _bufplce[12]
-	mov dword ptr [machmv7+2], eax
-	mov dword ptr [machmv10+2], ebx
+	mov dword ptr ds:[machmv7+2], eax
+	mov dword ptr ds:[machmv10+2], ebx
 
 	mov eax, dword ptr _palookupoffse[0]
 	mov ebx, dword ptr _palookupoffse[4]
-	mov dword ptr [machmv2+2], eax
-	mov dword ptr [machmv5+2], ebx
+	mov dword ptr ds:[machmv2+2], eax
+	mov dword ptr ds:[machmv5+2], ebx
 	mov eax, dword ptr _palookupoffse[8]
 	mov ebx, dword ptr _palookupoffse[12]
-	mov dword ptr [machmv8+2], eax
-	mov dword ptr [machmv11+2], ebx
+	mov dword ptr ds:[machmv8+2], eax
+	mov dword ptr ds:[machmv11+2], ebx
 
 	mov eax, dword ptr _vince[0]        ;vince
 	mov ebx, dword ptr _vince[4]
 	xor al, al
 	xor bl, bl
-	mov dword ptr [machmv3+2], eax
-	mov dword ptr [machmv6+2], ebx
+	mov dword ptr ds:[machmv3+2], eax
+	mov dword ptr ds:[machmv6+2], ebx
 	mov eax, dword ptr _vince[8]
 	mov ebx, dword ptr _vince[12]
-	mov dword ptr [machmv9+2], eax
-	mov dword ptr [machmv12+2], ebx
+	mov dword ptr ds:[machmv9+2], eax
+	mov dword ptr ds:[machmv12+2], ebx
 
 	mov ebx, ecx
 	mov ecx, dword ptr _vplce[0]
@@ -1152,20 +1182,20 @@ mvcase15:
 ALIGN 16
 PUBLIC setupspritevline_
 setupspritevline_:
-	mov dword ptr [spal+2], eax
+	mov dword ptr ds:[spal+2], eax
 
 	mov eax, esi                      ;xinc's
 	shl eax, 16
-	mov dword ptr [smach1+2], eax
-	mov dword ptr [smach4+2], eax
+	mov dword ptr ds:[smach1+2], eax
+	mov dword ptr ds:[smach4+2], eax
 	mov eax, esi
 	sar eax, 16
 	add eax, ebx                      ;watch out with ebx - it's passed
-	mov dword ptr [smach2+2], eax
+	mov dword ptr ds:[smach2+2], eax
 	add eax, edx
-	mov dword ptr [smach5+2], eax
+	mov dword ptr ds:[smach5+2], eax
 
-	mov dword ptr [smach3+2], ecx  ;yinc's
+	mov dword ptr ds:[smach3+2], ecx  ;yinc's
 	ret
 
 ALIGN 16
@@ -1196,20 +1226,20 @@ endsvline:
 ALIGN 16
 PUBLIC msetupspritevline_
 msetupspritevline_:
-	mov dword ptr [mspal+2], eax
+	mov dword ptr ds:[mspal+2], eax
 
 	mov eax, esi                      ;xinc's
 	shl eax, 16
-	mov dword ptr [msmach1+2], eax
-	mov dword ptr [msmach4+2], eax
+	mov dword ptr ds:[msmach1+2], eax
+	mov dword ptr ds:[msmach4+2], eax
 	mov eax, esi
 	sar eax, 16
 	add eax, ebx                      ;watch out with ebx - it's passed
-	mov dword ptr [msmach2+2], eax
+	mov dword ptr ds:[msmach2+2], eax
 	add eax, edx
-	mov dword ptr [msmach5+2], eax
+	mov dword ptr ds:[msmach5+2], eax
 
-	mov dword ptr [msmach3+2], ecx  ;yinc's
+	mov dword ptr ds:[msmach3+2], ecx  ;yinc's
 	ret
 
 ALIGN 16
@@ -1243,20 +1273,20 @@ mendsvline:
 ALIGN 16
 PUBLIC tsetupspritevline_
 tsetupspritevline_:
-	mov dword ptr [tspal+2], eax
+	mov dword ptr ds:[tspal+2], eax
 
 	mov eax, esi                      ;xinc's
 	shl eax, 16
-	mov dword ptr [tsmach1+2], eax
-	mov dword ptr [tsmach4+2], eax
+	mov dword ptr ds:[tsmach1+2], eax
+	mov dword ptr ds:[tsmach4+2], eax
 	mov eax, esi
 	sar eax, 16
 	add eax, ebx                      ;watch out with ebx - it's passed
-	mov dword ptr [tsmach2+2], eax
+	mov dword ptr ds:[tsmach2+2], eax
 	add eax, edx
-	mov dword ptr [tsmach5+2], eax
+	mov dword ptr ds:[tsmach5+2], eax
 
-	mov dword ptr [tsmach3+2], ecx  ;yinc's
+	mov dword ptr ds:[tsmach3+2], ecx  ;yinc's
 	ret
 
 ALIGN 16
@@ -1302,12 +1332,12 @@ ALIGN 16
 PUBLIC msethlineshift_
 msethlineshift_:
 	neg al
-	mov byte ptr [msh1d+2], al
-	mov byte ptr [msh2d+3], bl
-	mov byte ptr [msh3d+2], al
-	mov byte ptr [msh4d+3], bl
-	mov byte ptr [msh5d+2], al
-	mov byte ptr [msh6d+3], bl
+	mov byte ptr ds:[msh1d+2], al
+	mov byte ptr ds:[msh2d+3], bl
+	mov byte ptr ds:[msh3d+2], al
+	mov byte ptr ds:[msh4d+3], bl
+	mov byte ptr ds:[msh5d+2], al
+	mov byte ptr ds:[msh6d+3], bl
 	ret
 
 ALIGN 16
@@ -1323,21 +1353,21 @@ mhline_:
 	;esi = by
 	;edi = p
 
-	mov dword ptr [mmach1d+2], eax
-	mov dword ptr [mmach5d+2], eax
-	mov dword ptr [mmach9d+2], eax
+	mov dword ptr ds:[mmach1d+2], eax
+	mov dword ptr ds:[mmach5d+2], eax
+	mov dword ptr ds:[mmach9d+2], eax
 	mov eax, _asm3
-	mov dword ptr [mmach2d+2], eax
-	mov dword ptr [mmach2da+2], eax
-	mov dword ptr [mmach2db+2], eax
-	mov dword ptr [mmach6d+2], eax
-	mov dword ptr [mmach10d+2], eax
+	mov dword ptr ds:[mmach2d+2], eax
+	mov dword ptr ds:[mmach2da+2], eax
+	mov dword ptr ds:[mmach2db+2], eax
+	mov dword ptr ds:[mmach6d+2], eax
+	mov dword ptr ds:[mmach10d+2], eax
 	mov eax, _asm1
-	mov dword ptr [mmach3d+2], eax
-	mov dword ptr [mmach7d+2], eax
+	mov dword ptr ds:[mmach3d+2], eax
+	mov dword ptr ds:[mmach7d+2], eax
 	mov eax, _asm2
-	mov dword ptr [mmach4d+2], eax
-	mov dword ptr [mmach8d+2], eax
+	mov dword ptr ds:[mmach4d+2], eax
+	mov dword ptr ds:[mmach8d+2], eax
 	jmp short mhlineskipmodify_
 
 ALIGN 16
@@ -1407,7 +1437,7 @@ mmach2db: mov bh, byte ptr [eax+88888888h]    ;shadeoffs
 	jmp mendhline
 mskip1:                                                     ;2nd only
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -1430,12 +1460,12 @@ ALIGN 16
 PUBLIC tsethlineshift_
 tsethlineshift_:
 	neg al
-	mov byte ptr [tsh1d+2], al
-	mov byte ptr [tsh2d+3], bl
-	mov byte ptr [tsh3d+2], al
-	mov byte ptr [tsh4d+3], bl
-	mov byte ptr [tsh5d+2], al
-	mov byte ptr [tsh6d+3], bl
+	mov byte ptr ds:[tsh1d+2], al
+	mov byte ptr ds:[tsh2d+3], bl
+	mov byte ptr ds:[tsh3d+2], al
+	mov byte ptr ds:[tsh4d+3], bl
+	mov byte ptr ds:[tsh5d+2], al
+	mov byte ptr ds:[tsh6d+3], bl
 	ret
 
 ALIGN 16
@@ -1451,19 +1481,19 @@ thline_:
 	;esi = by
 	;edi = p
 
-	mov dword ptr [tmach1d+2], eax
-	mov dword ptr [tmach5d+2], eax
-	mov dword ptr [tmach9d+2], eax
+	mov dword ptr ds:[tmach1d+2], eax
+	mov dword ptr ds:[tmach5d+2], eax
+	mov dword ptr ds:[tmach9d+2], eax
 	mov eax, _asm3
-	mov dword ptr [tmach2d+2], eax
-	mov dword ptr [tmach6d+2], eax
-	mov dword ptr [tmach10d+2], eax
+	mov dword ptr ds:[tmach2d+2], eax
+	mov dword ptr ds:[tmach6d+2], eax
+	mov dword ptr ds:[tmach10d+2], eax
 	mov eax, _asm1
-	mov dword ptr [tmach3d+2], eax
-	mov dword ptr [tmach7d+2], eax
+	mov dword ptr ds:[tmach3d+2], eax
+	mov dword ptr ds:[tmach7d+2], eax
 	mov eax, _asm2
-	mov dword ptr [tmach4d+2], eax
-	mov dword ptr [tmach8d+2], eax
+	mov dword ptr ds:[tmach4d+2], eax
+	mov dword ptr ds:[tmach8d+2], eax
 	jmp thlineskipmodify_
 
 ALIGN 16
@@ -1557,12 +1587,12 @@ tendhline:
 ALIGN 16
 PUBLIC setuptvlineasm2_
 setuptvlineasm2_:
-	mov byte ptr [tran2shra+2], al
-	mov byte ptr [tran2shrb+2], al
-	mov dword ptr [tran2pala+2], ebx
-	mov dword ptr [tran2palb+2], ecx
-	mov dword ptr [tran2palc+2], ebx
-	mov dword ptr [tran2pald+2], ecx
+	mov byte ptr ds:[tran2shra+2], al
+	mov byte ptr ds:[tran2shrb+2], al
+	mov dword ptr ds:[tran2pala+2], ebx
+	mov dword ptr ds:[tran2palb+2], ecx
+	mov dword ptr ds:[tran2palc+2], ebx
+	mov dword ptr ds:[tran2pald+2], ecx
 	ret
 
 	;Pass:   eax=vplc2, ebx=vinc1, ecx=bufplc1, edx=bufplc2, esi=vplc1, edi=p
@@ -1575,24 +1605,24 @@ tvlineasm2_:
 
 	mov ebp, eax
 
-	mov dword ptr [tran2inca+2], ebx
+	mov dword ptr ds:[tran2inca+2], ebx
 	mov eax, _asm1
-	mov dword ptr [tran2incb+2], eax
+	mov dword ptr ds:[tran2incb+2], eax
 
-	mov dword ptr [tran2bufa+2], ecx         ;bufplc1
-	mov dword ptr [tran2bufb+2], edx         ;bufplc2
+	mov dword ptr ds:[tran2bufa+2], ecx         ;bufplc1
+	mov dword ptr ds:[tran2bufb+2], edx         ;bufplc2
 
 	mov eax, _asm2
 	sub edi, eax
-	mov dword ptr [tran2edia+3], eax
-	mov dword ptr [tran2edic+2], eax
+	mov dword ptr ds:[tran2edia+3], eax
+	mov dword ptr ds:[tran2edic+2], eax
 	inc eax
-	mov dword ptr [tran2edie+2], eax
+	mov dword ptr ds:[tran2edie+2], eax
 fixchaint2a: sub eax, 320
-	mov dword ptr [tran2edif+2], eax
+	mov dword ptr ds:[tran2edif+2], eax
 	dec eax
-	mov dword ptr [tran2edib+3], eax
-	mov dword ptr [tran2edid+2], eax
+	mov dword ptr ds:[tran2edib+3], eax
+	mov dword ptr ds:[tran2edid+2], eax
 
 	xor ecx, ecx
 	xor edx, edx
@@ -1694,13 +1724,13 @@ BITSOFPRECISIONPOW equ 8
 ALIGN 16
 PUBLIC setupslopevlin2_
 setupslopevlin2_:
-	mov dword ptr [slop3+2], edx ;ptr
-	mov dword ptr [slop7+2], edx ;ptr
-	mov dword ptr [slop4+2], esi ;tptr
-	mov dword ptr [slop8+2], esi ;tptr
-	mov byte ptr [slop2+2], ah   ;ybits
-	mov byte ptr [slop6+2], ah   ;ybits
-	mov dword ptr [slop9+2], edi ;pinc
+	mov dword ptr ds:[slop3+2], edx ;ptr
+	mov dword ptr ds:[slop7+2], edx ;ptr
+	mov dword ptr ds:[slop4+2], esi ;tptr
+	mov dword ptr ds:[slop8+2], esi ;tptr
+	mov byte ptr ds:[slop2+2], ah   ;ybits
+	mov byte ptr ds:[slop6+2], ah   ;ybits
+	mov dword ptr ds:[slop9+2], edi ;pinc
 
 	mov edx, 1
 	mov cl, al
@@ -1710,8 +1740,8 @@ setupslopevlin2_:
 	mov cl, ah
 	ror edx, cl
 
-	mov dword ptr [slop1+2], edx   ;ybits...xbits
-	mov dword ptr [slop5+2], edx   ;ybits...xbits
+	mov dword ptr ds:[slop1+2], edx   ;ybits...xbits
+	mov dword ptr ds:[slop5+2], edx   ;ybits...xbits
 
 	ret
 
@@ -1751,10 +1781,10 @@ slop9: lea edi, [edi+88888888h]          ;pinc
 ALIGN 16
 PUBLIC setupslopevlin_
 setupslopevlin_:
-	mov dword ptr [slopmach3+3], ebx    ;ptr
-	mov dword ptr [slopmach5+2], ecx    ;pinc
+	mov dword ptr ds:[slopmach3+3], ebx    ;ptr
+	mov dword ptr ds:[slopmach5+2], ecx    ;pinc
 	neg ecx
-	mov dword ptr [slopmach6+2], ecx    ;-pinc
+	mov dword ptr ds:[slopmach6+2], ecx    ;-pinc
 
 	mov edx, 1
 	mov cl, al
@@ -1762,13 +1792,13 @@ setupslopevlin_:
 	dec edx
 	mov cl, ah
 	shl edx, cl
-	mov dword ptr [slopmach7+2], edx
+	mov dword ptr ds:[slopmach7+2], edx
 
 	neg ah
-	mov byte ptr [slopmach2+2], ah
+	mov byte ptr ds:[slopmach2+2], ah
 
 	sub ah, al
-	mov byte ptr [slopmach1+2], ah
+	mov byte ptr ds:[slopmach1+2], ah
 
 	fild dword ptr _asm1
 	fstp dword ptr _asm2
@@ -1781,7 +1811,7 @@ slopevlin_:
 	mov _espbak, esp
 
 	sub ecx, esp
-	mov dword ptr [slopmach4+3], ecx
+	mov dword ptr ds:[slopmach4+3], ecx
 
 	fild dword ptr _asm3
 slopmach6: lea ebp, [eax+88888888h]
@@ -1873,35 +1903,35 @@ slopmach4: mov ebx, dword ptr [esp+88888888h]
 ALIGN 16
 PUBLIC setuprhlineasm4_
 setuprhlineasm4_:
-	mov dword ptr [rmach1a+2], eax
-	mov dword ptr [rmach1b+2], eax
-	mov dword ptr [rmach1c+2], eax
-	mov dword ptr [rmach1d+2], eax
-	mov dword ptr [rmach1e+2], eax
+	mov dword ptr ds:[rmach1a+2], eax
+	mov dword ptr ds:[rmach1b+2], eax
+	mov dword ptr ds:[rmach1c+2], eax
+	mov dword ptr ds:[rmach1d+2], eax
+	mov dword ptr ds:[rmach1e+2], eax
 
-	mov dword ptr [rmach2a+2], ebx
-	mov dword ptr [rmach2b+2], ebx
-	mov dword ptr [rmach2c+2], ebx
-	mov dword ptr [rmach2d+2], ebx
-	mov dword ptr [rmach2e+2], ebx
+	mov dword ptr ds:[rmach2a+2], ebx
+	mov dword ptr ds:[rmach2b+2], ebx
+	mov dword ptr ds:[rmach2c+2], ebx
+	mov dword ptr ds:[rmach2d+2], ebx
+	mov dword ptr ds:[rmach2e+2], ebx
 
-	mov dword ptr [rmach3a+2], ecx
-	mov dword ptr [rmach3b+2], ecx
-	mov dword ptr [rmach3c+2], ecx
-	mov dword ptr [rmach3d+2], ecx
-	mov dword ptr [rmach3e+2], ecx
+	mov dword ptr ds:[rmach3a+2], ecx
+	mov dword ptr ds:[rmach3b+2], ecx
+	mov dword ptr ds:[rmach3c+2], ecx
+	mov dword ptr ds:[rmach3d+2], ecx
+	mov dword ptr ds:[rmach3e+2], ecx
 
-	mov dword ptr [rmach4a+2], edx
-	mov dword ptr [rmach4b+2], edx
-	mov dword ptr [rmach4c+2], edx
-	mov dword ptr [rmach4d+2], edx
-	mov dword ptr [rmach4e+2], edx
+	mov dword ptr ds:[rmach4a+2], edx
+	mov dword ptr ds:[rmach4b+2], edx
+	mov dword ptr ds:[rmach4c+2], edx
+	mov dword ptr ds:[rmach4d+2], edx
+	mov dword ptr ds:[rmach4e+2], edx
 
-	mov dword ptr [rmach5a+2], esi
-	mov dword ptr [rmach5b+2], esi
-	mov dword ptr [rmach5c+2], esi
-	mov dword ptr [rmach5d+2], esi
-	mov dword ptr [rmach5e+2], esi
+	mov dword ptr ds:[rmach5a+2], esi
+	mov dword ptr ds:[rmach5b+2], esi
+	mov dword ptr ds:[rmach5c+2], esi
+	mov dword ptr ds:[rmach5d+2], esi
+	mov dword ptr ds:[rmach5e+2], esi
 	ret
 
 	;Non power of 2, non masking, with palookup method #1 (6 clock cycles)
@@ -1923,9 +1953,9 @@ rhlineasm4_:
 
 	lea ebp, [edi-4]
 	sub ebp, eax
-	mov dword ptr [rmach6a+2], ebp
+	mov dword ptr ds:[rmach6a+2], ebp
 	add ebp, 3
-	mov dword ptr [rmach6b+2], ebp
+	mov dword ptr ds:[rmach6b+2], ebp
 	mov edi, eax
 	test edi, 3
 	jz short begrhline
@@ -1997,11 +2027,11 @@ endrhline:
 ALIGN 16
 PUBLIC setuprmhlineasm4_
 setuprmhlineasm4_:
-	mov dword ptr [rmmach1+2], eax
-	mov dword ptr [rmmach2+2], ebx
-	mov dword ptr [rmmach3+2], ecx
-	mov dword ptr [rmmach4+2], edx
-	mov dword ptr [rmmach5+2], esi
+	mov dword ptr ds:[rmmach1+2], eax
+	mov dword ptr ds:[rmmach2+2], ebx
+	mov dword ptr ds:[rmmach3+2], ecx
+	mov dword ptr ds:[rmmach4+2], edx
+	mov dword ptr ds:[rmmach5+2], esi
 	ret
 
 ALIGN 16
@@ -2014,7 +2044,7 @@ rmhlineasm4_:
 
 	lea ebp, [edi-1]
 	sub ebp, eax
-	mov dword ptr [rmmach6+2], ebp
+	mov dword ptr ds:[rmmach6+2], ebp
 	mov edi, eax
 	jmp short begrmhline
 
@@ -2041,25 +2071,25 @@ endrmhline:
 ALIGN 16
 PUBLIC setupqrhlineasm4_
 setupqrhlineasm4_:
-	mov dword ptr [qrmach2e+2], ebx
-	mov dword ptr [qrmach3e+2], ecx
+	mov dword ptr ds:[qrmach2e+2], ebx
+	mov dword ptr ds:[qrmach3e+2], ecx
 	xor edi, edi
 	sub edi, ecx
-	mov dword ptr [qrmach7a+2], edi
-	mov dword ptr [qrmach7b+2], edi
+	mov dword ptr ds:[qrmach7a+2], edi
+	mov dword ptr ds:[qrmach7b+2], edi
 
 	add ebx, ebx
 	adc ecx, ecx
-	mov dword ptr [qrmach2a+2], ebx
-	mov dword ptr [qrmach2b+2], ebx
-	mov dword ptr [qrmach3a+2], ecx
-	mov dword ptr [qrmach3b+2], ecx
+	mov dword ptr ds:[qrmach2a+2], ebx
+	mov dword ptr ds:[qrmach2b+2], ebx
+	mov dword ptr ds:[qrmach3a+2], ecx
+	mov dword ptr ds:[qrmach3b+2], ecx
 
-	mov dword ptr [qrmach4a+2], edx
-	mov dword ptr [qrmach4b+2], edx
-	mov dword ptr [qrmach4c+2], edx
-	mov dword ptr [qrmach4d+2], edx
-	mov dword ptr [qrmach4e+2], edx
+	mov dword ptr ds:[qrmach4a+2], edx
+	mov dword ptr ds:[qrmach4b+2], edx
+	mov dword ptr ds:[qrmach4c+2], edx
+	mov dword ptr ds:[qrmach4d+2], edx
+	mov dword ptr ds:[qrmach4e+2], edx
 	ret
 
 	;Non power of 2, non masking, with palookup method (FASTER BUT NO SBB'S)
@@ -2128,23 +2158,23 @@ endqrhline:
 
 PUBLIC setupdrawslab_
 setupdrawslab_:
-	mov dword ptr [voxbpl1+2], eax
-	mov dword ptr [voxbpl2+2], eax
-	mov dword ptr [voxbpl3+2], eax
-	mov dword ptr [voxbpl4+2], eax
-	mov dword ptr [voxbpl5+2], eax
-	mov dword ptr [voxbpl6+2], eax
-	mov dword ptr [voxbpl7+2], eax
-	mov dword ptr [voxbpl8+2], eax
+	mov dword ptr ds:[voxbpl1+2], eax
+	mov dword ptr ds:[voxbpl2+2], eax
+	mov dword ptr ds:[voxbpl3+2], eax
+	mov dword ptr ds:[voxbpl4+2], eax
+	mov dword ptr ds:[voxbpl5+2], eax
+	mov dword ptr ds:[voxbpl6+2], eax
+	mov dword ptr ds:[voxbpl7+2], eax
+	mov dword ptr ds:[voxbpl8+2], eax
 
-	mov dword ptr [voxpal1+2], ebx
-	mov dword ptr [voxpal2+2], ebx
-	mov dword ptr [voxpal3+2], ebx
-	mov dword ptr [voxpal4+2], ebx
-	mov dword ptr [voxpal5+2], ebx
-	mov dword ptr [voxpal6+2], ebx
-	mov dword ptr [voxpal7+2], ebx
-	mov dword ptr [voxpal8+2], ebx
+	mov dword ptr ds:[voxpal1+2], ebx
+	mov dword ptr ds:[voxpal2+2], ebx
+	mov dword ptr ds:[voxpal3+2], ebx
+	mov dword ptr ds:[voxpal4+2], ebx
+	mov dword ptr ds:[voxpal5+2], ebx
+	mov dword ptr ds:[voxpal6+2], ebx
+	mov dword ptr ds:[voxpal7+2], ebx
+	mov dword ptr ds:[voxpal8+2], ebx
 	ret
 
 ALIGN 16
@@ -2154,7 +2184,7 @@ drawslab_:
 	cmp eax, 2
 	je voxbegdraw2
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2162,7 +2192,7 @@ IFNDEF TTT
 ENDIF
 	ja voxskip2
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2175,7 +2205,7 @@ voxbegdraw1:
 	add ebx, edx
 	dec ecx
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2194,7 +2224,7 @@ voxbegdraw2:
 	xor eax, eax
 	dec ecx
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2211,7 +2241,7 @@ voxskip2:
 	cmp eax, 4
 	jne voxskip4
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2224,7 +2254,7 @@ voxbegdraw4:
 	shr ebp, 16
 	xor eax, eax
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2248,7 +2278,7 @@ voxskip4:
 	test edi, 1
 	jz voxskipslab1
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2257,7 +2287,7 @@ ENDIF
 	cmp edi, eax
 	je voxskipslab1
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2274,7 +2304,7 @@ voxbegslab1:
 	shr ebp, 16
 	xor eax, eax
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2295,7 +2325,7 @@ voxskipslab1:
 	test edi, 2
 	jz voxskipslab2
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2305,7 +2335,7 @@ ENDIF
 	cmp edi, eax
 	jge voxskipslab2
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2321,7 +2351,7 @@ voxbegslab2:
 	shr ebp, 16
 	xor eax, eax
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2344,7 +2374,7 @@ voxskipslab2:
 	cmp edi, eax
 	jge voxskipslab3
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2361,7 +2391,7 @@ voxbegslab3:
 	shr ebp, 16
 	xor eax, eax
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2394,7 +2424,7 @@ voxskipslab3:
 	cmp edi, eax
 	jge voxskipslab4
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2410,7 +2440,7 @@ voxbegslab4:
 	shr ebp, 16
 	xor eax, eax
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2432,7 +2462,7 @@ voxskipslab4:
 	cmp edi, eax
 	je voxskipslab5
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
@@ -2445,7 +2475,7 @@ voxbegslab5:
 	shr ebp, 16
 	xor eax, eax
 ; FIXME TEST
-IFDEF TTT
+IFNDEF TTT
 	mov al, byte ptr [esi+ebp]
 ELSE
 	mov al, [ebp+esi]
@@ -2492,16 +2522,16 @@ stretchhline_:
 
 	add eax, eax
 	adc ebp, ebp
-	mov dword ptr [loinc1+2], eax
-	mov dword ptr [loinc2+2], eax
-	mov dword ptr [loinc3+2], eax
-	mov dword ptr [loinc4+2], eax
+	mov dword ptr ds:[loinc1+2], eax
+	mov dword ptr ds:[loinc2+2], eax
+	mov dword ptr ds:[loinc3+2], eax
+	mov dword ptr ds:[loinc4+2], eax
 
 	inc ch
 
 	jmp begloop
 ; FIXME TEST
-IFNDEF TTT
+IFDEF TTT
 	nop
 	nop
 	nop
