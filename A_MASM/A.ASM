@@ -5,19 +5,6 @@
 
 .386P
 .8087
-;include mmx.inc       ;Include this if using < WATCOM 11.0 WASM
-
-;Warning: IN THIS FILE, ALL SEGMENTS ARE REMOVED.  THIS MEANS THAT DS:[]
-;MUST BE ADDED FOR ALL SELF-MODIFIES FOR MASM TO WORK.
-;
-;WASM PROBLEMS:
-;   1. Requires all scaled registers (*1,*2,*4,*8) to be last thing on line
-;   2. Using 'DATA' is nice for self-mod. code, but WDIS only works with 'CODE'
-;
-;MASM PROBLEMS:
-;   1. Requires DS: to be written out for self-modifying code to work
-;   2. Doesn't encode short jumps automatically like WASM
-;   3. Stupidly adds wait prefix to ffree's
 
 EXTRN _vince : near
 EXTRN _vplce : near
