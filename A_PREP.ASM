@@ -2,7 +2,10 @@
 ; Ken Silverman's official web site: "http://www.advsys.net/ken"
 ; See the included license file "BUILDLIC.TXT" for license info.
 
-.586P
+; TTT BEGIN
+.386P
+;.586P
+; TTT END
 .8087
 ;include mmx.inc       ;Include this if using < WATCOM 11.0 WASM
 
@@ -229,6 +232,13 @@ machnegxbits1: shr eax, 32-6               ;32-xbits
 	add ebx, ebx
 	mov eax, edx
 	jc beginhline64
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 
 	mov eax, _asm1
 machxbits2: rol eax, 6                     ;xbits
@@ -246,6 +256,10 @@ machxbits2: rol eax, 6                     ;xbits
 
 	mov eax, edx
 	jmp beginhline64
+; FIXME TEST
+IFNDEF TTT
+	nop
+ENDIF
 ALIGN 16
 prebeginhline64:
 	mov dword ptr [edi], ebx
@@ -254,6 +268,7 @@ beginhline64:
 hmach3a: rol eax, 6
 hmach2a: and eax, 00008888h
 hmach4a: sub esi, 88888888h
+;
 hmach1a: sbb edx, 88888888h
 	sub edi, 4
 hoffs4: mov cl, byte ptr [eax+88888888h]
@@ -293,12 +308,26 @@ skipthe4byte:
 
 	test ebp, 2
 	jz skipdrawthe2
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 	rol ebx, 16
 	mov word ptr [edi+2], bx
 	sub edi, 2
 skipdrawthe2:
 	test ebp, 1
 	jz skipdrawthe1
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 	shr ebx, 24
 	mov byte ptr [edi+3], bl
 skipdrawthe1:
@@ -309,6 +338,13 @@ skipdrawthe1:
 shorthline:
 	test ebp, ebp
 	jz endshorthline
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 begshorthline:
 	mov eax, esi
 hxsiz4: shr eax, 26
@@ -529,13 +565,25 @@ settransnormal_:
 	mov byte ptr [transrev4+1], 90h
 	mov byte ptr [transrev5+1], 37h
 	mov byte ptr [transrev6+1], 90h
+IFDEF TTT
 	mov word ptr [transrev7+0], 0f38ah
+ELSE
+	mov byte ptr [transrev7+0], 0f3h
+ENDIF
 	mov byte ptr [transrev8+1], 90h
+IFDEF TTT
 	mov word ptr [transrev9+0], 0f78ah
+ELSE
+	mov byte ptr [transrev9+0], 0f7h
+ENDIF
 	mov byte ptr [transrev10+1], 0a7h
 	mov byte ptr [transrev11+1], 81h
 	mov byte ptr [transrev12+2], 9fh
+IFDEF TTT
 	mov word ptr [transrev13+0], 0dc88h
+ELSE
+	mov byte ptr [transrev13+0], 0e3h
+ENDIF
 	mov byte ptr [transrev14+1], 81h
 	mov byte ptr [transrev15+1], 9ah
 	mov byte ptr [transrev16+1], 0a7h
@@ -552,13 +600,25 @@ settransreverse_:
 	mov byte ptr [transrev4+1], 0b0h
 	mov byte ptr [transrev5+1], 17h
 	mov byte ptr [transrev6+1], 0b0h
+IFDEF TTT
 	mov word ptr [transrev7+0], 0d38ah
+ELSE
+	mov byte ptr [transrev7+0], 0d3h
+ENDIF
 	mov byte ptr [transrev8+1], 0b0h
+IFDEF TTT
 	mov word ptr [transrev9+0], 0d78ah
+ELSE
+	mov byte ptr [transrev9+0], 0d7h
+ENDIF
 	mov byte ptr [transrev10+1], 87h
 	mov byte ptr [transrev11+1], 0a1h
 	mov byte ptr [transrev12+2], 87h
+IFDEF TTT
 	mov word ptr [transrev13+0], 0e388h
+ELSE
+	mov byte ptr [transrev13+0], 0dch
+ENDIF
 	mov byte ptr [transrev14+1], 0a1h
 	mov byte ptr [transrev15+1], 0bah
 	mov byte ptr [transrev16+1], 87h
@@ -1346,6 +1406,12 @@ mmach2db: mov bh, byte ptr [eax+88888888h]    ;shadeoffs
 	jnc short mbeghline
 	jmp mendhline
 mskip1:                                                     ;2nd only
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+ENDIF
 	cmp ch, 255
 	je short mprebeghline
 
@@ -2087,14 +2153,33 @@ drawslab_:
 	push ebp
 	cmp eax, 2
 	je voxbegdraw2
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 	ja voxskip2
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 	xor eax, eax
 voxbegdraw1:
 	mov ebp, ebx
 	shr ebp, 16
 	add ebx, edx
 	dec ecx
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal1: mov al, byte ptr [eax+88888888h]
 	mov byte ptr [edi], al
 voxbpl1: lea edi, [edi+88888888h]
@@ -2108,7 +2193,12 @@ voxbegdraw2:
 	add ebx, edx
 	xor eax, eax
 	dec ecx
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal2: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	mov word ptr [edi], ax
@@ -2120,13 +2210,25 @@ voxbpl2: lea edi, [edi+88888888h]
 voxskip2:
 	cmp eax, 4
 	jne voxskip4
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 	xor eax, eax
 voxbegdraw4:
 	mov ebp, ebx
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal3: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	shl eax, 8
@@ -2145,8 +2247,22 @@ voxskip4:
 
 	test edi, 1
 	jz voxskipslab1
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 	cmp edi, eax
 	je voxskipslab1
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 
 	push eax
 	push ebx
@@ -2157,7 +2273,12 @@ voxbegslab1:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal4: mov al, byte ptr [eax+88888888h]
 	mov byte ptr [edi], al
 voxbpl4: add edi, 88888888h
@@ -2173,9 +2294,23 @@ voxskipslab1:
 	push eax
 	test edi, 2
 	jz voxskipslab2
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 	dec eax
 	cmp edi, eax
 	jge voxskipslab2
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 
 	push ebx
 	push ecx
@@ -2185,7 +2320,12 @@ voxbegslab2:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal5: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	mov word ptr [edi], ax
@@ -2203,6 +2343,13 @@ voxskipslab2:
 	sub eax, 3
 	cmp edi, eax
 	jge voxskipslab3
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 
 voxprebegslab3:
 	push ebx
@@ -2213,7 +2360,12 @@ voxbegslab3:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal6: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	shl eax, 8
@@ -2241,6 +2393,13 @@ voxskipslab3:
 	dec eax
 	cmp edi, eax
 	jge voxskipslab4
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 
 	push ebx
 	push ecx
@@ -2250,7 +2409,12 @@ voxbegslab4:
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal7: mov al, byte ptr [eax+88888888h]
 	mov ah, al
 	mov word ptr [edi], ax
@@ -2267,13 +2431,25 @@ voxskipslab4:
 
 	cmp edi, eax
 	je voxskipslab5
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+	nop
+ENDIF
 
 voxbegslab5:
 	mov ebp, ebx
 	add ebx, edx
 	shr ebp, 16
 	xor eax, eax
+; FIXME TEST
+IFDEF TTT
 	mov al, byte ptr [esi+ebp]
+ELSE
+	mov al, [ebp+esi]
+ENDIF
 voxpal8: mov al, byte ptr [eax+88888888h]
 	mov byte ptr [edi], al
 voxbpl8: add edi, 88888888h
@@ -2324,6 +2500,12 @@ stretchhline_:
 	inc ch
 
 	jmp begloop
+; FIXME TEST
+IFNDEF TTT
+	nop
+	nop
+	nop
+ENDIF
 
 begloop:
 	mov al, [edx]
