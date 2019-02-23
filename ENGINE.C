@@ -4058,6 +4058,7 @@ drawsprite (long snum)
 		globvis = globalvisibility;
 		if (sec->visibility != 0) globvis = mulscale4(globvis,(long)((unsigned char)(sec->visibility+16)));
 
+#if (LIBVER_BUILDREV >= 19961112L)
 		if ((searchit >= 1) && (yp > (4<<8)) && (searchy >= lwall[searchx]) && (searchy < swall[searchx]))
 		{
 			siz = divscale19(xdimenscale,yp);
@@ -4106,6 +4107,7 @@ drawsprite (long snum)
 			}
 		}
 
+#endif
 		drawvox(tspr->x,tspr->y,tspr->z,(long)tspr->ang+1536,(long)tspr->xrepeat,(long)tspr->yrepeat,tilenum,tspr->shade,tspr->pal,lwall,swall);
 	}
 #endif
@@ -5470,7 +5472,9 @@ clipmove (long *x, long *y, long *z, short *sectnum,
 				templong2 = dmulscale6(clipit[j].x2-clipit[j].x1,oxvect,clipit[j].y2-clipit[j].y1,oyvect);
 				if ((templong1^templong2) < 0)
 				{
+#if (LIBVER_BUILDREV >= 19961112L)
 					updatesector(*x,*y,sectnum);
+#endif
 					return(retval);
 				}
 			}
