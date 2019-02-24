@@ -1255,7 +1255,7 @@ prepwall(long z, walltype *wal)
 	}
 }
 
-#if (LIBVER_BUILDREV < 19961012L) // FIXME (RESTORATION) - HUGE HACK!!!
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - HACK
 #define slowhline hline
 #endif
 ceilscan (long x1, long x2, long sectnum)

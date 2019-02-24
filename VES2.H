@@ -415,9 +415,6 @@ setvesa(long x, long y)
 	{
 		vesachecked = 1;
 
-		//validmodecnt = 0;
-		//modelist[0] = -1;
-
 		strncpy(vgaInfo.VESASignature,"VBE2",4);
 		regs.x.ax = 0x4f00;
 		VBE_callESDI(&regs,&vgaInfo,sizeof(VBE_vgaInfo));
@@ -427,16 +424,12 @@ setvesa(long x, long y)
 			return(-1);
 		}
 
-		//if (vgaInfo.VESAVersion < 0x200) return;
-
 			//LfbMapRealPointer
 		p1 = (short *)(((vgaInfo.VideoModePtr&0xffff0000)>>12)+((vgaInfo.VideoModePtr)&0xffff));
 		p2 = modelist;
 		while (*p1 != -1) *p2++ = *p1++;
 		*p2 = -1;
-		//getvalidvesamodes();
 	}
-	//p2 = modelist;
 #else // LIBVER_BUILDREV
 	getvalidvesamodes();
 #endif
@@ -444,7 +437,6 @@ setvesa(long x, long y)
 	xres = x; yres = y;
 #if (LIBVER_BUILDREV < 19961012L)
 	for(p=modelist;*p!=-1;p++)
-	//while(*p2 != -1)
 #else
 	for(k=0;k<validmodecnt;k++)
 #endif
