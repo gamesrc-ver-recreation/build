@@ -2646,7 +2646,7 @@ nextpage()
 					visualpage = activepage;
 					activepage = ((activepage+1)&3);
 					koutpw(0x3d4,0xc+(visualpage<<14));
-					koutp(0x3d4,0x35+(activepage<<8));
+					koutpw(0x3d4,0x35+(activepage<<8));
 					break;
 #endif
 				case 6:
