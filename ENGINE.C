@@ -4548,14 +4548,14 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 				for(;voxptr<voxend;voxptr+=voxptr[1]+3)
 				{
 #if (LIBVER_BUILDREV < 19961012L)
-					j = (voxptr[0]<<25)-syoff;
+					j = (voxptr[0]<<23)-syoff;
 #else
 					j = (voxptr[0]<<15)-syoff;
 #endif
 					if (j < 0)
 					{
 #if (LIBVER_BUILDREV < 19961012L)
-						k = j+(voxptr[1]<<25);
+						k = j+(voxptr[1]<<23);
 #else
 						k = j+(voxptr[1]<<15);
 #endif
