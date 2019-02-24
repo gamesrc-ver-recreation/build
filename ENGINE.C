@@ -6922,16 +6922,15 @@ dosetaspect()
 		}
 #ifdef SUPERBUILD
 #if (LIBVER_BUILDREV < 19961012L)
-		j = (xdimen<<14);
+		j = xdimen*16384;
 		for(i=7;i<16384;i+=4)
 		{
-			y = krecipasm(i);
-			distrecip[i] = y*j,
-			distrecip[i-2] = (distrecip[i-4]>>1)+((y*j)>>1),
-			distrecip[i-1] = (distrecip[i-2]>>1)+((y*j)>>1),
+			distrecip[i] = mulscale32(j,krecipasm(i));
+			distrecip[i-2] = (distrecip[i-4]>>1)+(distrecip[i]>>1);
+			distrecip[i-1] = (distrecip[i-2]>>1)+(distrecip[i]>>1);
 			distrecip[i-3] = (distrecip[i-4]>>1)+(distrecip[i-2]>>1);
 		}
-		nytooclose = (xdimen<<13);
+		nytooclose = xdimen*8192;
 #else
 		for(i=1;i<16384;i++) distrecip[i] = divscale20(xdimen,i);
 		nytooclose = xdimen*2100;
