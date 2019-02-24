@@ -3172,7 +3172,7 @@ copytilepiece(long tilenume1, long sx1, long sy1, long xsiz, long ysiz,
 drawmasks()
 {
 #if (LIBVER_BUILDREV < 19961012L)
-	long i, j, k, l, gap, xs, ys, zs, xp, yp, zp, z1, z2;
+	long i, j, k, l, gap, xs, ys, xp, yp;
 #else
 	long i, j, k, l, gap, xs, ys, zs, xp, yp, zp, z1, z2, yoff, yspan;
 #endif
@@ -3207,13 +3207,18 @@ drawmasks()
 			for(l=i;l>=0;l-=gap)
 			{
 #if (LIBVER_BUILDREV < 19961012L)
-				if ((spritesy[l] - spritesy[l+gap] < 0) ||
-				    (spritesy[l] - spritesy[l+gap] == 0) &&
-	    			    ((tspriteptr[l]->statnum - tspriteptr[l+gap]->statnum < 0) ||
-	    			     (tspriteptr[l]->statnum - tspriteptr[l+gap]->statnum == 0) &&
-				     (klabs(tspriteptr[l]->z - globalposz) - klabs(tspriteptr[l+gap]->z - globalposz) < 0)))
-					break;
-#else
+				j = spritesy[l] - spritesy[l+gap];
+				if (j < 0) break;
+				if (j == 0)
+				{
+					j = tspriteptr[l]->statnum - tspriteptr[l+gap]->statnum;
+	    				if (j < 0) break;
+	    				if (j == 0)
+					{
+						if (klabs(tspriteptr[l]->z - globalposz) < klabs(tspriteptr[l+gap]->z - globalposz)) break;
+					}
+				}
+#else // LIBVER_BUILDREV
 				if (spritesy[l] <= spritesy[l+gap]) break;
 #endif
 				swaplong(&tspriteptr[l],&tspriteptr[l+gap]);
