@@ -4581,7 +4581,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 						if ((voxptr[2]&oand16) == 0) continue;
 						z1 = mulscale32(l2,j) + globalhoriz;        //Above slab
 #if (LIBVER_BUILDREV < 19961012L)
-						z2 = mulscale32(l1,j+(voxptr[1]<<25)) + globalhoriz;
+						z2 = mulscale32(l1,j+(voxptr[1]<<23)) + globalhoriz;
 #else
 						z2 = mulscale32(l1,j+(voxptr[1]<<15)) + globalhoriz;
 #endif
