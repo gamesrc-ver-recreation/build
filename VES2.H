@@ -62,6 +62,9 @@ long VESABuf_len = 1024, VESABuf_sel = 0, VESABuf_rseg;
 #else
 long VESABuf_sel = 0, VESABuf_rseg;
 #endif
+#if (LIBVER_BUILDREV < 19961012L)
+#define modelist modeList // VERSIONS RESTORATION (HACK) - Original name from misc. debugging symbols
+#endif
 short modelist[256];
 static char *screen = NULL, vesachecked = 0;
 long xres, yres, bytesperline, frameplace, imageSize, maxpages;

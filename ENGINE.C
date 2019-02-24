@@ -41,14 +41,19 @@ volatile char oa1, o3c2, ortca, ortcb, overtbits, laststereoint;
 
 	//MUST CALL MALLOC THIS WAY TO FORCE CALLS TO KMALLOC!
 void *kmalloc(size_t size) { return(malloc(size)); }
+#if (LIBVER_BUILDREV >= 19961012L) // VERSIONS RESTORATION - Symbol was possibly not present (done for global variables ordering recreation)
 void *kkmalloc(size_t size);
+#endif
 #pragma aux kkmalloc =\
 	"call kmalloc",\
 	parm [eax]\
 
 	//MUST CALL FREE THIS WAY TO FORCE CALLS TO KFREE!
 void kfree(void *buffer) { free(buffer); }
+#if (LIBVER_BUILDREV >= 19961012L) // VERSIONS RESTORATION - Symbol was possibly not present (done for global variables ordering recreation)
+
 void kkfree(void *buffer);
+#endif
 #pragma aux kkfree =\
 	"call kfree",\
 	parm [eax]\
