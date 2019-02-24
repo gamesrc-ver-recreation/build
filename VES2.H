@@ -78,6 +78,16 @@ long globlinplace;
 static long backlinaddress = 0;  //Save address for free operation (0x801)
 #endif
 
+#if (LIBVER_BUILDREV < 19961012L)
+#pragma aux qlimitrate =\
+	"mov dx, 0x3da",\
+	"wait1: in al, dx",\
+	"and al, 9",\
+	"dec al",\
+	"jz wait1",\
+	modify exact [eax edx]\
+
+#else
 #pragma aux qlimitrate =\
 	"mov dx, 0x3da",\
 	"wait1: in al, dx",\
@@ -85,6 +95,7 @@ static long backlinaddress = 0;  //Save address for free operation (0x801)
 	"jnz wait1",\
 	modify exact [eax edx]\
 
+#endif
 short ods, oes, oss;
 #pragma aux backupsegs =\
 	"mov ods, ds",\
@@ -319,6 +330,7 @@ GetPtrToLFB(long physAddr)
 	if (r.x.cflag) { printf("DPMI_setSelectorLimit() failed!\n"); exit(0); }
 }
 
+#if (LIBVER_BUILDREV >= 19961012L)
 getvalidvesamodes()
 {
 	long i, j, k;
@@ -380,25 +392,68 @@ getvalidvesamodes()
 				k = validmodeydim[i]; validmodeydim[i] = validmodeydim[j]; validmodeydim[j] = k;
 			}
 }
+#endif // LIBVER_BUILDREV
 
 setvesa(long x, long y)
 {
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Try moving dived down a bit
+	long i, j;
+#else
 	div_t dived;
 	long i, j, k;
+#endif
 	short *p, *p1, *p2;
 	VBE_modeInfo modeInfo;
 	RMREGS regs;
 	RMSREGS sregs;
 
+#if (LIBVER_BUILDREV < 19961012L)
+	if (!vesachecked)
+	{
+		vesachecked = 1;
+
+		//validmodecnt = 0;
+		//modelist[0] = -1;
+
+		strncpy(vgaInfo.VESASignature,"VBE2",4);
+		regs.x.ax = 0x4f00;
+		VBE_callESDI(&regs,&vgaInfo,sizeof(VBE_vgaInfo));
+		if ((regs.x.ax != 0x004f) || (strncmp(vgaInfo.VESASignature,"VESA",4)))
+		{
+			printf("VESA not found!\n");
+			return(-1);
+		}
+
+		//if (vgaInfo.VESAVersion < 0x200) return;
+
+			//LfbMapRealPointer
+		p = (short *)(((vgaInfo.VideoModePtr&0xffff0000)>>12)+((vgaInfo.VideoModePtr)&0xffff));
+		p2 = modelist;
+		while (*p != -1) *p2++ = *p++;
+		*p2 = -1;
+		//getvalidvesamodes();
+	}
+	//p2 = modelist;
+#else // LIBVER_BUILDREV
 	getvalidvesamodes();
+#endif
 
 	xres = x; yres = y;
+#if (LIBVER_BUILDREV < 19961012L)
+	for(p=modelist;*p!=-1;p++)
+	//while(*p2 != -1)
+#else
 	for(k=0;k<validmodecnt;k++)
+#endif
 	{
+#if (LIBVER_BUILDREV < 19961012L)
+		if (!VBE_getModeInfo(*p, &modeInfo)) continue;
+#else
 		regs.x.ax = 0x4f01; regs.x.cx = validmode[k];
 		VBE_callESDI(&regs,&modeInfo,sizeof(VBE_modeInfo));
 		if (regs.x.ax != 0x004f) continue;
 		if (!(modeInfo.ModeAttributes&1)) continue; //1 is vbeMdAvailable
+#endif
 
 		if (modeInfo.MemoryModel != 4) continue;    //4 is vbeMemPK
 		if (modeInfo.BitsPerPixel != 8) continue;
@@ -410,7 +465,11 @@ setvesa(long x, long y)
 		maxpages = min(modeInfo.NumberOfImagePages+1,64);
 
 		regs.x.ax = 0x4f02;
+#if (LIBVER_BUILDREV < 19961012L)
+		regs.x.bx = (*p) | ((modeInfo.ModeAttributes&128)<<7);
+#else
 		regs.x.bx = validmode[k] | ((modeInfo.ModeAttributes&128)<<7);
+#endif
 		DPMI_int86(0x10,&regs,&regs);
 
 		if (modeInfo.ModeAttributes&32) vgacompatible = 0;
@@ -485,6 +544,9 @@ setvesa(long x, long y)
 		j = 0;
 		for(i=0;i<maxpages;i++)
 		{
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Try moving dived down a bit
+			div_t dived;
+#endif
 			dived = div(j,bytesperline);
 			visualpagelookup[i][0] = (short)dived.rem;
 			visualpagelookup[i][1] = (short)dived.quot;
@@ -714,7 +776,9 @@ VBE_setPalette(long start, long num, char *dapal)
 {
 	RMREGS regs;
 	long i, j, k;
+#if (LIBVER_BUILDREV >= 19961012L)
 	char palquick[768];
+#endif
 
 #if (LIBVER_BUILDREV >= 19970602L)
 	if (stereomode == 1)
@@ -735,6 +799,25 @@ VBE_setPalette(long start, long num, char *dapal)
 #endif
 	if ((vgacompatible) || (vgaInfo.VESAVersion < 0x200) || (vidoption != 1))
 	{
+		// VERSIONS RESTORATION - Using earlier VES2.H code as a base
+#if (LIBVER_BUILDREV < 19961012L)
+		//setpalettequick(start,num,palquick);
+		koutp(0x3c8,start);
+		for(i=(num>>1);i>0;i--)
+		{
+			koutp(0x3c9,dapal[2]);
+			while (kinp(0x3da)&1); while (!(kinp(0x3da)&1));
+										  koutp(0x3c9,dapal[1]); koutp(0x3c9,dapal[0]);
+			koutp(0x3c9,dapal[6]); koutp(0x3c9,dapal[5]); koutp(0x3c9,dapal[4]);
+			dapal += 8;
+		}
+		if (num&1)
+		{
+			koutp(0x3c9,dapal[2]);
+			while (kinp(0x3da)&1); while (!(kinp(0x3da)&1));
+										  koutp(0x3c9,dapal[1]); koutp(0x3c9,dapal[0]);
+		}
+#else // LIBVER_BUILDREV
 		j = 0; k = (start<<2);
 		for(i=0;i<num;i++)
 		{
@@ -762,6 +845,7 @@ VBE_setPalette(long start, long num, char *dapal)
 			while (kinp(0x3da)&1); while (!(kinp(0x3da)&1));
 										  koutp(0x3c9,dapal[1]); koutp(0x3c9,dapal[0]);
 		}
+#endif /* LIBVER_BUILDREV */
 #endif /* LIBVER_BUILDREV */
 		return(1);
 	}

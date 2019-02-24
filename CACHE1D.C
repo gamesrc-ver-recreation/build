@@ -119,7 +119,11 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 
 		//Remove all blocks except 1
 	suckz -= (bestz+1); cacnum -= suckz;
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From BUILD2.TXT changelog (Plutonium Pak note)
+	copybuf(&cac[bestz+suckz],&cac[bestz],(cacnum-bestz)*sizeof(cactype));
+#else
 	copybufbyte(&cac[bestz+suckz],&cac[bestz],(cacnum-bestz)*sizeof(cactype));
+#endif
 	cac[bestz].hand = newhandle; *newhandle = cachestart+besto;
 	cac[bestz].leng = newbytes;
 	cac[bestz].lock = newlockptr;
@@ -148,11 +152,16 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 #else
 	cacnum++; if (cacnum > MAXCACHEOBJECTS) reportandexit("Too many objects in cache! (cacnum > MAXCACHEOBJECTS)");
 #endif
+#if (LIBVER_BUILDREV < 19961012L)
+	for(z=cacnum-1;z>bestz;z--) { cac[z].hand = cac[z-1].hand; cac[z].leng = cac[z-1].leng; cac[z].lock = cac[z-1].lock; }
+#else
 	for(z=cacnum-1;z>bestz;z--) cac[z] = cac[z-1];
+#endif
 	cac[bestz].leng = sucklen;
 	cac[bestz].lock = &zerochar;
 }
 
+#if (LIBVER_BUILDREV >= 19961012L)
 suckcache (long *suckptr)
 {
 	long i;
@@ -178,6 +187,7 @@ suckcache (long *suckptr)
 			}
 		}
 }
+#endif // LIBVER_BUILDREV
 
 agecache()
 {

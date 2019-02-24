@@ -43,12 +43,16 @@
 //   bit 4: 1 = x-flip                                               "F"
 //   bit 5: 1 = y-flip                                               "F"
 //   bit 6: 1 = Align texture to first wall of sector                "R"
+#if (LIBVER_BUILDREV < 19961012L)
+//   bits 7-15: reserved
+#else
 //   bits 7-8:                                                       "T"
 //          00 = normal floors
 //          01 = masked floors
 //          10 = transluscent masked floors
 //          11 = reverse transluscent masked floors
 //   bits 9-15: reserved
+#endif
 
 	//40 bytes
 typedef struct
@@ -134,10 +138,12 @@ EXTERN char vidoption;
 EXTERN long xdim, ydim, ylookup[MAXYDIM+1], numpages;
 EXTERN long yxaspect, viewingrange;
 
+#if (LIBVER_BUILDREV >= 19961012L)
 EXTERN long validmodecnt;
 EXTERN short validmode[256];
 EXTERN long validmodexdim[256], validmodeydim[256];
 
+#endif
 EXTERN short numsectors, numwalls;
 EXTERN volatile long totalclock;
 EXTERN long numframes, randomseed;

@@ -66,11 +66,20 @@ void kloadvoxel(long voxindex);
 #define MAXYSIZ 128
 #define MAXZSIZ 200
 #define MAXVOXELS 512
+#if (LIBVER_BUILDREV < 19961012L)
+#define MAXVOXMIPS 3
+#else
 #define MAXVOXMIPS 5
+#endif
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
 static long ggxinc[MAXXSIZ+1], ggyinc[MAXXSIZ+1];
+#if (LIBVER_BUILDREV < 19961012L)
+static long lowrecip[1024], nytooclose;
+static unsigned short distrecip[16384];
+#else
 static long lowrecip[1024], nytooclose, nytoofar;
 static unsigned long distrecip[16384];
+#endif // LIBVER_BUILDREV
 #endif
 
 static char moustat = 0;
@@ -1236,6 +1245,9 @@ prepwall(long z, walltype *wal)
 	}
 }
 
+#if (LIBVER_BUILDREV < 19961012L) // FIXME (RESTORATION) - HUGE HACK!!!
+#define slowhline hline
+#endif
 ceilscan (long x1, long x2, long sectnum)
 {
 	long i, j, ox, oy, x, y1, y2, twall, bwall;
@@ -1322,6 +1334,7 @@ ceilscan (long x1, long x2, long sectnum)
 	globaly2 = mulscale16(globaly2,globalzd);
 	globvis = klabs(mulscale10(globvis,globalzd));
 
+#if (LIBVER_BUILDREV >= 19961012L)
 	if (!(globalorientation&0x180))
 	{
 		y1 = umost[x1]; y2 = y1;
@@ -1370,6 +1383,7 @@ ceilscan (long x1, long x2, long sectnum)
 			tsethlineshift(picsiz[globalpicnum]&15,picsiz[globalpicnum]>>4);
 			break;
 	}
+#endif // LIBVER_BUILDREV
 
 	y1 = umost[x1]; y2 = y1;
 	for(x=x1;x<=x2;x++)
@@ -1488,6 +1502,7 @@ florscan (long x1, long x2, long sectnum)
 	globaly2 = mulscale16(globaly2,globalzd);
 	globvis = klabs(mulscale10(globvis,globalzd));
 
+#if (LIBVER_BUILDREV >= 19961012L)
 	if (!(globalorientation&0x180))
 	{
 		y1 = max(dplc[x1],umost[x1]); y2 = y1;
@@ -1536,6 +1551,7 @@ florscan (long x1, long x2, long sectnum)
 			tsethlineshift(picsiz[globalpicnum]&15,picsiz[globalpicnum]>>4);
 			break;
 	}
+#endif // LIBVER_BUILDREV
 
 	y1 = max(dplc[x1],umost[x1]); y2 = y1;
 	for(x=x1;x<=x2;x++)
@@ -2099,14 +2115,25 @@ loadpalette()
 	}
 }
 
+#if (LIBVER_BUILDREV >= 19961012L)
 static char screenalloctype = 255;
 setgamemode(char davidoption, long daxdim, long daydim)
+#else
+setgamemode()
+#endif
 {
+#if (LIBVER_BUILDREV < 19961012L)
+	long i, j;
+
+	if (qsetmode == 200)
+		return(0);
+#else
 	long i, j, k, ostereomode;
 
 	if ((qsetmode == 200) && (vidoption == davidoption) && (xdim == daxdim) && (ydim == daydim))
 		return(0);
 	vidoption = davidoption; xdim = daxdim; ydim = daydim;
+#endif
 
 	strcpy(kensmessage,"!!!! BUILD engine&tools programmed by Ken Silverman of E.G. RI.  (c) Copyright 1995 Ken Silverman.  Summary:  BUILD = Ken. !!!!");
 	if (getkensmessagecrc(FP_OFF(kensmessage)) != 0x56c764d4)
@@ -2120,6 +2147,55 @@ setgamemode(char davidoption, long daxdim, long daydim)
 #endif
 
 	activepage = visualpage = 0;
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Using hints from 1995 engine revision of initengine and setgamemode
+	if (vidoption == 0) return(-1);
+	if (vidoption == 1)
+	{
+			//bytesperline is set in this function
+		if (setvesa(xdim,ydim) < 0) return(-1);
+	}
+	if (vidoption == 2)
+	{
+		xdim = 320; ydim = 200;
+		horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
+		setvmode(0x13);
+		bytesperline = xdim;
+	}
+	if (vidoption == 3)
+	{
+		xdim = 320; ydim = 200;
+		setvmode(0x13);
+		koutp(0x3cd,activepage+(activepage<<4));
+		bytesperline = xdim;
+	}
+	if (vidoption == 4)
+	{
+		xdim = 320; ydim = 200;
+		setvmode(0x13);
+		koutpw(0x3ce,0x050f);
+		koutpw(0x3d4,0x8529);
+		koutpw(0x3c4,0x4806);
+		koutpw(0x3d4,0x002f);   //set mod = 256k
+		koutpw(0x3ce,0x9+(activepage<<12));
+		bytesperline = xdim;
+	}
+	if (vidoption == 5)
+	{
+		xdim = 320; ydim = 200;
+		setvmode(0x13);
+		koutpw(0x3d4,0x4838);           //S3 Extensions enable #1
+		koutpw(0x3d4,0xa539);           //S3 Extensions enable #2
+		koutp(0x3d4,0x31); koutp(0x3d5,kinp(0x3d5)|9);   //Init for start address
+		koutpw(0x3d4,0x35+(activepage<<8));
+		bytesperline = xdim;
+	}
+	if (vidoption == 6)
+	{
+		xdim = 320; ydim = 200;
+		setvmode(0x13);
+		bytesperline = xdim;
+	}
+#else // LIBVER_BUILDREV
 	switch(vidoption)
 	{
 		case 1: i = xdim*ydim; break;
@@ -2164,6 +2240,7 @@ setgamemode(char davidoption, long daxdim, long daydim)
 
 		//Force drawrooms to call dosetaspect & recalculate stuff
 	oxyaspect = oxdimen = oviewingrange = -1;
+#endif // LIBVER_BUILDREV
 
 	setvlinebpl(bytesperline);
 	j = 0;
@@ -2171,6 +2248,9 @@ setgamemode(char davidoption, long daxdim, long daydim)
 
 	numpages = 1;
 	if (vidoption == 1) numpages = min(maxpages,8);
+#if (LIBVER_BUILDREV < 19961012L)
+	if ((vidoption >= 3) && (vidoption <= 5)) numpages = 4;
+#endif
 
 	setview(0L,0L,xdim-1,ydim-1);
 	clearallviews(0L);
@@ -2178,10 +2258,10 @@ setgamemode(char davidoption, long daxdim, long daydim)
 
 	if (searchx < 0) { searchx = halfxdimen; searchy = (ydimen>>1); }
 
-#if (LIBVER_BUILDREV < 19970602L)
-	if (ostereomode) initstereo();
-#else
+#if (LIBVER_BUILDREV >= 19970602L)
 	if (ostereomode) setstereo(ostereomode);
+#elif (LIBVER_BUILDREV >= 19961012L)
+	if (ostereomode) initstereo();
 #endif
 
 	qsetmode = 200;
@@ -2214,6 +2294,7 @@ hline (long xr, long yp)
 		ylookup[yp]+xr+frameoffset);
 }
 
+#if (LIBVER_BUILDREV >= 19961012L)
 slowhline (long xr, long yp)
 {
 	long xl, x, y, ox, oy, r, p, shade;
@@ -2234,6 +2315,7 @@ slowhline (long xr, long yp)
 		globalx2*r+globalypanning-asm2*(xr-xl),ylookup[yp]+xl+frameoffset);
 	transarea += (xr-xl);
 }
+#endif // LIBVER_BUILDREV
 
 #if (LIBVER_BUILDREV < 19970602L)
 transmaskvline (long x)
@@ -2336,11 +2418,19 @@ transmaskvline2 (long x)
 #else /* LIBVER_BUILDREV */
 long dommxoverlay = 1;
 #endif /* LIBVER_BUILDREV */
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Using exact signature and more from 1995 revision
+initengine(char davidoption, long daxdim, long daydim)
+#else
 initengine()
+#endif
 {
 	long i, j;
 
-#if (LIBVER_BUILDREV >= 19971004L)
+#if (LIBVER_BUILDREV < 19961012L)
+	vidoption = davidoption;
+	xdim = daxdim;
+	ydim = daydim;
+#elif (LIBVER_BUILDREV >= 19971004L)
 	if (dommxoverlay) mmxoverlay();
 
 #endif
@@ -2376,8 +2466,10 @@ initengine()
 	clearbuf((long)(&show2dwall[0]),(long)((MAXWALLS+3)>>5),0L);
 	automapping = 0;
 
+#if (LIBVER_BUILDREV >= 19961012L)
 	validmodecnt = 0;
 
+#endif
 	pointhighlight = -1;
 	linehighlight = -1;
 	highlightcnt = 0;
@@ -2386,6 +2478,53 @@ initengine()
 	visibility = 512;
 	parallaxvisibility = 512;
 
+#if (LIBVER_BUILDREV < 19961012L)
+	switch(vidoption)
+	{
+	case 1:
+		if ((screen = (char *)kkmalloc((xdim+8)*ydim)) == NULL)
+		{
+			printf("Not enough memory for screen allocation\n");
+			exit(0);
+		}
+		frameplace = FP_OFF(screen);
+		break;
+	case 3:
+	case 4:
+	case 5:
+		frameplace = 0xa0000;
+		break;
+	case 6:
+		if ((screen = (char *)kkmalloc(0x20000)) == NULL)
+		{
+			printf("Not enough memory for screen allocation\n");
+			exit(0);
+		}
+		frameplace = FP_OFF(screen);
+		break;
+	default:
+		xdim = 320; ydim = 200;
+		if ((screen = (char *)kkmalloc(xdim*ydim)) == NULL)
+		{
+			printf("Not enough memory for screen allocation\n");
+			exit(0);
+		}
+		frameplace = FP_OFF(screen);
+		break;
+	}
+
+	if ((horizlookup = (long *)kkmalloc(ydim*16)) == NULL)
+	{
+		printf("OUT OF MEMORY\n");
+		exit(0);
+	}
+	if ((horizlookup2 = (long *)kkmalloc(ydim*16)) == NULL)
+	{
+		printf("OUT OF MEMORY\n");
+		exit(0);
+	}
+	horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
+#endif // LIBVER_BUILDREV
 	loadpalette();
 }
 
@@ -2402,12 +2541,18 @@ uninitengine()
 #endif
 	if (transluc != NULL) { kkfree(transluc); transluc = NULL; }
 	if (pic != NULL) { kkfree(pic); pic = NULL; }
+#if (LIBVER_BUILDREV < 19961012L)
+	if (screen != NULL) { kkfree(screen); screen = NULL; }
+	if (horizlookup != NULL) { kkfree(horizlookup); horizlookup = NULL; }
+	if (horizlookup2 != NULL) { kkfree(horizlookup2); horizlookup2 = NULL; }
+#else
 	if (screen != NULL)
 	{
 		if (screenalloctype == 0) kkfree((void *)screen);
 		//if (screenalloctype == 1) suckcache(screen);  //Cache already gone
 		screen = NULL;
 	}
+#endif
 	for(i=0;i<MAXPALOOKUPS;i++)
 		if (palookup[i] != NULL) { kkfree(palookup[i]); palookup[i] = NULL; }
 }
@@ -2484,6 +2629,26 @@ nextpage()
 				case 2:
 					copybuf(frameplace,0xa0000,64000>>2);
 					break;
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 revision of nextpage
+				case 3:
+					visualpage = activepage;
+					activepage = ((activepage+1)&3);
+					koutpw(0x3d4,0xc+(visualpage<<14));
+					koutp(0x3cd,activepage+(activepage<<4));
+					break;
+				case 4:
+					visualpage = activepage;
+					activepage = ((activepage+1)&3);
+					koutpw(0x3d4,0xc+(visualpage<<14));
+					koutpw(0x3ce,0x9+(activepage<<12));
+					break;
+				case 5:
+					visualpage = activepage;
+					activepage = ((activepage+1)&3);
+					koutpw(0x3d4,0xc+(visualpage<<14));
+					koutp(0x3d4,0x35+(activepage<<8));
+					break;
+#endif
 				case 6:
 					if (!activepage) redblueblit(screen,&screen[65536],64000L);
 					activepage ^= 1;
@@ -2676,13 +2841,19 @@ loadpics(char *filename)
 #ifdef SUPERBUILD
 qloadkvx(long voxindex, char *filename)
 {
+#if (LIBVER_BUILDREV < 19961012L)
+	long i, fil, dasiz, lengcnt;
+#else
 	long i, fil, dasiz, lengcnt, lengtot;
+#endif
 	char *ptr;
 
 	if ((fil = kopen4load(filename,0)) == -1) return;
 
 	lengcnt = 0;
+#if (LIBVER_BUILDREV >= 19961012L)
 	lengtot = kfilelength(fil);
+#endif
 
 	for(i=0;i<MAXVOXMIPS;i++)
 	{
@@ -2694,7 +2865,9 @@ qloadkvx(long voxindex, char *filename)
 		kread(fil,ptr,dasiz);
 
 		lengcnt += dasiz+4;
+#if (LIBVER_BUILDREV >= 19961012L)
 		if (lengcnt >= lengtot-768) break;
+#endif
 	}
 	kclose(fil);
 }
@@ -2998,7 +3171,11 @@ copytilepiece(long tilenume1, long sx1, long sy1, long xsiz, long ysiz,
 
 drawmasks()
 {
+#if (LIBVER_BUILDREV < 19961012L)
+	long i, j, k, l, gap, xs, ys, zs, xp, yp, zp, z1, z2;
+#else
 	long i, j, k, l, gap, xs, ys, zs, xp, yp, zp, z1, z2, yoff, yspan;
+#endif
 
 	for(i=spritesortcnt-1;i>=0;i--) tspriteptr[i] = &tsprite[i];
 	for(i=spritesortcnt-1;i>=0;i--)
@@ -3029,12 +3206,22 @@ drawmasks()
 		for(i=0;i<spritesortcnt-gap;i++)
 			for(l=i;l>=0;l-=gap)
 			{
+#if (LIBVER_BUILDREV < 19961012L)
+				if ((spritesy[l] - spritesy[l+gap] < 0) ||
+				    (spritesy[l] - spritesy[l+gap] == 0) &&
+	    			    ((tspriteptr[l]->statnum - tspriteptr[l+gap]->statnum < 0) ||
+	    			     (tspriteptr[l]->statnum - tspriteptr[l+gap]->statnum == 0) &&
+				     (klabs(tspriteptr[l]->z - globalposz) - klabs(tspriteptr[l+gap]->z - globalposz) < 0)))
+					break;
+#else
 				if (spritesy[l] <= spritesy[l+gap]) break;
+#endif
 				swaplong(&tspriteptr[l],&tspriteptr[l+gap]);
 				swaplong(&spritesx[l],&spritesx[l+gap]);
 				swaplong(&spritesy[l],&spritesy[l+gap]);
 			}
 
+#if (LIBVER_BUILDREV >= 19961012L)
 	if (spritesortcnt > 0)
 		spritesy[spritesortcnt] = (spritesy[spritesortcnt-1]^1);
 
@@ -3077,6 +3264,7 @@ drawmasks()
 		}
 		i = j;
 	}
+#endif // LIBVER_BUILDREV
 
 	/*for(i=spritesortcnt-1;i>=0;i--)
 	{
@@ -4043,17 +4231,27 @@ drawsprite (long snum)
 			if (x == rx) return;
 		}
 
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Had just 3 mipmaps
+		if (!voxoff[tilenum][0] || !voxoff[tilenum][1] || !voxoff[tilenum][2])
+		{
+			kloadvoxel(tilenum);
+			if (!voxoff[tilenum][0]) return;
+		}
+#else
 		for(i=0;i<MAXVOXMIPS;i++)
 			if (!voxoff[tilenum][i])
 			{
 				kloadvoxel(tilenum);
 				break;
 			}
+#endif
 
 		longptr = (long *)voxoff[tilenum][0];
 		if (!(cstat&128)) tspr->z -= mulscale6(longptr[5],(long)tspr->yrepeat);
+#if (LIBVER_BUILDREV >= 19961012L)
 		yoff = (long)((signed char)((picanm[sprite[tspr->owner].picnum]>>16)&255))+((long)tspr->yoffset);
 		tspr->z -= ((yoff*tspr->yrepeat)<<2);
+#endif
 
 		globvis = globalvisibility;
 		if (sec->visibility != 0) globvis = mulscale4(globvis,(long)((unsigned char)(sec->visibility+16)));
@@ -4141,6 +4339,14 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	j = (long)(getpalookup((long)mulscale21(globvis,i),(long)dashade)<<8);
 	setupdrawslab(ylookup[1],FP_OFF(palookup[dapal])+j);
 #endif
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Had just 3 mipmaps
+	if (i < 0x100000)
+		i = 0;
+	else if (i < 0x200000)
+		i = 1;
+	else
+		i = 2;
+#else
 	j = 1310720;
 #if (LIBVER_BUILDREV >= 19970602L)
 	j *= min(daxscale,dayscale); j >>= 6;  //New hacks (for sized-down voxels)
@@ -4153,12 +4359,19 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	if (k >= MAXVOXMIPS) i = MAXVOXMIPS-1;
 
 	davoxptr = (char *)voxoff[daindex][i]; if (!davoxptr) return;
+#endif // LIBVER_BUILDREV
 
 	daxscale <<= (i+8); dayscale <<= (i+8);
 	odayscale = dayscale;
 	daxscale = mulscale16(daxscale,xyaspect);
+#if (LIBVER_BUILDREV < 19961012L)
+	daxscale = scale(daxscale,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8);
+	dayscale = scale(dayscale,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8);
+	davoxptr = (char *)voxoff[daindex][i];
+#else
 	daxscale = scale(daxscale,xdimenscale,xdimen<<8);
 	dayscale = scale(dayscale,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8);
+#endif
 
 	daxscalerecip = (1<<30)/daxscale;
 	dayscalerecip = (1<<30)/dayscale;
@@ -4184,10 +4397,17 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	cosang = mulscale16(cosang,dayscalerecip);
 	sinang = mulscale16(sinang,dayscalerecip);
 
+#if (LIBVER_BUILDREV < 19961012L)
+	gxstart = 4*(y*cosang - x*sinang);
+	gystart = 4*(x*cosang + y*sinang);
+	gxinc = dmulscale8(sprsinang,cosang,sprcosang,-sinang);
+	gyinc = dmulscale8(sprcosang,cosang,sprsinang,sinang);
+#else
 	gxstart = y*cosang - x*sinang;
 	gystart = x*cosang + y*sinang;
 	gxinc = dmulscale10(sprsinang,cosang,sprcosang,-sinang);
 	gyinc = dmulscale10(sprcosang,cosang,sprsinang,sinang);
+#endif
 
 	x = 0; y = 0; j = max(daxsiz,daysiz);
 	for(i=0;i<=j;i++)
@@ -4196,8 +4416,12 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 		ggyinc[i] = y; y += gyinc;
 	}
 
+#if (LIBVER_BUILDREV < 19961012L)
+	syoff = divscale29(globalposz-dasprz,odayscale) + (dazpivot<<15);
+#else
 	if ((klabs(globalposz-dasprz)>>10) >= klabs(odayscale)) return;
 	syoff = divscale21(globalposz-dasprz,odayscale) + (dazpivot<<7);
+#endif
 	yoff = ((klabs(gxinc)+klabs(gyinc))>>1);
 	longptr = (long *)davoxptr;
 	xyvoxoffs = ((daxsiz+1)<<2);
@@ -4251,12 +4475,21 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 		oand16 = oand+16;
 		oand32 = oand+32;
 
+#if (LIBVER_BUILDREV < 19961012L)
+		if (yi > 0) { dagxinc = gxinc; dagyinc = gyinc; }
+				 else { dagxinc = -gxinc; dagyinc = -gyinc; }
+#else
 		if (yi > 0) { dagxinc = gxinc; dagyinc = mulscale16(gyinc,viewingrangerecip); }
 				 else { dagxinc = -gxinc; dagyinc = -mulscale16(gyinc,viewingrangerecip); }
+#endif
 
 			//Fix for non 90 degree viewing ranges
+#if (LIBVER_BUILDREV < 19961012L)
+		nxoff = x2-x1;
+#else
 		nxoff = mulscale16(x2-x1,viewingrangerecip);
 		x1 = mulscale16(x1,viewingrangerecip);
+#endif
 
 		ggxstart = gxstart+ggyinc[ys];
 		ggystart = gystart-ggxinc[ys];
@@ -4266,30 +4499,56 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 			slabxoffs = (long)&davoxptr[longptr[x]];
 			shortptr = (short *)&davoxptr[((x*(daysiz+1))<<1)+xyvoxoffs];
 
+#if (LIBVER_BUILDREV < 19961012L)
+			nx = ggxstart+ggxinc[x];
+#else
 			nx = mulscale16(ggxstart+ggxinc[x],viewingrangerecip)+x1;
+#endif
 			ny = ggystart+ggyinc[x];
 			for(y=ys;y!=ye;y+=yi,nx+=dagyinc,ny-=dagxinc)
 			{
+#if (LIBVER_BUILDREV >= 19961012L)
 				if ((ny <= nytooclose) || (ny >= nytoofar)) continue;
+#endif
 				voxptr = (char *)(shortptr[y]+slabxoffs);
 				voxend = (char *)(shortptr[y+1]+slabxoffs);
 				if (voxptr == voxend) continue;
 
+#if (LIBVER_BUILDREV < 19961012L)
+				if (ny <= nytooclose) continue;
+				lx = mulscale32(nx+x1,distrecip[(ny+y1)>>16]<<3)+halfxdimen;
+				if (lx < 0) lx = 0;
+				rx = mulscale32(nx+x2,distrecip[(ny+y2)>>16]<<3)+halfxdimen;
+#else
 				lx = mulscale32(nx>>3,distrecip[(ny+y1)>>14])+halfxdimen;
 				if (lx < 0) lx = 0;
 				rx = mulscale32((nx+nxoff)>>3,distrecip[(ny+y2)>>14])+halfxdimen;
+#endif
 				if (rx > xdimen) rx = xdimen;
 				if (rx <= lx) continue;
 				rx -= lx;
 
+#if (LIBVER_BUILDREV < 19961012L)
+				l1 = distrecip[(ny-yoff)>>16];
+				l2 = distrecip[(ny+yoff)>>16];
+#else
 				l1 = distrecip[(ny-yoff)>>14];
 				l2 = distrecip[(ny+yoff)>>14];
+#endif
 				for(;voxptr<voxend;voxptr+=voxptr[1]+3)
 				{
+#if (LIBVER_BUILDREV < 19961012L)
+					j = (voxptr[0]<<25)-syoff;
+#else
 					j = (voxptr[0]<<15)-syoff;
+#endif
 					if (j < 0)
 					{
+#if (LIBVER_BUILDREV < 19961012L)
+						k = j+(voxptr[1]<<25);
+#else
 						k = j+(voxptr[1]<<15);
+#endif
 						if (k < 0)
 						{
 							if ((voxptr[2]&oand32) == 0) continue;
@@ -4306,7 +4565,11 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					{
 						if ((voxptr[2]&oand16) == 0) continue;
 						z1 = mulscale32(l2,j) + globalhoriz;        //Above slab
+#if (LIBVER_BUILDREV < 19961012L)
+						z2 = mulscale32(l1,j+(voxptr[1]<<25)) + globalhoriz;
+#else
 						z2 = mulscale32(l1,j+(voxptr[1]<<15)) + globalhoriz;
+#endif
 					}
 
 					if (voxptr[1] == 1)
@@ -5211,7 +5474,11 @@ lastwall(short point)
 	clipnum++;                                            \
 }                                                        \
 
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - HACK
+#define clipmoveboxtracenum 3
+#else
 long clipmoveboxtracenum = 3;
+#endif
 clipmove (long *x, long *y, long *z, short *sectnum,
 			 long xvect, long yvect,
 			 long walldist, long ceildist, long flordist, unsigned long cliptype)
@@ -6649,9 +6916,22 @@ dosetaspect()
 			radarang2[i] = (short)(((long)radarang[k]+j)>>6);
 		}
 #ifdef SUPERBUILD
+#if (LIBVER_BUILDREV < 19961012L)
+		j = (xdimen<<14);
+		for(i=7;i<16384;i+=4)
+		{
+			y = krecipasm(i);
+			distrecip[i] = y*j,
+			distrecip[i-2] = (distrecip[i-4]>>1)+((y*j)>>1),
+			distrecip[i-1] = (distrecip[i-2]>>1)+((y*j)>>1),
+			distrecip[i-3] = (distrecip[i-4]>>1)+(distrecip[i-2]>>1);
+		}
+		nytooclose = (xdimen<<13);
+#else
 		for(i=1;i<16384;i++) distrecip[i] = divscale20(xdimen,i);
 		nytooclose = xdimen*2100;
 		nytoofar = 16384*16384-1048576;
+#endif
 #endif
 	}
 }
@@ -8021,6 +8301,20 @@ clearallviews(long dacol)
 		case 2:
 			clearbuf(frameplace,(xdim*ydim)>>2,0L);
 			break;
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 rev
+		case 3:
+			for(i=0;i<4;i++)
+				{ koutp(0x3cd,i); clearbuf(0xa0000,16000L,0L); }
+			break;
+		case 4:
+			for(i=0;i<4;i++)
+				{ koutpw(0x3ce,0x9+(i<<12)); clearbuf(0xa0000,16000L,0L); }
+			break;
+		case 5:
+			for(i=0;i<4;i++)
+				{ koutpw(0x3d4,0x35+(i<<8)); clearbuf(0xa0000,16000L,0L); }
+			break;
+#endif
 		case 6:
 			clearbuf(screen,128000L>>2,dacol);
 			break;
@@ -9169,6 +9463,7 @@ uninstallbistereohandlers()
 #endif /* LIBVER_BUILDREV */
 }
 
+#if (LIBVER_BUILDREV >= 19961012L)
 loopnumofsector(short sectnum, short wallnum)
 {
 	long i, numloops, startwall, endwall;
@@ -9241,3 +9536,4 @@ setfirstwall(short sectnum, short newfirstwall)
 	for(i=startwall;i<endwall;i++)
 		if (wall[i].nextwall >= 0) wall[wall[i].nextwall].nextwall = i;
 }
+#endif // LIBVER_BUILDREV
