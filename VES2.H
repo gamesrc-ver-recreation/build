@@ -396,10 +396,10 @@ getvalidvesamodes()
 
 setvesa(long x, long y)
 {
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Try moving dived down a bit
+	div_t dived;
+#if (LIBVER_BUILDREV < 19961012L)
 	long i, j;
 #else
-	div_t dived;
 	long i, j, k;
 #endif
 	short *p, *p1, *p2;
@@ -427,9 +427,9 @@ setvesa(long x, long y)
 		//if (vgaInfo.VESAVersion < 0x200) return;
 
 			//LfbMapRealPointer
-		p = (short *)(((vgaInfo.VideoModePtr&0xffff0000)>>12)+((vgaInfo.VideoModePtr)&0xffff));
+		p1 = (short *)(((vgaInfo.VideoModePtr&0xffff0000)>>12)+((vgaInfo.VideoModePtr)&0xffff));
 		p2 = modelist;
-		while (*p != -1) *p2++ = *p++;
+		while (*p1 != -1) *p2++ = *p1++;
 		*p2 = -1;
 		//getvalidvesamodes();
 	}
@@ -544,9 +544,6 @@ setvesa(long x, long y)
 		j = 0;
 		for(i=0;i<maxpages;i++)
 		{
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Try moving dived down a bit
-			div_t dived;
-#endif
 			dived = div(j,bytesperline);
 			visualpagelookup[i][0] = (short)dived.rem;
 			visualpagelookup[i][1] = (short)dived.quot;
