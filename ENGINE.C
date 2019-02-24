@@ -72,11 +72,12 @@ void kloadvoxel(long voxindex);
 #define MAXVOXMIPS 5
 #endif
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
-static long ggxinc[MAXXSIZ+1], ggyinc[MAXXSIZ+1];
 #if (LIBVER_BUILDREV < 19961012L)
+static long ggxinc[MAXXSIZ], ggyinc[MAXXSIZ];
 static long lowrecip[1024], nytooclose;
 static unsigned short distrecip[16384];
 #else
+static long ggxinc[MAXXSIZ+1], ggyinc[MAXXSIZ+1];
 static long lowrecip[1024], nytooclose, nytoofar;
 static unsigned long distrecip[16384];
 #endif // LIBVER_BUILDREV
@@ -159,8 +160,12 @@ static long smostwall[MAXWALLSB], smostwallcnt = -1L;
 
 static short maskwall[MAXWALLSB], maskwallcnt;
 static long spritesx[MAXSPRITESONSCREEN];
+#if (LIBVER_BUILDREV < 19961012L)
+static long spritesy[MAXSPRITESONSCREEN];
+#else
 static long spritesy[MAXSPRITESONSCREEN+1];
 static long spritesz[MAXSPRITESONSCREEN];
+#endif
 static spritetype *tspriteptr[MAXSPRITESONSCREEN];
 
 short umost[MAXXDIM], dmost[MAXXDIM];
