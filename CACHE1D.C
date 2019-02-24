@@ -74,7 +74,11 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 
 	newbytes = ((newbytes+15)&0xfffffff0);
 
+#if (LIBVER_BUILDREV < 19961012L)
+	if (newbytes > cachesize)
+#else
 	if ((unsigned)newbytes > (unsigned)cachesize)
+#endif
 	{
 		printf("Cachesize: %ld\n",cachesize);
 		printf("*Newhandle: 0x%x, Newbytes: %ld, *Newlock: %d\n",newhandle,newbytes,*newlockptr);
