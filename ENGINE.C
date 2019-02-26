@@ -2149,11 +2149,11 @@ setgamemode()
 	if (getkensmessagecrc(FP_OFF(kensmessage)) != 0x56c764d4)
 		{ setvmode(0x3); printf("Nice try.\n"); exit(0); }
 
-#if (LIBVER_BUILDREV < 19970602L)
+#if (LIBVER_BUILDREV >= 19970602L)
+	ostereomode = stereomode; if (stereomode) setstereo(0L);
+#elif (LIBVER_BUILDREV >= 19961012)
 	ostereomode = stereomode;
 	if (stereomode) uninitstereo();
-#else
-	ostereomode = stereomode; if (stereomode) setstereo(0L);
 #endif
 
 	activepage = visualpage = 0;
