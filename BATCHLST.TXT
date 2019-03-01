@@ -1,4 +1,4 @@
-[1] A.OBJ as presumably prepared on 19960501 (MASM 5.10).
+[1] A.OBJ as presumably prepared on 19960501 (MASM 5.10 + Watcom Make).
 [2] MMULTI.OBJ as prepared on 19960904 (Watcom 10.5).
 [3] DN3D14 - Matching CACHE1D.OBJ and ENGINE.OBJ objects (Watcom 10.5).
 [4] 19961012 - ENGINE.OBJ (Watcom 10.5).

@@ -26,40 +26,37 @@ build.exe : build.obj engine.obj cache1d.obj a.obj bstub.obj
 	wlink f build f engine f cache1d f a f bstub
 	cd ..
 
-game.obj : game.c build.h names.h pragmas.h $(BUILDREV)
+game.obj : game.c build.h names.h pragmas.h
 	wcc386 game $(common_opt) /fo=$(BUILDREV)\$^&
-build.obj : build.c build.h pragmas.h $(BUILDREV)
+build.obj : build.c build.h pragmas.h
 	wcc386 build $(common_opt) /fo=$(BUILDREV)\$^&
-bstub.obj : bstub.c build.h $(BUILDREV)
+bstub.obj : bstub.c build.h
 	wcc386 bstub $(common_opt) /fo=$(BUILDREV)\$^&
-cache1d.obj : cache1d.c pragmas.h $(BUILDREV)
+cache1d.obj : cache1d.c pragmas.h
 	wcc386 cache1d $(common_opt) /fo=$(BUILDREV)\$^&
-engine.obj : engine.c build.h pragmas.h ves2.h $(BUILDREV)
+engine.obj : engine.c build.h pragmas.h ves2.h
 	wcc386 engine $(common_opt) /fo=$(BUILDREV)\$^&
 !ifeq IS_LATE 1
-a.obj : a_wasm\a.asm $(BUILDREV)
+a.obj : a_wasm\a.asm
 	cd $(BUILDREV)
 	copy ..\a_wasm\a.asm .
 	wasm a.asm
 !else
-a.obj : a_masm\a.asm $(BUILDREV)
+a.obj : a_masm\a.asm
 	cd $(BUILDREV)
 	copy ..\a_masm\a.asm .
 	masm a.asm;
 !endif
 	del a.asm
 	cd..
-mmulti.obj : mmulti.c $(BUILDREV)
+mmulti.obj : mmulti.c
 	wcc386 mmulti /4r /s /or -DLIBVER_BUILDREV=$(BUILDREV) /fo=$(BUILDREV)\$^&
-multi.obj : multi.c $(BUILDREV)
+multi.obj : multi.c
 	wcc386 multi /4r /s /or /fo=$(BUILDREV)\$^&
-kdmeng.obj : kdmeng.c makefile. $(BUILDREV)
+kdmeng.obj : kdmeng.c makefile.
 	wcc386 kdmeng /4r /s /or /d2 /fo=$(BUILDREV)\$^&
-k.obj : k.asm makefile. $(BUILDREV)
+k.obj : k.asm makefile.
 	cd $(BUILDREV)
 	copy ..\k.asm .
 	wasm k.asm
 	cd..
-
-$(BUILDREV) :
-	mkdir $(BUILDREV)

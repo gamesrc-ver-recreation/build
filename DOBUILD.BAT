@@ -15,32 +15,32 @@ if ERRORLEVEL 2 goto 19960904
 if ERRORLEVEL 1 goto 19960501
 
 :19960501
-wmake a.obj BUILDREV=19960501
+call bldhlpr a.obj 19960501
 goto quit
 :19960904
-wmake mmulti.obj BUILDREV=19960904
+call bldhlpr mmulti.obj 19960904
 goto quit
 :DN3D14
-wmake engine.obj BUILDREV=19960820
+call bldhlpr engine.obj 19960820
 if ERRORLEVEL 1 goto quit
-wmake cache1d.obj BUILDREV=19960820
+call bldhlpr cache1d.obj 19960820
 goto quit
 :19961012
-wmake engine.obj BUILDREV=19961012
+call bldhlpr engine.obj 19961012
 goto quit
 :DN3D15
-wmake engine.obj BUILDREV=19961112
+call bldhlpr engine.obj 19961112
 if ERRORLEVEL 1 goto quit
-wmake cache1d.obj BUILDREV=19961207
+call bldhlpr cache1d.obj 19961207
 goto quit
 :19970212
-wmake engine.obj BUILDREV=19970212
+call bldhlpr engine.obj 19970212
 goto quit
 :19970522
-wmake engine.obj BUILDREV=19970522
+call bldhlpr engine.obj 19970522
 goto quit
 :20000614
-wmake game.exe BUILDREV=20000614
+call bldhlpr game.exe 20000614
 goto quit
 
 :quit
