@@ -90,12 +90,13 @@ gives us a more explicit description.
 What is this based on
 ---------------------
 
-This codebase was more-or-less started from the public Ken-Build releases
-of 2000 and 2002 as a base.
+This codebase was more-or-less started from Ken Silverman's public Ken-Build
+release of 2000 as a base. It also got a few (really) minor edits from 2002.
 
-Thanks to Ken Silverman's consent to release other Build engine sources under
-the same terms as of the 2000 release, other files have been used.
-In particular, this includes the sources for ENGINE.OBJ as used in SW 1.1-1.2,
+Additional thanks go to Ken for his consent to let other Build engine sources
+become accessible under the same terms as of his 2000 release. Thus,
+additional files could be used for the recreation efforts.
+In particular, this included the sources for ENGINE.OBJ as used in SW 1.1-1.2,
 an October 1996 revision of ENGINE.OBJ, and older engine sources from 1995.
 
 Not long before the A.OBJ code used in Duke3D 1.4-1.5 and SW 1.0-1.2 was fully
