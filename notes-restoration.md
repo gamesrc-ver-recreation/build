@@ -101,8 +101,10 @@ an October 1996 revision of ENGINE.OBJ, and older engine sources from 1995.
 
 Not long before the A.OBJ code used in Duke3D 1.4-1.5 and SW 1.0-1.2 was fully
 recreated, Nuke.YKT came in to recreate ENGINE.OBJ as used in Duke3D 1.5, with
-the assistance of the aforementioned SW 1.1-1.2 revision. CACHE1D.OBJ itself
-didn't need that much changes, while MMULTI.OBJ as used in Duke3D 1.4-1.5 and
+the assistance of the aforementioned SW 1.1-1.2 revision. In fact, originally
+he wanted to recreate the revision used in Redneck Rampage, only that it
+eventually turned out to match Duke3D 1.5's. CACHE1D.OBJ itself didn't
+need that much changes, while MMULTI.OBJ as used in Duke3D 1.4-1.5 and
 SW 1.0-1.2 essentially has the same code as in the public Ken-Build releases
 (although at least the 2000 release uses a more recent build of MMULTI.OBJ).
 
