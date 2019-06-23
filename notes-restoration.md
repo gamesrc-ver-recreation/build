@@ -24,7 +24,8 @@ the objects, or executable, as coming from the following original releases:
 in Duke3D 1.4-1.5 and SW 1.0-1.2.
 - MMULTI.OBJ as prepared on 19960904 and used in Duke3D 1.4-1.5 and SW 1.0-1.2
 (*presumably* also in 2DRAW, as available from Ken's site and prepared on 99).
-- CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.4.
+- BUILD.OBJ, CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.4 and its
+revision of the Build editor (the same editor was reused for Duke3D 1.5).
 - An 19961012 revision of ENGINE.OBJ.
 - CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.5; The latter was possibly
 prepared on 19961112, while the former was *maybe* prepared on 19961207.
@@ -57,7 +58,7 @@ You can still select one or a few files to build/clean at a time,
 using DOBUILD.BAT/DOCLEAN.BAT. A list of choices should be shown.
 
 Usually a single directory will be created with the corresponding file(s).
-As exceptions, DN3D14 should create 19960820 with the two OBJ files,
+As exceptions, DN3D14 should create 19960820 with the appropriate OBJ files,
 while DN3D15 should create 19961112\ENGINE.OBJ and 19961207\CACHE1D.OBJ.
 
 How to identify code changes (and what's this BUILDREV thing)?
