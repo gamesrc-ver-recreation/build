@@ -24,6 +24,8 @@ goto end
 call bldhlpr engine.obj 19960820
 if ERRORLEVEL 1 goto end
 call bldhlpr cache1d.obj 19960820
+if ERRORLEVEL 1 goto end
+call bldhlpr build.obj 19960820
 goto end
 :19961012
 call bldhlpr engine.obj 19961012
