@@ -51,8 +51,8 @@ These CACHE1D.OBJ and MMULTI.OBJ files were probably made with Watcom C 10.5.
 However, the ENGINE.OBJ files used for SW 1.0-1.2 were apparently made using
 Watcom C 10.6. In fact, a copy of the sources for ENGINE.OBJ as used
 for SW 1.1-1.2 was found alongside SW sources under a directory
-named "blddg", and evidence shows that these sources were
-realy built by at least one SW dev, rather than Ken.
+named "blddbg", and evidence shows that these sources were
+really built by at least one SW dev, rather than Ken.
 
 You can still select one or a few files to build/clean at a time,
 using DOBUILD.BAT/DOCLEAN.BAT. A list of choices should be shown.
