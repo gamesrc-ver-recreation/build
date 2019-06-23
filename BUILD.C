@@ -168,7 +168,11 @@ main(short int argc,char **argv)
 	strcpy(kensig,"BUILD by Ken Silverman");
 	initcrc();
 
+#if (LIBVER_BUILDREV < 19961012L)
+	if (setgamemode() < 0)
+#else
 	if (setgamemode(vidoption,xdim,ydim) < 0)
+#endif
 	{
 		ExtUnInit();
 		uninitkeys();
@@ -1866,7 +1870,9 @@ editinput()
 				if (searchstat != 3)
 				{
 					setfirstwall(searchsector,searchwall);
+#if (LIBVER_BUILDREV >= 19961012L)
 					asksave = 1;
+#endif
 				}
 			}
 			else
@@ -2743,7 +2749,9 @@ overheadeditor()
 				if (linehighlight >= 0)
 				{
 					setfirstwall(sectorofwall(linehighlight),linehighlight);
+#if (LIBVER_BUILDREV >= 19961012L)
 					asksave = 1;
+#endif
 					printmessage16("This wall now sector's first wall (sector[].wallptr)");
 				}
 			}
@@ -3947,10 +3955,17 @@ overheadeditor()
 					dax = centerx+mulscale14(sintable[(j+512)&2047],circlerad);
 					day = centery+mulscale14(sintable[j],circlerad);
 
+#if (LIBVER_BUILDREV < 19961012L)
+					if (dax <= -65536) dax = -65536;
+					if (dax >= 65536) dax = 65536;
+					if (day <= -65536) day = -65536;
+					if (day >= 65536) day = 65536;
+#else
 					if (dax <= -131072) dax = -131072;
 					if (dax >= 131072) dax = 131072;
 					if (day <= -131072) day = -131072;
 					if (day >= 131072) day = 131072;
+#endif
 
 					if (bad > 0)
 					{
@@ -5118,7 +5133,11 @@ overheadeditor()
 
 	fixspritesectors();
 
+#if (LIBVER_BUILDREV < 19961012L)
+	if (setgamemode() < 0)
+#else
 	if (setgamemode(vidoption,xdim,ydim) < 0)
+#endif
 	{
 		ExtUnInit();
 		uninitkeys();
@@ -5587,6 +5606,89 @@ numloopsofsector(short sectnum)
 		if (wall[i].point2 < i) numloops++;
 	return(numloops);
 }
+#if (LIBVER_BUILDREV < 19961012L)
+
+/* VERSIONS RESTORATION - Functions from Duke3D 1.4/1.5's Build editor,
+later moved to ENGINE.OBJ (loopnumofsector + setfirstwall).
+Note that during this migration, the assignment of
+the form "asksave = 1" further moved from the end
+of setfirstwall's function body to right after
+calls to this function within the editor itself. */
+loopnumofsector(short sectnum, short wallnum)
+{
+	long i, numloops, startwall, endwall;
+
+	numloops = 0;
+	startwall = sector[sectnum].wallptr;
+	endwall = startwall + sector[sectnum].wallnum;
+	for(i=startwall;i<endwall;i++)
+	{
+		if (i == wallnum) return(numloops);
+		if (wall[i].point2 < i) numloops++;
+	}
+	return(-1);
+}
+
+setfirstwall(short sectnum, short newfirstwall)
+{
+	long i, j, k, numwallsofloop;
+	long startwall, endwall, danumwalls, dagoalloop;
+
+	startwall = sector[sectnum].wallptr;
+	danumwalls = sector[sectnum].wallnum;
+	endwall = startwall+danumwalls;
+	if ((newfirstwall < startwall) || (newfirstwall >= startwall+danumwalls)) return;
+	for(i=0;i<danumwalls;i++)
+		memcpy(&wall[i+numwalls],&wall[i+startwall],sizeof(walltype));
+
+	numwallsofloop = 0;
+	i = newfirstwall;
+	do
+	{
+		numwallsofloop++;
+		i = wall[i].point2;
+	} while (i != newfirstwall);
+
+		//Put correct loop at beginning
+	dagoalloop = loopnumofsector(sectnum,newfirstwall);
+	if (dagoalloop > 0)
+	{
+		j = 0;
+		while (loopnumofsector(sectnum,j+startwall) != dagoalloop) j++;
+		for(i=0;i<danumwalls;i++)
+		{
+			k = i+j; if (k >= danumwalls) k -= danumwalls;
+			memcpy(&wall[startwall+i],&wall[numwalls+k],sizeof(walltype));
+
+			wall[startwall+i].point2 += danumwalls-startwall-j;
+			if (wall[startwall+i].point2 >= danumwalls)
+				wall[startwall+i].point2 -= danumwalls;
+			wall[startwall+i].point2 += startwall;
+		}
+		newfirstwall += danumwalls-j;
+		if (newfirstwall >= startwall+danumwalls) newfirstwall -= danumwalls;
+	}
+
+	for(i=0;i<numwallsofloop;i++)
+		memcpy(&wall[i+numwalls],&wall[i+startwall],sizeof(walltype));
+	for(i=0;i<numwallsofloop;i++)
+	{
+		k = i+newfirstwall-startwall;
+		if (k >= numwallsofloop) k -= numwallsofloop;
+		memcpy(&wall[startwall+i],&wall[numwalls+k],sizeof(walltype));
+
+		wall[startwall+i].point2 += numwallsofloop-newfirstwall;
+		if (wall[startwall+i].point2 >= numwallsofloop)
+			wall[startwall+i].point2 -= numwallsofloop;
+		wall[startwall+i].point2 += startwall;
+	}
+
+	for(i=startwall;i<endwall;i++)
+		if (wall[i].nextwall >= 0) wall[wall[i].nextwall].nextwall = i;
+	// VERSIONS RESTORATION (when it's a part of the editor code)
+	asksave = 1;
+}
+#endif // LIBVER_BUILDREV < 19961012L
 
 getnumber16(char namestart[80], short num, long maxnumber)
 {
