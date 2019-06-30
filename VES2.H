@@ -81,7 +81,9 @@ long globlinplace;
 static long backlinaddress = 0;  //Save address for free operation (0x801)
 #endif
 
-#if (LIBVER_BUILDREV < 19961012L)
+// FIXME - TEST
+#if 0
+//#if (LIBVER_BUILDREV < 19961012L)
 #pragma aux qlimitrate =\
 	"mov dx, 0x3da",\
 	"wait1: in al, dx",\

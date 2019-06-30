@@ -79,8 +79,10 @@ void kloadvoxel(long voxindex);
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
 #if (LIBVER_BUILDREV < 19961012L)
 static long ggxinc[MAXXSIZ], ggyinc[MAXXSIZ];
-static long lowrecip[1024], nytooclose;
-static unsigned short distrecip[16384];
+//static long lowrecip[1024], nytooclose;
+static long lowrecip[1024]; // FIXME TEST FOR Duke3D 1.4 Build Editor
+static unsigned long distrecip[16384]; // FIXME TEST FOR Duke3D 1.4 Build Editor
+//static unsigned short distrecip[16384];
 #else
 static long ggxinc[MAXXSIZ+1], ggyinc[MAXXSIZ+1];
 static long lowrecip[1024], nytooclose, nytoofar;
@@ -2167,7 +2169,8 @@ setgamemode()
 	if (vidoption == 2)
 	{
 		xdim = 320; ydim = 200;
-		horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
+		// FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+//		horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
 		setvmode(0x13);
 		bytesperline = xdim;
 	}
@@ -4431,7 +4434,11 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 		ggyinc[i] = y; y += gyinc;
 	}
 
-#if (LIBVER_BUILDREV < 19961012L)
+#if 1 // FIXME DUKE3D BUILD EDITOR 1.4 TEST
+	syoff = mulscale5(globalposz-dasprz,dayscalerecip);
+	syoff = scale(syoff,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8) + (dazpivot<<11);
+//	syoff = scale(mulscale5(globalposz-dasprz,dayscalerecip),mulscale16(xdimenscale,viewingrangerecip),xdimen<<8) + (dazpivot<<1);
+#elif (LIBVER_BUILDREV < 19961012L)
 	syoff = divscale29(globalposz-dasprz,odayscale) + (dazpivot<<15);
 #else
 	if ((klabs(globalposz-dasprz)>>10) >= klabs(odayscale)) return;
@@ -4529,7 +4536,13 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 				voxend = (char *)(shortptr[y+1]+slabxoffs);
 				if (voxptr == voxend) continue;
 
-#if (LIBVER_BUILDREV < 19961012L)
+// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
+#if 1
+				if (ny <= 0x400000) continue;
+				lx = (mulscale32(nx+x1,distrecip[(ny+y1)>>18])+xdimen)>>1;
+				if (lx < 0) lx = 0;
+				rx = (mulscale32(nx+x2,distrecip[(ny+y2)>>18])+xdimen)>>1;
+#elif (LIBVER_BUILDREV < 19961012L)
 				if (ny <= nytooclose) continue;
 				lx = mulscale32(nx+x1,distrecip[(ny+y1)>>16]<<3)+halfxdimen;
 				if (lx < 0) lx = 0;
@@ -4543,7 +4556,11 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 				if (rx <= lx) continue;
 				rx -= lx;
 
-#if (LIBVER_BUILDREV < 19961012L)
+// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
+#if 1
+				l1 = distrecip[(ny-yoff)>>18];
+				l2 = distrecip[(ny+yoff)>>18];
+#elif (LIBVER_BUILDREV < 19961012L)
 				l1 = distrecip[(ny-yoff)>>16];
 				l2 = distrecip[(ny+yoff)>>16];
 #else
@@ -4552,14 +4569,20 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 #endif
 				for(;voxptr<voxend;voxptr+=voxptr[1]+3)
 				{
-#if (LIBVER_BUILDREV < 19961012L)
+// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
+#if 1
+					j = (voxptr[0]<<19)-syoff;
+#elif (LIBVER_BUILDREV < 19961012L)
 					j = (voxptr[0]<<23)-syoff;
 #else
 					j = (voxptr[0]<<15)-syoff;
 #endif
 					if (j < 0)
 					{
-#if (LIBVER_BUILDREV < 19961012L)
+// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
+#if 1
+						k = j+(voxptr[1]<<19);
+#elif (LIBVER_BUILDREV < 19961012L)
 						k = j+(voxptr[1]<<23);
 #else
 						k = j+(voxptr[1]<<15);
@@ -4580,7 +4603,10 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					{
 						if ((voxptr[2]&oand16) == 0) continue;
 						z1 = mulscale32(l2,j) + globalhoriz;        //Above slab
-#if (LIBVER_BUILDREV < 19961012L)
+// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
+#if 1
+						z2 = mulscale32(l1,j+(voxptr[1]<<19)) + globalhoriz;
+#elif (LIBVER_BUILDREV < 19961012L)
 						z2 = mulscale32(l1,j+(voxptr[1]<<23)) + globalhoriz;
 #else
 						z2 = mulscale32(l1,j+(voxptr[1]<<15)) + globalhoriz;
@@ -4595,7 +4621,12 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					else
 					{
 						if (z2-z1 >= 1024) yinc = divscale16(voxptr[1],z2-z1);
+// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
+#if 1
+						else if (z2 > z1) yinc = lowrecip[z2-z1]*voxptr[1];
+#else
 						else if (z2 > z1) yinc = (lowrecip[z2-z1]*voxptr[1]>>8);
+#endif
 						if (z1 < daumost[lx]) { yplc = yinc*(daumost[lx]-z1); z1 = daumost[lx]; } else yplc = 0;
 					}
 					if (z2 > dadmost[lx]) z2 = dadmost[lx];
@@ -6931,7 +6962,9 @@ dosetaspect()
 			radarang2[i] = (short)(((long)radarang[k]+j)>>6);
 		}
 #ifdef SUPERBUILD
-#if (LIBVER_BUILDREV < 19961012L)
+#if 1 // FIXME - Duke3D 1.4 Build Editor test
+		for(i=1;i<16384;i++) distrecip[i] = divscale14(xdimen,i);
+#elif (LIBVER_BUILDREV < 19961012L)
 		j = xdimen*16384;
 		for(i=7;i<16384;i+=4)
 		{
@@ -9396,7 +9429,9 @@ installbistereohandlers(void far *stereohan)
 #endif
 {
 #if (LIBVER_BUILDREV < 19970602L)
+#if 0 // FIXME Duke3D 1.4 Build Editor test
 	koutpw(0x70,0x420b);
+#endif
 	if ((activepage&1) == 0)
 	{
 		clearbuf(ylookup[ydim-1]+frameplace,xdim>>4,whiteband);
