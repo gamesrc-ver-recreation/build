@@ -9324,10 +9324,12 @@ setstereo(long dastereomode)
 	}
 
 		//Init RTC
-	_disable();
+	// FIXME Duke3D 1.4 Build Editor test
+//	_disable();
 #if (LIBVER_BUILDREV < 19970602L)
 	oldstereohandler = _dos_getvect(0x70); _dos_setvect(0x70,stereohandler);
-	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,0x28); //+8 = 256hz
+	// FIXME Duke3D 1.4 Build Editor test
+//	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,0x28); //+8 = 256hz
 #else
 	if (stereomode == 1) installbistereohandlers(stereohandler1);
 	if (stereomode == 2) installbistereohandlers(stereohandler2);
@@ -9335,12 +9337,19 @@ setstereo(long dastereomode)
 	if (stereomode == 1) koutp(0x71,0x28); //+8 = 256hz
 	if (stereomode == 2) koutp(0x71,0x26); //+6 = 1024hz
 #endif
-	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,0x42);
+	// FIXME Duke3D 1.4 Build Editor test
+//	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,0x42);
 #if (LIBVER_BUILDREV >= 19970602L)
 	koutp(0x70,0xc); kinp(0x71);
 #endif
 	oa1 = kinp(0xa1); koutp(0xa1,oa1&~1);
+	// FIXME Duke3D 1.4 Build Editor test
+#if 1
+	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,(ortca & 0xF0) + 8);
+	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,ortcb | 0x48);
+#else
 	_enable();
+#endif
 
 		//Init VR flag
 	koutp(0x3d4,0x11);
@@ -9393,12 +9402,18 @@ void *engconvalloc32 (unsigned long size)
 
 #if (LIBVER_BUILDREV < 19970602L)
 		//Uninit RTC
+	// FIXME Duke3D 1.4 Build Editor test
+#if 1
+	koutp(0xa1,oa1);
+#else
 	_disable();
 	koutp(0xa1,(kinp(0xa1)&~1)|(oa1&1));
+#endif
 	koutp(0x70,0xa); koutp(0x71,ortca);
 	koutp(0x70,0xb); koutp(0x71,ortcb);
 	_dos_setvect(0x70, oldstereohandler);
-	_enable();
+	// FIXME Duke3D 1.4 Build Editor test
+//	_enable();
 #else
 	 r.x.eax = 0x0100;           //DPMI allocate DOS memory
 	 r.x.ebx = ((size+15)>>4);   //Number of paragraphs requested
