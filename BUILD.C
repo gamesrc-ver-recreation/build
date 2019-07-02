@@ -3643,7 +3643,11 @@ overheadeditor()
 		}
 
 		if ((keystatus[buildkeys[8]] > 0) && (zoom < 16384)) zoom += (zoom>>4);
+#if (LIBVER_BUILDREV < 19961012L)
+		if ((keystatus[buildkeys[9]] > 0) && (zoom > 48)) zoom -= (zoom>>4);
+#else
 		if ((keystatus[buildkeys[9]] > 0) && (zoom > 24)) zoom -= (zoom>>4);
+#endif
 
 		if (keystatus[0x22] > 0)  // G (grid on/off)
 		{
@@ -5153,18 +5157,32 @@ overheadeditor()
 
 getpoint(long searchxe, long searchye, long *x, long *y)
 {
+#if (LIBVER_BUILDREV < 19961012L)
+	if (posx <= -65536) posx = -65536;
+	if (posx >= 65536) posx = 65536;
+	if (posy <= -65536) posy = -65536;
+	if (posy >= 65536) posy = 65536;
+#else
 	if (posx <= -131072) posx = -131072;
 	if (posx >= 131072) posx = 131072;
 	if (posy <= -131072) posy = -131072;
 	if (posy >= 131072) posy = 131072;
+#endif
 
 	*x = posx + divscale14(searchxe-320,zoom);
 	*y = posy + divscale14(searchye-200,zoom);
 
+#if (LIBVER_BUILDREV < 19961012L)
+	if (*x <= -65536) *x = -65536;
+	if (*x >= 65536) *x = 65536;
+	if (*y <= -65536) *y = -65536;
+	if (*y >= 65536) *y = 65536;
+#else
 	if (*x <= -131072) *x = -131072;
 	if (*x >= 131072) *x = 131072;
 	if (*y <= -131072) *y = -131072;
 	if (*y >= 131072) *y = 131072;
+#endif
 }
 
 getlinehighlight(long xplc, long yplc)
@@ -6617,7 +6635,11 @@ AlignWalls(long nWall0, long z0, long nWall1, long z1, long nTile)
 
 	z1 = GetWallZPeg(nWall1);
 
+#if (LIBVER_BUILDREV < 19961012L)
+	for(n=(picsiz[nTile]>>4);((1<<n)!=tilesizy[nTile]);n++);
+#else
 	for(n=(picsiz[nTile]>>4);((1<<n)<tilesizy[nTile]);n++);
+#endif
 
 	wall[nWall1].yrepeat = wall[nWall0].yrepeat;
 	wall[nWall1].ypanning = (char)(wall[nWall0].ypanning+(((z1-z0)*wall[nWall0].yrepeat)>>(n+3)));

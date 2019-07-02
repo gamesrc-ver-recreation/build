@@ -2457,7 +2457,12 @@ initengine()
 	showinvisibility = 0;
 
 #ifdef SUPERBUILD
+	// FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+#if 1
+	for(i=1;i<1024;i++) lowrecip[i] = ((1<<16)-1)/i;
+#else
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<24)-1)/i;
+#endif
 	for(i=0;i<MAXVOXELS;i++)
 		for(j=0;j<MAXVOXMIPS;j++)
 		{
@@ -6332,9 +6337,15 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 
 	if (gride > 0)
 	{
+#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+		yp1 = 200-mulscale14(posye+65536,zoome);
+		if (yp1 < 0) yp1 = 0;
+		yp2 = 200-mulscale14(posye-65536,zoome);
+#else
 		yp1 = 200-mulscale14(posye+131072,zoome);
 		if (yp1 < 0) yp1 = 0;
 		yp2 = 200-mulscale14(posye-131072,zoome);
+#endif
 		if (yp2 >= ydim16) yp2 = ydim16-1;
 
 		if ((yp1 < ydim16) && (yp2 >= 0) && (yp2 >= yp1))
@@ -6345,9 +6356,15 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 			templong = ((yp1*640+pageoffset)>>3)+0xa0000;
 			tempy = yp2-yp1+1;
 			mask = 0;
+#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+			xp1 = 320-mulscale14(posxe+65536,zoome);
+
+			for(i=-65536;i<=65536;i+=(2048>>gride))
+#else
 			xp1 = 320-mulscale14(posxe+131072,zoome);
 
 			for(i=-131072;i<=131072;i+=(2048>>gride))
+#endif
 			{
 				xp2 = xp1;
 				xp1 = 320-mulscale14(posxe-i,zoome);
@@ -6365,7 +6382,11 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 					mask |= pow2char[xp1&7^7];
 				}
 			}
+#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+			if ((i >= 65536) && (xp1 < 640))
+#else
 			if ((i >= 131072) && (xp1 < 640))
+#endif
 				xp2 = xp1;
 			if ((mask != 0) && ((xp2>>3) >= 0) && ((xp2>>3) < 80))
 			{
@@ -6374,10 +6395,17 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 			}
 		}
 
+#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+		xp1 = mulscale14(posxe+65536,zoome);
+		xp2 = mulscale14(posxe-65536,zoome);
+		tempy = 0x80000000;
+		for(i=-65536;i<=65536;i+=(2048>>gride))
+#else
 		xp1 = mulscale14(posxe+131072,zoome);
 		xp2 = mulscale14(posxe-131072,zoome);
 		tempy = 0x80000000;
 		for(i=-131072;i<=131072;i+=(2048>>gride))
+#endif
 		{
 			yp1 = (((posye-i)*zoome)>>14);
 			if (yp1 != tempy)
@@ -6963,7 +6991,7 @@ dosetaspect()
 		}
 #ifdef SUPERBUILD
 #if 1 // FIXME - Duke3D 1.4 Build Editor test
-		for(i=1;i<16384;i++) distrecip[i] = divscale14(xdimen,i);
+		for(i=1;i<4096;i++) distrecip[i] = divscale14(xdimen,i);
 #elif (LIBVER_BUILDREV < 19961012L)
 		j = xdimen*16384;
 		for(i=7;i<16384;i+=4)
