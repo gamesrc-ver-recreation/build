@@ -81,7 +81,7 @@ long voxoff[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
 static long ggxinc[MAXXSIZ], ggyinc[MAXXSIZ];
 //static long lowrecip[1024], nytooclose;
 static long lowrecip[1024]; // FIXME TEST FOR Duke3D 1.4 Build Editor
-static unsigned long distrecip[4096]; // FIXME TEST FOR Duke3D 1.4 Build Editor (dosetaspect might lead to a buffer overflow with this)
+static unsigned long distrecip[4096]; // FIXME TEST FOR Duke3D 1.4 Build Editor
 //static unsigned short distrecip[16384];
 #else
 static long ggxinc[MAXXSIZ+1], ggyinc[MAXXSIZ+1];
