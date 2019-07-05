@@ -29,11 +29,14 @@ in Duke3D 1.4-1.5 and SW 1.0-1.2.
 - BUILD.OBJ and ENGINE.OBJ as present in Duke3D 1.4-1.5's Build Editor
 (ENGINE.OBJ has differences from the revision used in the Duke3D 1.4 game EXE).
 - ENGINE.OBJ as present in Duke3D 1.5.
-- An 19961012 revision of ENGINE.OBJ.
+- An 19961012 revision of BUILD.OBJ and ENGINE.OBJ.
 - CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.5; The latter was possibly
 prepared on 19961112, while the former was *maybe* prepared on 19961207.
+- BUILD.OBJ as used in SW 1.2's Build Editor, possibly prepared on 19961213
+(it has just one minor difference from the 19961012 revision).
 - ENGINE.OBJ as used in SW 1.0, possibly prepared on 19970212.
-- ENGINE.OBJ as used in SW 1.1-1.2, possibly prepared on 19970522.
+- ENGINE.OBJ as used in SW 1.1-1.2 and 1.2's Build Editor,
+possibly prepared on 19970522.
 - The Ken-Build GAME.EXE file as originally prepared on 2000
 (not to be confused with an updated EXE from 2002).
 
@@ -150,7 +153,8 @@ For reference, a list of such original paths in use is given here:
 revision of ENGINE.OBJ: C:\C\CPROG\BUILD for local files,
 c:\watcom\h for system headers.
 - 19961012, 19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2) revisions
-of ENGINE.OBJ: D: for local files, c:\watcom\h for system headers.
+of ENGINE.OBJ, as well as the 19961012 and 19961213 (SW 1.2 Build Editor)
+revisions of BUILD.OBJ: D: for local files, c:\watcom\h for system headers.
 
 Building the LIB
 ----------------
