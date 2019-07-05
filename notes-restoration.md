@@ -24,8 +24,11 @@ the objects, or executable, as coming from the following original releases:
 in Duke3D 1.4-1.5 and SW 1.0-1.2.
 - MMULTI.OBJ as prepared on 19960904 and used in Duke3D 1.4-1.5 and SW 1.0-1.2
 (*presumably* also in 2DRAW, as available from Ken's site and prepared on 99).
-- BUILD.OBJ, CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.4 and its
-revision of the Build editor (the same editor was reused for Duke3D 1.5).
+- CACHE1D.OBJ as present in Duke3D 1.4 and its revision of the Build editor
+(the same editor was reused for Duke3D 1.5).
+- BUILD.OBJ and ENGINE.OBJ as present in Duke3D 1.4-1.5's Build Editor
+(ENGINE.OBJ has differences from the revision used in the Duke3D 1.4 game EXE).
+- ENGINE.OBJ as present in Duke3D 1.5.
 - An 19961012 revision of ENGINE.OBJ.
 - CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.5; The latter was possibly
 prepared on 19961112, while the former was *maybe* prepared on 19961207.
