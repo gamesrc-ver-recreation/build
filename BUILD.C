@@ -6635,7 +6635,7 @@ AlignWalls(long nWall0, long z0, long nWall1, long z1, long nTile)
 
 	z1 = GetWallZPeg(nWall1);
 
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19961213L)
 	for(n=(picsiz[nTile]>>4);((1<<n)!=tilesizy[nTile]);n++);
 #else
 	for(n=(picsiz[nTile]>>4);((1<<n)<tilesizy[nTile]);n++);
