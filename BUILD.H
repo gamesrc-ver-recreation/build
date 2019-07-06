@@ -7,7 +7,7 @@
 #define MAXWALLS 8192
 #define MAXSPRITES 4096
 
-#if (LIBVER_BUILDREV < 19971004L)
+#if (LIBVER_BUILDREV < 19971004L) // VERSIONS RESTORATION - See BUILD2.TXT, 7/24/96 & 10/4/97
 #define MAXTILES 6144
 #else
 #define MAXTILES 9216
@@ -138,7 +138,7 @@ EXTERN char vidoption;
 EXTERN long xdim, ydim, ylookup[MAXYDIM+1], numpages;
 EXTERN long yxaspect, viewingrange;
 
-#if (LIBVER_BUILDREV >= 19961012L)
+#if (LIBVER_BUILDREV >= 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (getvalidvesamodes)
 EXTERN long validmodecnt;
 EXTERN short validmode[256];
 EXTERN long validmodexdim[256], validmodeydim[256];

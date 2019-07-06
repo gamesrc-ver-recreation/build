@@ -168,7 +168,7 @@ main(short int argc,char **argv)
 	strcpy(kensig,"BUILD by Ken Silverman");
 	initcrc();
 
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (changed sigs)
 	if (setgamemode() < 0)
 #else
 	if (setgamemode(vidoption,xdim,ydim) < 0)
@@ -5137,7 +5137,7 @@ overheadeditor()
 
 	fixspritesectors();
 
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (changed sigs)
 	if (setgamemode() < 0)
 #else
 	if (setgamemode(vidoption,xdim,ydim) < 0)
@@ -5626,11 +5626,10 @@ numloopsofsector(short sectnum)
 }
 #if (LIBVER_BUILDREV < 19961012L)
 
-/* VERSIONS RESTORATION - Functions from Duke3D 1.4/1.5's Build editor,
-later moved to ENGINE.OBJ (loopnumofsector + setfirstwall).
-Note that during this migration, the assignment of
-the form "asksave = 1" further moved from the end
-of setfirstwall's function body to right after
+/* VERSIONS RESTORATION - See BUILD2.TXT, 9/6/96 (moved functions).
+Note that at some point, possibly for the same revision, the
+assignment of the form "asksave = 1" further moved from
+the end of setfirstwall's function body to right after
 calls to this function within the editor itself. */
 loopnumofsector(short sectnum, short wallnum)
 {
@@ -6635,7 +6634,7 @@ AlignWalls(long nWall0, long z0, long nWall1, long z1, long nTile)
 
 	z1 = GetWallZPeg(nWall1);
 
-#if (LIBVER_BUILDREV < 19961213L)
+#if (LIBVER_BUILDREV < 19961213L) // VERSIONS RESTORATION - See BUILD2.TXT, 12/13/96 (lock up fix)
 	for(n=(picsiz[nTile]>>4);((1<<n)!=tilesizy[nTile]);n++);
 #else
 	for(n=(picsiz[nTile]>>4);((1<<n)<tilesizy[nTile]);n++);

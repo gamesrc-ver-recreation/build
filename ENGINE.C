@@ -19,7 +19,7 @@
 #include <i86.h>
 #include "build.h"
 #include "pragmas.h"
-#if (LIBVER_BUILDREV >= 19970602L)
+#if (LIBVER_BUILDREV >= 19970602L) // VERSIONS RESTORATION - See BUILD2.TXT, 6/2/97 (support for the Nuvision 3D-Spex stereo glasses)
 
 long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
 volatile long stereomode = 0, visualpage, activepage, whiteband, blackband;
@@ -275,7 +275,7 @@ short searchsector, searchwall, searchstat;     //search output
 static char artfilename[20];
 static long numtilefiles, artfil = -1, artfilnum, artfilplc;
 
-#if (LIBVER_BUILDREV >= 19970212L)
+#if (LIBVER_BUILDREV >= 19970212L) // VERSIONS RESTORATION - See BUILD2.TXT, 2/12/97 (mirror code optimization)
 static char inpreparemirror = 0;
 static long mirrorsx1, mirrorsy1, mirrorsx2, mirrorsy2;
 
@@ -285,7 +285,7 @@ long totalclocklock;
 #if (LIBVER_BUILDREV < 19971004L)
 extern long setbytesperline(long);
 #pragma aux setbytesperline parm [eax];
-#else
+#else // VERSIONS RESTORATION - See BUILD2.TXT, 10/4/97 (MMX support)
 extern long mmxoverlay();
 #pragma aux mmxoverlay modify [eax ebx ecx edx];
 #endif
@@ -2130,7 +2130,7 @@ loadpalette()
 #if (LIBVER_BUILDREV >= 19961012L)
 static char screenalloctype = 255;
 setgamemode(char davidoption, long daxdim, long daydim)
-#else
+#else // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (changed sigs)
 setgamemode()
 #endif
 {
@@ -2159,7 +2159,7 @@ setgamemode()
 #endif
 
 	activepage = visualpage = 0;
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Using hints from 1995 engine revision of initengine and setgamemode
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Using hints from 1995 engine revision of initengine and setgamemode; See also BUILD2.TXT, 9/25/96 (removed modes)
 	if (vidoption == 0) return(-1);
 	if (vidoption == 1)
 	{
@@ -2261,7 +2261,7 @@ setgamemode()
 
 	numpages = 1;
 	if (vidoption == 1) numpages = min(maxpages,8);
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (removed modes)
 	if ((vidoption >= 3) && (vidoption <= 5)) numpages = 4;
 #endif
 
@@ -2428,10 +2428,10 @@ transmaskvline2 (long x)
 	faketimerhandler();
 }
 
-#else /* LIBVER_BUILDREV */
+#else // VERSIONS RESTORATION - See BUILD2.TXT, 10/4/97 (MMX support)
 long dommxoverlay = 1;
 #endif /* LIBVER_BUILDREV */
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Using exact signature and more from 1995 revision
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Using exact signature and more from 1995 revision; See also BUILD2.TXT, 9/25/96 (changed sigs)
 initengine(char davidoption, long daxdim, long daydim)
 #else
 initengine()
@@ -2443,7 +2443,7 @@ initengine()
 	vidoption = davidoption;
 	xdim = daxdim;
 	ydim = daydim;
-#elif (LIBVER_BUILDREV >= 19971004L)
+#elif (LIBVER_BUILDREV >= 19971004L) // VERSIONS RESTORATION - See BUILD2.TXT, 10/4/97 (MMX support)
 	if (dommxoverlay) mmxoverlay();
 
 #endif
@@ -2484,7 +2484,7 @@ initengine()
 	clearbuf((long)(&show2dwall[0]),(long)((MAXWALLS+3)>>5),0L);
 	automapping = 0;
 
-#if (LIBVER_BUILDREV >= 19961012L)
+#if (LIBVER_BUILDREV >= 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (getvalidvesamodes)
 	validmodecnt = 0;
 
 #endif
@@ -2496,7 +2496,7 @@ initengine()
 	visibility = 512;
 	parallaxvisibility = 512;
 
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (Modified signature + removed modes)
 	switch(vidoption)
 	{
 	case 1:
@@ -2647,7 +2647,7 @@ nextpage()
 				case 2:
 					copybuf(frameplace,0xa0000,64000>>2);
 					break;
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 revision of nextpage
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 revision of nextpage; See also BUILD2.TXT, 9/25/96 (removed modes)
 				case 3:
 					visualpage = activepage;
 					activepage = ((activepage+1)&3);
@@ -5525,7 +5525,7 @@ lastwall(short point)
 	clipnum++;                                            \
 }                                                        \
 
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - HACK
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/6/96 (new var)
 #define clipmoveboxtracenum 3
 #else
 long clipmoveboxtracenum = 3;
@@ -7718,7 +7718,8 @@ drawmapview (long dax, long day, long zoome, short ang)
 
 	clearbuf((long)(&gotsector[0]),(long)((numsectors+31)>>5),0L);
 
-#if (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L) // VERSIONS RESTORATION - See BUILD2.TXT, 5/22/97 (divide overflow fix)
+
 	cx1 = (windowx1<<16); cy1 = (windowy1<<16);
 	cx2 = ((windowx2+1)<<16)-1; cy2 = ((windowy2+1)<<16)-1;
 #else
@@ -8008,7 +8009,7 @@ clippoly (long npoints, long clipstat)
 	cy1 = windowy1;
 	cx2 = windowx2+1;
 	cy2 = windowy2+1;
-#if (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L) // VERSIONS RESTORATION - See BUILD2.TXT, 5/22/97 (divide overflow fix)
 	cx1 <<= 16; cy1 <<= 16; cx2 <<= 16; cy2 <<= 16;
 #else
 	cx1 <<= 12; cy1 <<= 12; cx2 <<= 12; cy2 <<= 12;
@@ -8216,7 +8217,7 @@ fillpolygon(long npoints)
 	miny = 0x7fffffff; maxy = 0x80000000;
 	for(z=npoints-1;z>=0;z--)
 		{ y = ry1[z]; miny = min(miny,y); maxy = max(maxy,y); }
-#if (LIBVER_BUILDREV < 19970522L)
+#if (LIBVER_BUILDREV < 19970522L) // VERSIONS RESTORATION - See BUILD2.TXT, 5/22/97 (divide overflow fix)
 	miny = (miny>>16); maxy = (maxy>>16);
 #else
 	miny = (miny>>12); maxy = (maxy>>12);
@@ -8376,7 +8377,7 @@ clearallviews(long dacol)
 		case 2:
 			clearbuf(frameplace,(xdim*ydim)>>2,0L);
 			break;
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 rev
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 rev; See also BUILD2.TXT, 9/25/96 (removed modes)
 		case 3:
 			for(i=0;i<4;i++)
 				{ koutp(0x3cd,i); clearbuf(0xa0000,16000L,0L); }
@@ -9555,7 +9556,7 @@ uninstallbistereohandlers()
 #endif /* LIBVER_BUILDREV */
 }
 
-#if (LIBVER_BUILDREV >= 19961012L)
+#if (LIBVER_BUILDREV >= 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/6/96 (moved functions)
 loopnumofsector(short sectnum, short wallnum)
 {
 	long i, numloops, startwall, endwall;

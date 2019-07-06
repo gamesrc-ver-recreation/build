@@ -123,7 +123,7 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 
 		//Remove all blocks except 1
 	suckz -= (bestz+1); cacnum -= suckz;
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From BUILD2.TXT changelog (Plutonium Pak note)
+#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 12/13/96 (Plutonium Pak note)
 	copybuf(&cac[bestz+suckz],&cac[bestz],(cacnum-bestz)*sizeof(cactype));
 #else
 	copybufbyte(&cac[bestz+suckz],&cac[bestz],(cacnum-bestz)*sizeof(cactype));
