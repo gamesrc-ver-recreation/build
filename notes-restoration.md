@@ -28,7 +28,7 @@ in Duke3D 1.4-1.5 and SW 1.0-1.2.
 (the same editor was reused for Duke3D 1.5).
 - BUILD.OBJ and ENGINE.OBJ as present in Duke3D 1.4-1.5's Build Editor
 (ENGINE.OBJ has differences from the revision used in the Duke3D 1.4 game EXE).
-- ENGINE.OBJ as present in Duke3D 1.5.
+- ENGINE.OBJ as present in Duke3D 1.4 (the game EXE).
 - An 19961012 revision of BUILD.OBJ and ENGINE.OBJ.
 - CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.5; The latter was possibly
 prepared on 19961112, while the former was *maybe* prepared on 19961207.
@@ -64,8 +64,8 @@ You can still select one or a few files to build/clean at a time,
 using DOBUILD.BAT/DOCLEAN.BAT. A list of choices should be shown.
 
 Usually a single directory will be created with the corresponding file(s).
-As exceptions, DN3D14 should create 19960820 with the appropriate OBJ files,
-while DN3D15 should create 19961112\ENGINE.OBJ and 19961207\CACHE1D.OBJ.
+There are exceptions for DN3D14, DN3D14B, DN3D14B and DN3D15.
+In particular, DN3D15 refers to files in separate directories.
 
 How to identify code changes (and what's this BUILDREV thing)?
 --------------------------------------------------------------
