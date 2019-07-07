@@ -3643,7 +3643,7 @@ overheadeditor()
 		}
 
 		if ((keystatus[buildkeys[8]] > 0) && (zoom < 16384)) zoom += (zoom>>4);
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960820L)
 		if ((keystatus[buildkeys[9]] > 0) && (zoom > 48)) zoom -= (zoom>>4);
 #else
 		if ((keystatus[buildkeys[9]] > 0) && (zoom > 24)) zoom -= (zoom>>4);
@@ -3959,7 +3959,7 @@ overheadeditor()
 					dax = centerx+mulscale14(sintable[(j+512)&2047],circlerad);
 					day = centery+mulscale14(sintable[j],circlerad);
 
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960820L)
 					if (dax <= -65536) dax = -65536;
 					if (dax >= 65536) dax = 65536;
 					if (day <= -65536) day = -65536;
@@ -5157,7 +5157,7 @@ overheadeditor()
 
 getpoint(long searchxe, long searchye, long *x, long *y)
 {
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960820L)
 	if (posx <= -65536) posx = -65536;
 	if (posx >= 65536) posx = 65536;
 	if (posy <= -65536) posy = -65536;
@@ -5172,7 +5172,7 @@ getpoint(long searchxe, long searchye, long *x, long *y)
 	*x = posx + divscale14(searchxe-320,zoom);
 	*y = posy + divscale14(searchye-200,zoom);
 
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960820L)
 	if (*x <= -65536) *x = -65536;
 	if (*x >= 65536) *x = 65536;
 	if (*y <= -65536) *y = -65536;
