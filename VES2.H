@@ -81,9 +81,15 @@ long globlinplace;
 static long backlinaddress = 0;  //Save address for free operation (0x801)
 #endif
 
-// FIXME - TEST
-#if 0
-//#if (LIBVER_BUILDREV < 19961012L)
+// VERSIONS RESTORATION - This one has been somewhat less clear:
+// - On the one hand, Duke3D 1.4's Build Editor and Duke3D 1.5 use the
+// same revision of qlimitrate, which differs from Duke3D 1.4's. So it
+// might be guessed from here that the editor is using
+// a bit newer ENGINE.OBJ than the Duke3D 1.4 game EXE.
+// - On the other hand, various changes to ENGINE.OBJ show the exact opposite.
+//
+// For now we make an exception in this file.
+#if (LIBVER_BUILDREV != 19960724L) && (LIBVER_BUILDREV < 19961012L)
 #pragma aux qlimitrate =\
 	"mov dx, 0x3da",\
 	"wait1: in al, dx",\
