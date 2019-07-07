@@ -77,12 +77,14 @@ void kloadvoxel(long voxindex);
 #define MAXVOXMIPS 5
 #endif
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960820L)
 static long ggxinc[MAXXSIZ], ggyinc[MAXXSIZ];
-//static long lowrecip[1024], nytooclose;
-static long lowrecip[1024]; // FIXME TEST FOR Duke3D 1.4 Build Editor
-static unsigned long distrecip[4096]; // FIXME TEST FOR Duke3D 1.4 Build Editor
-//static unsigned short distrecip[16384];
+static long lowrecip[1024];
+static unsigned long distrecip[4096];
+#elif (LIBVER_BUILDREV < 19961012L)
+static long ggxinc[MAXXSIZ], ggyinc[MAXXSIZ];
+static long lowrecip[1024], nytooclose;
+static unsigned short distrecip[16384];
 #else
 static long ggxinc[MAXXSIZ+1], ggyinc[MAXXSIZ+1];
 static long lowrecip[1024], nytooclose, nytoofar;
@@ -2169,8 +2171,9 @@ setgamemode()
 	if (vidoption == 2)
 	{
 		xdim = 320; ydim = 200;
-		// FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
-//		horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
+#if (LIBVER_BUILDREV >= 19960820L)
+		horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
+#endif
 		setvmode(0x13);
 		bytesperline = xdim;
 	}
@@ -2457,8 +2460,7 @@ initengine()
 	showinvisibility = 0;
 
 #ifdef SUPERBUILD
-	// FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<16)-1)/i;
 #else
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<24)-1)/i;
@@ -4439,10 +4441,9 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 		ggyinc[i] = y; y += gyinc;
 	}
 
-#if 1 // FIXME DUKE3D BUILD EDITOR 1.4 TEST
+#if (LIBVER_BUILDREV < 19960820L)
 	syoff = mulscale5(globalposz-dasprz,dayscalerecip);
 	syoff = scale(syoff,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8) + (dazpivot<<11);
-//	syoff = scale(mulscale5(globalposz-dasprz,dayscalerecip),mulscale16(xdimenscale,viewingrangerecip),xdimen<<8) + (dazpivot<<1);
 #elif (LIBVER_BUILDREV < 19961012L)
 	syoff = divscale29(globalposz-dasprz,odayscale) + (dazpivot<<15);
 #else
@@ -4541,8 +4542,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 				voxend = (char *)(shortptr[y+1]+slabxoffs);
 				if (voxptr == voxend) continue;
 
-// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 				if (ny <= 0x400000) continue;
 				lx = (mulscale32(nx+x1,distrecip[(ny+y1)>>18])+xdimen)>>1;
 				if (lx < 0) lx = 0;
@@ -4561,8 +4561,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 				if (rx <= lx) continue;
 				rx -= lx;
 
-// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 				l1 = distrecip[(ny-yoff)>>18];
 				l2 = distrecip[(ny+yoff)>>18];
 #elif (LIBVER_BUILDREV < 19961012L)
@@ -4574,8 +4573,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 #endif
 				for(;voxptr<voxend;voxptr+=voxptr[1]+3)
 				{
-// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 					j = (voxptr[0]<<19)-syoff;
 #elif (LIBVER_BUILDREV < 19961012L)
 					j = (voxptr[0]<<23)-syoff;
@@ -4584,8 +4582,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 #endif
 					if (j < 0)
 					{
-// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 						k = j+(voxptr[1]<<19);
 #elif (LIBVER_BUILDREV < 19961012L)
 						k = j+(voxptr[1]<<23);
@@ -4608,8 +4605,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					{
 						if ((voxptr[2]&oand16) == 0) continue;
 						z1 = mulscale32(l2,j) + globalhoriz;        //Above slab
-// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 						z2 = mulscale32(l1,j+(voxptr[1]<<19)) + globalhoriz;
 #elif (LIBVER_BUILDREV < 19961012L)
 						z2 = mulscale32(l1,j+(voxptr[1]<<23)) + globalhoriz;
@@ -4626,8 +4622,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					else
 					{
 						if (z2-z1 >= 1024) yinc = divscale16(voxptr[1],z2-z1);
-// FIXME - DUKE3D 1.4 BUILD EDITOR TEST
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 						else if (z2 > z1) yinc = lowrecip[z2-z1]*voxptr[1];
 #else
 						else if (z2 > z1) yinc = (lowrecip[z2-z1]*voxptr[1]>>8);
@@ -6337,7 +6332,7 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 
 	if (gride > 0)
 	{
-#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+#if (LIBVER_BUILDREV < 19960820L)
 		yp1 = 200-mulscale14(posye+65536,zoome);
 		if (yp1 < 0) yp1 = 0;
 		yp2 = 200-mulscale14(posye-65536,zoome);
@@ -6356,7 +6351,7 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 			templong = ((yp1*640+pageoffset)>>3)+0xa0000;
 			tempy = yp2-yp1+1;
 			mask = 0;
-#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+#if (LIBVER_BUILDREV < 19960820L)
 			xp1 = 320-mulscale14(posxe+65536,zoome);
 
 			for(i=-65536;i<=65536;i+=(2048>>gride))
@@ -6382,7 +6377,7 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 					mask |= pow2char[xp1&7^7];
 				}
 			}
-#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+#if (LIBVER_BUILDREV < 19960820L)
 			if ((i >= 65536) && (xp1 < 640))
 #else
 			if ((i >= 131072) && (xp1 < 640))
@@ -6395,7 +6390,7 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 			}
 		}
 
-#if 1 // FIXME (RESTORATION) TEST for Duke3D 1.4 Build Editor
+#if (LIBVER_BUILDREV < 19960820L)
 		xp1 = mulscale14(posxe+65536,zoome);
 		xp2 = mulscale14(posxe-65536,zoome);
 		tempy = 0x80000000;
@@ -6990,7 +6985,7 @@ dosetaspect()
 			radarang2[i] = (short)(((long)radarang[k]+j)>>6);
 		}
 #ifdef SUPERBUILD
-#if 1 // FIXME - Duke3D 1.4 Build Editor test
+#if (LIBVER_BUILDREV < 19960820L)
 		for(i=1;i<4096;i++) distrecip[i] = divscale14(xdimen,i);
 #elif (LIBVER_BUILDREV < 19961012L)
 		j = xdimen*16384;
@@ -9353,12 +9348,14 @@ setstereo(long dastereomode)
 	}
 
 		//Init RTC
-	// FIXME Duke3D 1.4 Build Editor test
-//	_disable();
+#if (LIBVER_BUILDREV >= 19960820L)
+	_disable();
+#endif
 #if (LIBVER_BUILDREV < 19970602L)
 	oldstereohandler = _dos_getvect(0x70); _dos_setvect(0x70,stereohandler);
-	// FIXME Duke3D 1.4 Build Editor test
-//	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,0x28); //+8 = 256hz
+#if (LIBVER_BUILDREV >= 19960820L)
+	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,0x28); //+8 = 256hz
+#endif
 #else
 	if (stereomode == 1) installbistereohandlers(stereohandler1);
 	if (stereomode == 2) installbistereohandlers(stereohandler2);
@@ -9366,14 +9363,14 @@ setstereo(long dastereomode)
 	if (stereomode == 1) koutp(0x71,0x28); //+8 = 256hz
 	if (stereomode == 2) koutp(0x71,0x26); //+6 = 1024hz
 #endif
-	// FIXME Duke3D 1.4 Build Editor test
-//	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,0x42);
+#if (LIBVER_BUILDREV >= 19960820L)
+	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,0x42);
+#endif
 #if (LIBVER_BUILDREV >= 19970602L)
 	koutp(0x70,0xc); kinp(0x71);
 #endif
 	oa1 = kinp(0xa1); koutp(0xa1,oa1&~1);
-	// FIXME Duke3D 1.4 Build Editor test
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 	koutp(0x70,0xa); ortca = kinp(0x71); koutp(0x71,(ortca & 0xF0) + 8);
 	koutp(0x70,0xb); ortcb = kinp(0x71); koutp(0x71,ortcb | 0x48);
 #else
@@ -9431,8 +9428,7 @@ void *engconvalloc32 (unsigned long size)
 
 #if (LIBVER_BUILDREV < 19970602L)
 		//Uninit RTC
-	// FIXME Duke3D 1.4 Build Editor test
-#if 1
+#if (LIBVER_BUILDREV < 19960820L)
 	koutp(0xa1,oa1);
 #else
 	_disable();
@@ -9441,8 +9437,9 @@ void *engconvalloc32 (unsigned long size)
 	koutp(0x70,0xa); koutp(0x71,ortca);
 	koutp(0x70,0xb); koutp(0x71,ortcb);
 	_dos_setvect(0x70, oldstereohandler);
-	// FIXME Duke3D 1.4 Build Editor test
-//	_enable();
+#if (LIBVER_BUILDREV >= 19960820L)
+	_enable();
+#endif
 #else
 	 r.x.eax = 0x0100;           //DPMI allocate DOS memory
 	 r.x.ebx = ((size+15)>>4);   //Number of paragraphs requested
@@ -9473,7 +9470,7 @@ installbistereohandlers(void far *stereohan)
 #endif
 {
 #if (LIBVER_BUILDREV < 19970602L)
-#if 0 // FIXME Duke3D 1.4 Build Editor test
+#if (LIBVER_BUILDREV >= 19960820L)
 	koutpw(0x70,0x420b);
 #endif
 	if ((activepage&1) == 0)
