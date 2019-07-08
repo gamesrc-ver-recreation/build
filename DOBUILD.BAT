@@ -30,6 +30,7 @@ goto end
 call bldhlpr engine.obj 19960724
 if ERRORLEVEL 1 goto end
 call bldhlpr build.obj 19960724
+goto end
 :DN3D14G
 call bldhlpr engine.obj 19960820
 goto end
