@@ -58,6 +58,11 @@ long hvel;
 
 static long synctics = 0, lockclock = 0;
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
+extern long chainplace;
+extern char chainstat;
+#endif
+
 extern long stereomode;
 extern char vgacompatible;
 
@@ -260,7 +265,13 @@ main(short int argc,char **argv)
 	uninitengine();
 	setvmode(0x3);
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From 95 rev.
+	if (asksave == 0)
+		showengineinfo();
+	else
+#else
 	if (asksave)
+#endif
 	{
 		printf("Save changes?\n");
 		do
@@ -2306,8 +2317,10 @@ gettile(long tilenum)
 		}
 		while (tilenum < topleft) topleft -= (xtiles<<gettilezoom);
 		while (tilenum >= topleft+(tottiles<<(gettilezoom<<1))) topleft += (xtiles<<gettilezoom);
+#if (LIBVER_BUILDREV >= 19960427L)
 		if (topleft < 0) topleft = 0;
 		if (topleft > MAXTILES-(tottiles<<(gettilezoom<<1))) topleft = MAXTILES-(tottiles<<(gettilezoom<<1));
+#endif
 	}
 
 	if (keystatus[0x1c] == 0)
@@ -2355,15 +2368,33 @@ drawtilescreen(long pictopleft, long picbox)
 
 				dax = ((cnt%(xtiles<<gettilezoom))<<(6-gettilezoom));
 				day = ((cnt/(xtiles<<gettilezoom))<<(6-gettilezoom));
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
+				if (chainstat)
+					vidpos = ylookup[day]+(dax>>2)+chainplace;
+				else
+#endif
 				vidpos = ylookup[day]+dax+frameplace;
 				if ((xdime <= (64>>gettilezoom)) && (ydime <= (64>>gettilezoom)))
 				{
 					for(i=0;i<xdime;i++)
 					{
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
+						if (chainstat)
+						{
+							outpw(0x3c4,2+(256<<(i&3)));
+							vidpos2 = vidpos+(i>>2);
+						}
+						else
+#endif
 						vidpos2 = vidpos+i;
 						for(j=0;j<ydime;j++)
 						{
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From 95 rev.
+							dat = *picptr++;
+							drawpixel(vidpos2, dat);
+#else
 							*(char *)vidpos2 = *picptr++;
+#endif
 							vidpos2 += pinc;
 						}
 					}
@@ -2375,17 +2406,33 @@ drawtilescreen(long pictopleft, long picbox)
 					else
 						scaledown = ((ydime+(63>>gettilezoom))>>(6-gettilezoom));
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From 95 rev.
+					dax = 0;
+#endif
 					for(i=0;i<xdime;i+=scaledown)
 					{
 						if (waloff[wallnum] == 0) loadtile(wallnum);
 						picptr = (char *)(waloff[wallnum]) + ydime*i;
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
+						if (chainstat) outpw(0x3c4,2+(256<<(dax&3)));
+#endif
 						vidpos2 = vidpos;
 						for(j=0;j<ydime;j+=scaledown)
 						{
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From 95 rev.
+							dat = *picptr;
+							picptr += scaledown;
+							drawpixel(vidpos2, dat);
+#else
 							*(char *)vidpos2 = *picptr;
 							picptr += scaledown;
+#endif
 							vidpos2 += pinc;
 						}
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
+						dax++;
+						if (chainstat || ((dax&3) == 0))
+#endif
 						vidpos++;
 					}
 				}
@@ -5207,7 +5254,11 @@ getlinehighlight(long xplc, long yplc)
 		y1 = wall[closest].y;
 		x2 = wall[wall[closest].point2].x;
 		y2 = wall[wall[closest].point2].y;
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From 95 rev.
+		if ((xplc-x1)*(y2-y1) > (x2-x1)*(yplc-y1))
+#else
 		if (dmulscale32(xplc-x1,y2-y1,-(x2-x1),yplc-y1) >= 0)
+#endif
 			closest = wall[closest].nextwall;
 	}
 
