@@ -2499,7 +2499,11 @@ initengine()
 	linehighlight = -1;
 	highlightcnt = 0;
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs.
+	resettiming();
+#else
 	totalclock = 0;
+#endif
 	visibility = 512;
 	parallaxvisibility = 512;
 
@@ -2897,6 +2901,26 @@ qloadkvx(long voxindex, char *filename)
 	kclose(fil);
 }
 #endif
+
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From 95 rev.
+showengineinfo()
+{
+	long templong;
+
+	if (totalclock != 0)
+	{
+		templong = (numframes*12000L)/totalclock;
+		printf("%d.%1d%1d frames per second\n",(short)(templong/100),(short)((templong/10)%10),(short)(templong%10));
+	}
+}
+
+resettiming()
+{
+	numframes = 0L;
+	totalclock = 0L;
+	totalclocklock = 0L;
+}
+#endif // LIBVER_BUILDREV < 19960427L
 
 clipinsidebox(long x, long y, short wallnum, long walldist)
 {
