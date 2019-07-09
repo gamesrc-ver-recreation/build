@@ -94,6 +94,11 @@ static unsigned long distrecip[16384];
 
 static char moustat = 0;
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
+char chainstat = 0;
+long chainplace;
+#endif
+
 long transarea = 0, totalarea = 0, beforedrawrooms = 1;
 
 static long oxdimen = -1, oviewingrange = -1, oxyaspect = -1;

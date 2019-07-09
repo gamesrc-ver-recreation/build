@@ -59,8 +59,8 @@ long hvel;
 static long synctics = 0, lockclock = 0;
 
 #if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
-extern long chainplace;
 extern char chainstat;
+extern long chainplace;
 #endif
 
 extern long stereomode;
