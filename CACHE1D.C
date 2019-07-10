@@ -132,7 +132,7 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 		{
 			if (*CAC_LOCK(zz) >= 200) { daval = 0x7fffffff; break; }
 			if (*CAC_LOCK(zz) > 0)
-				daval += divscale4((CAC_LENG(zz)>>10)+64,200-CAC_LOCK(zz));
+				daval += divscale4((CAC_LENG(zz)>>10)+64,200-*CAC_LOCK(zz));
 			i+=CAC_LENG(zz);zz++;
 		}
 #else
