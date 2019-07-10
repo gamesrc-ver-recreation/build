@@ -41,6 +41,15 @@
 #define MAXCACHEOBJECTS 9216
 #endif
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Convenience macros
+#define CAC_HAND(i) handptr[i]
+#define CAC_LENG(i) cacleng[i]
+#define CAC_LOCK(i) lockptr[i]
+#else
+#define CAC_HAND(i) cac[i].hand
+#define CAC_LENG(i) cac[i].leng
+#define CAC_LOCK(i) cac[i].lock
+#endif
 static long cachesize = 0;
 long cachecount = 0;
 char zerochar = 0;
