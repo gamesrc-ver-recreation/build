@@ -54,9 +54,15 @@ static long cachesize = 0;
 long cachecount = 0;
 char zerochar = 0;
 long cachestart = 0, cacnum = 0, agecount = 0;
+#if (LIBVER_BUILDREV < 19960427L)
+long *handptr[MAXCACHEOBJECTS];
+long cacleng[MAXCACHEOBJECTS];
+char *lockptr[MAXCACHEOBJECTS];
+#else
 typedef struct { long *hand, leng; char *lock; } cactype;
 cactype cac[MAXCACHEOBJECTS];
 static long lockrecip[200];
+#endif
 #if (LIBVER_BUILDREV < 20000614L) // VERSIONS RESTORATION - HACK
 #define reportandexit_wrapper(errormessage) do { printf(errormessage "\n"); reportandexit(); } while (0)
 #else
@@ -72,8 +78,8 @@ initcache(long dacachestart, long dacachesize)
 	cachestart = dacachestart;
 	cachesize = dacachesize;
 
-	cac[0].leng = cachesize;
-	cac[0].lock = &zerochar;
+	CAC_LENG(0) = cachesize;
+	CAC_LOCK(0) = &zerochar;
 	cacnum = 1;
 }
 
@@ -103,15 +109,15 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	bestval = 0x7fffffff; o1 = cachesize;
 	for(z=cacnum-1;z>=0;z--)
 	{
-		o1 -= cac[z].leng;
+		o1 -= CAC_LENG(z);
 		o2 = o1+newbytes; if (o2 > cachesize) continue;
 
 		daval = 0;
-		for(i=o1,zz=z;i<o2;i+=cac[zz++].leng)
+		for(i=o1,zz=z;i<o2;i+=CAC_LENG(zz++))
 		{
-			if (*cac[zz].lock == 0) continue;
-			if (*cac[zz].lock >= 200) { daval = 0x7fffffff; break; }
-			daval += mulscale32(cac[zz].leng+65536,lockrecip[*cac[zz].lock]);
+			if (*CAC_LOCK(zz) == 0) continue;
+			if (*CAC_LOCK(zz) >= 200) { daval = 0x7fffffff; break; }
+			daval += mulscale32(CAC_LENG(zz)+65536,lockrecip[*CAC_LOCK(zz)]);
 			if (daval >= bestval) break;
 		}
 		if (daval < bestval)
@@ -127,8 +133,8 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 		reportandexit_wrapper("CACHE SPACE ALL LOCKED UP!");
 
 		//Suck things out
-	for(sucklen=-newbytes,suckz=bestz;sucklen<0;sucklen+=cac[suckz++].leng)
-		if (*cac[suckz].lock) *cac[suckz].hand = 0;
+	for(sucklen=-newbytes,suckz=bestz;sucklen<0;sucklen+=CAC_LENG(suckz++))
+		if (*CAC_LOCK(suckz)) *CAC_HAND(suckz) = 0;
 
 		//Remove all blocks except 1
 	suckz -= (bestz+1); cacnum -= suckz;
@@ -137,9 +143,9 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 #else
 	copybufbyte(&cac[bestz+suckz],&cac[bestz],(cacnum-bestz)*sizeof(cactype));
 #endif
-	cac[bestz].hand = newhandle; *newhandle = cachestart+besto;
-	cac[bestz].leng = newbytes;
-	cac[bestz].lock = newlockptr;
+	CAC_HAND(bestz) = newhandle; *newhandle = cachestart+besto;
+	CAC_LENG(bestz) = newbytes;
+	CAC_LOCK(bestz) = newlockptr;
 	cachecount++;
 
 		//Add new empty block if necessary
@@ -153,12 +159,12 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 #else
 		cacnum++; if (cacnum > MAXCACHEOBJECTS) reportandexit("Too many objects in cache! (cacnum > MAXCACHEOBJECTS)");
 #endif
-		cac[bestz].leng = sucklen;
-		cac[bestz].lock = &zerochar;
+		CAC_LENG(bestz) = sucklen;
+		CAC_LOCK(bestz) = &zerochar;
 		return;
 	}
 
-	if (*cac[bestz].lock == 0) { cac[bestz].leng += sucklen; return; }
+	if (*CAC_LOCK(bestz) == 0) { CAC_LENG(bestz) += sucklen; return; }
 
 #if (LIBVER_BUILDREV < 20000614L)
 	cacnum++;
@@ -166,12 +172,12 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	cacnum++; if (cacnum > MAXCACHEOBJECTS) reportandexit("Too many objects in cache! (cacnum > MAXCACHEOBJECTS)");
 #endif
 #if (LIBVER_BUILDREV < 19961012L)
-	for(z=cacnum-1;z>bestz;z--) { cac[z].hand = cac[z-1].hand; cac[z].leng = cac[z-1].leng; cac[z].lock = cac[z-1].lock; }
+	for(z=cacnum-1;z>bestz;z--) { CAC_HAND(z) = CAC_HAND(z-1); CAC_LENG(z) = CAC_LENG(z-1); CAC_LOCK(z) = CAC_LOCK(z-1); }
 #else
 	for(z=cacnum-1;z>bestz;z--) cac[z] = cac[z-1];
 #endif
-	cac[bestz].leng = sucklen;
-	cac[bestz].lock = &zerochar;
+	CAC_LENG(bestz) = sucklen;
+	CAC_LOCK(bestz) = &zerochar;
 }
 
 #if (LIBVER_BUILDREV >= 19961012L)
@@ -181,21 +187,21 @@ suckcache (long *suckptr)
 
 		//Can't exit early, because invalid pointer might be same even though lock = 0
 	for(i=0;i<cacnum;i++)
-		if ((long)(*cac[i].hand) == (long)suckptr)
+		if ((long)(*CAC_HAND(i)) == (long)suckptr)
 		{
-			if (*cac[i].lock) *cac[i].hand = 0;
-			cac[i].lock = &zerochar;
-			cac[i].hand = 0;
+			if (*CAC_LOCK(i)) *CAC_HAND(i) = 0;
+			CAC_LOCK(i) = &zerochar;
+			CAC_HAND(i) = 0;
 
 				//Combine empty blocks
-			if ((i > 0) && (*cac[i-1].lock == 0))
+			if ((i > 0) && (*CAC_LOCK(i-1) == 0))
 			{
-				cac[i-1].leng += cac[i].leng;
+				CAC_LENG(i-1) += CAC_LENG(i);
 				cacnum--; copybuf(&cac[i+1],&cac[i],(cacnum-i)*sizeof(cactype));
 			}
-			else if ((i < cacnum-1) && (*cac[i+1].lock == 0))
+			else if ((i < cacnum-1) && (*CAC_LOCK(i+1) == 0))
 			{
-				cac[i+1].leng += cac[i].leng;
+				CAC_LENG(i+1) += CAC_LENG(i);
 				cacnum--; copybuf(&cac[i+1],&cac[i],(cacnum-i)*sizeof(cactype));
 			}
 		}
@@ -210,9 +216,9 @@ agecache()
 	if (agecount >= cacnum) agecount = cacnum-1;
 	for(cnt=(cacnum>>4);cnt>=0;cnt--)
 	{
-		ch = (*cac[agecount].lock);
+		ch = (*CAC_LOCK(agecount));
 		if (((ch-2)&255) < 198)
-			(*cac[agecount].lock) = ch-1;
+			(*CAC_LOCK(agecount)) = ch-1;
 
 		agecount--; if (agecount < 0) agecount = cacnum-1;
 	}
@@ -235,10 +241,10 @@ reportandexit(char *errormessage)
 	for(i=0;i<cacnum;i++)
 	{
 		printf("%ld- ",i);
-		printf("ptr: 0x%x, ",*cac[i].hand);
-		printf("leng: %ld, ",cac[i].leng);
-		printf("lock: %ld\n",*cac[i].lock);
-		j += cac[i].leng;
+		printf("ptr: 0x%x, ",*CAC_HAND(i));
+		printf("leng: %ld, ",CAC_LENG(i));
+		printf("lock: %ld\n",*CAC_LOCK(i));
+		j += CAC_LENG(i);
 	}
 #if (LIBVER_BUILDREV >= 20000614L)
 	printf("Cachesize = %ld\n",cachesize);
