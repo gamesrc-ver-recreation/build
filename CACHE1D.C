@@ -94,7 +94,9 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 {
 	long i, j, z, zz, bestz, daval, bestval, besto, o1, o2, sucklen, suckz;
 
+#if (LIBVER_BUILDREV >= 19960317L)
 	newbytes = ((newbytes+15)&0xfffffff0);
+#endif
 
 #if (LIBVER_BUILDREV < 19961012L)
 	if (newbytes > cachesize)
