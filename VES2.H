@@ -87,9 +87,11 @@ static long backlinaddress = 0;  //Save address for free operation (0x801)
 // might be guessed from here that the editor is using
 // a bit newer ENGINE.OBJ than the Duke3D 1.4 game EXE.
 // - On the other hand, various changes to ENGINE.OBJ show the exact opposite.
+// - In fact, Duke3D 1.3d's Build Editor is also using the same revision
+// of qlimitrate as the 1.4 and 1.5 game EXEs.
 //
 // For now we make an exception in this file.
-#if (LIBVER_BUILDREV != 19960724L) && (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV == 19960820L)
 #pragma aux qlimitrate =\
 	"mov dx, 0x3da",\
 	"wait1: in al, dx",\
@@ -606,7 +608,11 @@ void setvisualpage(long dapagenum)
 		if (linearmode)
 		{
 			p = FP_OFF(screen);
+#if (LIBVER_BUILDREV < 19960427L)
+			delta = activepagelookup[dapagenum]-FP_OFF(screen);
+#else
 			delta = activepagelookup[dapagenum&0x7fffffff]-FP_OFF(screen);
+#endif
 			if (permanentupdate == 0)
 			{
 				y1 = startumost[cx1]; y2 = y1;
@@ -670,7 +676,11 @@ void setvisualpage(long dapagenum)
 			else
 			{
 				p += ylookup[cy1]+cx1;
+#if (LIBVER_BUILDREV < 19960427L)
+				delta = activepagelookup[dapagenum]-FP_OFF(screen);
+#else
 				delta = activepagelookup[dapagenum&0x7fffffff]-FP_OFF(screen);
+#endif
 				for(y=cy1;y<=cy2;y++)
 				{
 					copybufbyte(p,p+delta,dx);
@@ -714,10 +724,18 @@ void setvisualpage(long dapagenum)
 	{
 		if (setvisualentry)
 		{
+#if (LIBVER_BUILDREV < 19960427L)
+			i = imageSize*(dapagenum);
+#else
 			i = imageSize*(dapagenum&0x7fffffff);
+#endif
 			if (vgacompatible)
 			{
+#if (LIBVER_BUILDREV < 19960427L)
+				qlimitrate();
+#else
 				if (dapagenum >= 0) qlimitrate();
+#endif
 				vesasetvisual(0x4f07,0L,i>>2,i>>18);
 			}
 			else
@@ -727,18 +745,31 @@ void setvisualpage(long dapagenum)
 		else
 		{
 			regs.x.ax = 0x4f07;
+#if (LIBVER_BUILDREV < 19960427L)
+			regs.x.cx = visualpagelookup[dapagenum][0]; //X-coordinate
+			regs.x.dx = visualpagelookup[dapagenum][1]; //Y-coordinate
+#else
 			regs.x.cx = visualpagelookup[dapagenum&0x7fffffff][0]; //X-coordinate
 			regs.x.dx = visualpagelookup[dapagenum&0x7fffffff][1]; //Y-coordinate
+#endif
 			if (vgacompatible)
 			{
 				regs.x.bx = 0;
+#if (LIBVER_BUILDREV < 19960427L)
+				qlimitrate();
+#else
 				if (dapagenum >= 0) qlimitrate();
+#endif
 				DPMI_int86(0x10,&regs,&regs);
 			}
 			else
 				{ regs.x.bx = 0x80; DPMI_int86(0x10,&regs,&regs); }
 		}
+#if (LIBVER_BUILDREV < 19960427L)
+		faketimerhandler();
+#else
 		if (dapagenum >= 0) faketimerhandler();
+#endif
 	}
 }
 
