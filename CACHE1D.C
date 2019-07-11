@@ -52,15 +52,18 @@
 #define CAC_LENG(i) cac[i].leng
 #define CAC_LOCK(i) cac[i].lock
 #endif
+#if (LIBVER_BUILDREV < 19960427L)
+long cachecount = 0;
+static char zerochar = 0;
+static long cachestart = 0, cachesize = 0, cacnum = 0, agecount = 0;
+static long *handptr[MAXCACHEOBJECTS];
+static long cacleng[MAXCACHEOBJECTS];
+static char *lockptr[MAXCACHEOBJECTS];
+#else
 static long cachesize = 0;
 long cachecount = 0;
 char zerochar = 0;
 long cachestart = 0, cacnum = 0, agecount = 0;
-#if (LIBVER_BUILDREV < 19960427L)
-long *handptr[MAXCACHEOBJECTS];
-long cacleng[MAXCACHEOBJECTS];
-char *lockptr[MAXCACHEOBJECTS];
-#else
 typedef struct { long *hand, leng; char *lock; } cactype;
 cactype cac[MAXCACHEOBJECTS];
 static long lockrecip[200];
@@ -307,11 +310,11 @@ reportandexit(char *errormessage)
 #define MAXOPENFILES 64     //Warning: Fix filehan if this is changed
 
 #if (LIBVER_BUILDREV < 19960427L)
-long numfiles;
-long groupfil = -1;
-long groupfilpos;
-char *filelist;
-long *fileoffs;
+static long numfiles;
+static long groupfil = -1;
+static long groupfilpos;
+static char *filelist;
+static long *fileoffs;
 #else
 static char toupperlookup[256] =
 {
@@ -342,13 +345,12 @@ static long *gfileoffs[MAXGROUPFILES];
 #endif // LIBVER_BUILDREV
 
 #if (LIBVER_BUILDREV < 19960427L)
-long filepos[MAXOPENFILES];
-long filehan[MAXOPENFILES] =
+#define filehan filehandle // VERSIONS RESTORATION - Convenience macro
 #else
 static char filegrp[MAXOPENFILES];
+#endif
 static long filepos[MAXOPENFILES];
 static long filehan[MAXOPENFILES] =
-#endif
 {
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -675,8 +677,9 @@ kclose(long handle)
 	//Internal LZW variables
 #define LZWSIZE 16384           //Watch out for shorts!
 #if (LIBVER_BUILDREV < 19960427L)
-char *lzwbuf1, *lzwbuf4, *lzwbuf5, lzwbuflock[5];
-short *lzwbuf2, *lzwbuf3;
+static char *lzwbuf1;
+static short *lzwbuf2, *lzwbuf3;
+static char *lzwbuf4, *lzwbuf5, lzwbuflock[5];
 #else
 static char *lzwbuf1, *lzwbuf4, *lzwbuf5, lzwbuflock[5];
 static short *lzwbuf2, *lzwbuf3;
@@ -804,7 +807,7 @@ compress(char *lzwinbuf, long uncompleng, char *lzwoutbuf)
 	long bytecnt1, bitcnt, numbits, oneupnumbits;
 	short *shortptr;
 #if (LIBVER_BUILDREV < 19960427L)
-	char bitcnt2;
+	char bitcnt2 = 0;
 #endif
 
 	for(i=255;i>=0;i--) { lzwbuf1[i] = i; lzwbuf3[i] = (i+1)&255; }
