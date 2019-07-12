@@ -133,7 +133,11 @@ long tilefileoffs[MAXTILES];
 long artsize = 0, cachesize = 0;
 
 static short radarang[1280], radarang2[MAXXDIM];
+#if (LIBVER_BUILDREV < 19960427L)
+static unsigned short sqrtable[2048];
+#else
 static unsigned short sqrtable[4096], shlookup[4096+256];
+#endif
 char pow2char[8] = {1,2,4,8,16,32,64,128};
 long pow2long[32] =
 {
@@ -381,6 +385,48 @@ extern long setupdrawslab(long,long);
 extern long drawslab(long,long,long,long,long,long);
 #pragma aux drawslab parm [eax][ebx][ecx][edx][esi][edi];
 
+#if (LIBVER_BUILDREV < 19960427L)
+#pragma aux nsqrtasm = \
+	"mov fpuasm, eax",\
+	"fild dword ptr fpuasm",\
+	"fstp dword ptr fpuasm",\
+	"mov bl, byte ptr [fpuasm+3]",\
+	"sub bl, 0x44",\
+	"jge short over2048",\
+	"xor ebx, ebx",\
+	"mov bx, word ptr sqrtable[eax*2]",\
+	"jmp short end",\
+	"over2048: lea ecx, [ebx*2]",\
+	"shr eax, cl",\
+	"mov cl, bl",\
+	"xor ebx, ebx",\
+	"mov bx, word ptr sqrtable[eax*2]",\
+	"shl ebx, cl",\
+	"end: shr ebx, 10",\
+	parm nomemory [eax]\
+	modify exact [eax ebx ecx]\
+	value [ebx]\
+
+#pragma aux ksqrtasm = \
+	"test eax, eax",\
+	"jns skipnegate",\
+	"neg eax",\
+	"skipnegate: bsr ecx, eax",\
+	"cmp cl, 11",\
+	"jge short over2048",\
+	"movzx eax, word ptr sqrtable[eax*2]",\
+	"jmp short end",\
+	"over2048: sub cl, 9",\
+	"and cl, 0xfe",\
+	"sar eax, cl",\
+	"movzx eax, word ptr sqrtable[eax*2]",\
+	"sar cl, 1",\
+	"shl eax, cl",\
+	"end: sar eax, 10",\
+	parm nomemory [eax]\
+	modify exact [eax ebx ecx edx]\
+
+#else // LIBVER_BUILDREV
 #pragma aux nsqrtasm =\
 	"test eax, 0xff000000",\
 	"mov ebx, eax",\
@@ -397,6 +443,7 @@ extern long drawslab(long,long,long,long,long,long);
 	parm nomemory [eax]\
 	modify exact [eax ebx ecx]\
 
+#endif // LIBVER_BUILDREV
 #pragma aux msqrtasm =\
 	"mov eax, 0x40000000",\
 	"mov ebx, 0x20000000",\
@@ -3782,7 +3829,11 @@ getangle(long xvect, long yvect)
 
 ksqrt(long num)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	return(ksqrtasm(num));
+#else
 	return(nsqrtasm(num));
+#endif
 }
 
 krecip(long num)
@@ -3792,6 +3843,33 @@ krecip(long num)
 
 initksqrt()
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	unsigned long i, root, num;
+	long diff,temp;
+
+	for(i=0;i<2048;i++)
+	{
+		root = 128;
+		num = i<<20;
+		do
+		{
+			temp = root;
+			root = (root+num/root)>>1;
+		} while((temp-root+1) > 2);
+		diff = root*root-num;
+		while (klabs(diff-2*root+1) < klabs(diff))
+		{
+			diff += -(2*root)+1;
+			root--;
+		}
+		while (klabs(diff+2*root+1) < klabs(diff))
+		{
+			diff += 2*root+1;
+			root++;
+		}
+		sqrtable[i] = root;
+	}
+#else
 	long i, j, k;
 
 	j = 1; k = 0;
@@ -3802,6 +3880,7 @@ initksqrt()
 		shlookup[i] = (k<<1)+((10-k)<<8);
 		if (i < 256) shlookup[i+4096] = ((k+6)<<1)+((10-(k+6))<<8);
 	}
+#endif
 }
 
 copytilepiece(long tilenume1, long sx1, long sy1, long xsiz, long ysiz,
@@ -5698,7 +5777,11 @@ hitscan(long xs, long ys, long zs, short sectnum, long vx, long vy, long vz,
 		{
 			wal = &wall[sec->wallptr]; wal2 = &wall[wal->point2];
 			dax = wal2->x-wal->x; day = wal2->y-wal->y;
+#if (LIBVER_BUILDREV < 19960427L)
+			i = ksqrtasm(dax*dax+day*day); if (i == 0) continue;
+#else
 			i = nsqrtasm(dax*dax+day*day); if (i == 0) continue;
+#endif
 			i = divscale15(sec->ceilingheinum,i);
 			dax *= i; day *= i;
 
@@ -5737,7 +5820,11 @@ hitscan(long xs, long ys, long zs, short sectnum, long vx, long vy, long vz,
 		{
 			wal = &wall[sec->wallptr]; wal2 = &wall[wal->point2];
 			dax = wal2->x-wal->x; day = wal2->y-wal->y;
+#if (LIBVER_BUILDREV < 19960427L)
+			i = ksqrtasm(dax*dax+day*day); if (i == 0) continue;
+#else
 			i = nsqrtasm(dax*dax+day*day); if (i == 0) continue;
+#endif
 			i = divscale15(sec->floorheinum,i);
 			dax *= i; day *= i;
 
@@ -6208,7 +6295,11 @@ clipmove (long *x, long *y, long *z, short *sectnum,
 	cy = (((*y)+goaly)>>1);
 		//Extra walldist for sprites on sector lines
 	gx = goalx-(*x); gy = goaly-(*y);
+#if (LIBVER_BUILDREV < 19960427L)
+	rad = ksqrtasm(gx*gx + gy*gy) + MAXCLIPDIST+walldist + 8;
+#else
 	rad = nsqrtasm(gx*gx + gy*gy) + MAXCLIPDIST+walldist + 8;
+#endif
 	xmin = cx-rad; ymin = cy-rad;
 	xmax = cx+rad; ymax = cy+rad;
 
@@ -9234,6 +9325,18 @@ sectorofwall(short theline)
 
 getceilzofslope(short sectnum, long dax, long day)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long dx, dy, i, j, wal, wal2;
+
+	if (!(sector[sectnum].ceilingstat&2)) return(sector[sectnum].ceilingz);
+	j = sector[sectnum].wallptr;
+	dx = wall[wall[j].point2].x-wall[j].x;
+	dy = wall[wall[j].point2].y-wall[j].y;
+	i = (ksqrtasm(dx*dx+dy*dy)); if (i == 0) return(sector[sectnum].ceilingz);
+	i = divscale15(sector[sectnum].ceilingheinum,i);
+	dx *= i; dy *= i;
+	return(sector[sectnum].ceilingz+dmulscale23(dx,day-wall[j].y,-dy,dax-wall[j].x));
+#else
 	long dx, dy, i, j;
 	walltype *wal;
 
@@ -9243,10 +9346,23 @@ getceilzofslope(short sectnum, long dax, long day)
 	i = (nsqrtasm(dx*dx+dy*dy)<<5); if (i == 0) return(sector[sectnum].ceilingz);
 	j = dmulscale3(dx,day-wal->y,-dy,dax-wal->x);
 	return(sector[sectnum].ceilingz+scale(sector[sectnum].ceilingheinum,j,i));
+#endif
 }
 
 getflorzofslope(short sectnum, long dax, long day)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long dx, dy, i, j;
+
+	if (!(sector[sectnum].floorstat&2)) return(sector[sectnum].floorz);
+	j = sector[sectnum].wallptr;
+	dx = wall[wall[j].point2].x-wall[j].x;
+	dy = wall[wall[j].point2].y-wall[j].y;
+	i = (ksqrtasm(dx*dx+dy*dy)); if (i == 0) return(sector[sectnum].floorz);
+	i = divscale15(sector[sectnum].floorheinum,i);
+	dx *= i; dy *= i;
+	return(sector[sectnum].floorz+dmulscale23(dx,day-wall[j].y,-dy,dax-wall[j].x));
+#else
 	long dx, dy, i, j;
 	walltype *wal;
 
@@ -9256,6 +9372,7 @@ getflorzofslope(short sectnum, long dax, long day)
 	i = (nsqrtasm(dx*dx+dy*dy)<<5); if (i == 0) return(sector[sectnum].floorz);
 	j = dmulscale3(dx,day-wal->y,-dy,dax-wal->x);
 	return(sector[sectnum].floorz+scale(sector[sectnum].floorheinum,j,i));
+#endif
 }
 
 getzsofslope(short sectnum, long dax, long day, long *ceilz, long *florz)
@@ -9270,7 +9387,11 @@ getzsofslope(short sectnum, long dax, long day, long *ceilz, long *florz)
 	{
 		wal = &wall[sec->wallptr]; wal2 = &wall[wal->point2];
 		dx = wal2->x-wal->x; dy = wal2->y-wal->y;
+#if (LIBVER_BUILDREV < 19960427L)
+		i = (ksqrtasm(dx*dx+dy*dy)<<5); if (i == 0) return;
+#else
 		i = (nsqrtasm(dx*dx+dy*dy)<<5); if (i == 0) return;
+#endif
 		j = dmulscale3(dx,day-wal->y,-dy,dax-wal->x);
 		if (sec->ceilingstat&2) *ceilz = (*ceilz)+scale(sec->ceilingheinum,j,i);
 		if (sec->floorstat&2) *florz = (*florz)+scale(sec->floorheinum,j,i);
@@ -9279,6 +9400,20 @@ getzsofslope(short sectnum, long dax, long day, long *ceilz, long *florz)
 
 alignceilslope(short dasect, long x, long y, long z)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, j, dax, day;
+
+	j = sector[dasect].wallptr;
+	dax = wall[wall[j].point2].x-wall[j].x;
+	day = wall[wall[j].point2].y-wall[j].y;
+
+	i = (y-wall[j].y)*dax - (x-wall[j].x)*day; if (i == 0) return;
+	sector[dasect].ceilingheinum = scale((z-sector[dasect].ceilingz)<<8,
+													 ksqrtasm(dax*dax+day*day),i);
+
+	if (sector[dasect].ceilingheinum == 0) sector[dasect].ceilingstat &= ~2;
+												 else sector[dasect].ceilingstat |= 2;
+#else
 	long i, dax, day;
 	walltype *wal;
 
@@ -9292,10 +9427,25 @@ alignceilslope(short dasect, long x, long y, long z)
 
 	if (sector[dasect].ceilingheinum == 0) sector[dasect].ceilingstat &= ~2;
 												 else sector[dasect].ceilingstat |= 2;
+#endif
 }
 
 alignflorslope(short dasect, long x, long y, long z)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, j, dax, day;
+
+	j = sector[dasect].wallptr;
+	dax = wall[wall[j].point2].x-wall[j].x;
+	day = wall[wall[j].point2].y-wall[j].y;
+
+	i = (y-wall[j].y)*dax - (x-wall[j].x)*day; if (i == 0) return;
+	sector[dasect].floorheinum = scale((z-sector[dasect].floorz)<<8,
+												  ksqrtasm(dax*dax+day*day),i);
+
+	if (sector[dasect].floorheinum == 0) sector[dasect].floorstat &= ~2;
+											  else sector[dasect].floorstat |= 2;
+#else
 	long i, dax, day;
 	walltype *wal;
 
@@ -9309,6 +9459,7 @@ alignflorslope(short dasect, long x, long y, long z)
 
 	if (sector[dasect].floorheinum == 0) sector[dasect].floorstat &= ~2;
 											  else sector[dasect].floorstat |= 2;
+#endif
 }
 
 owallmost(short *mostbuf, long w, long z)
