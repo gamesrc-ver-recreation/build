@@ -96,7 +96,9 @@ static char moustat = 0;
 
 #if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
 char chainstat = 0;
-long chainplace;
+long chainplace, chainsiz, chainnumpages = 0;
+
+static long ooption0, stereopage, stereofps = 0;
 #endif
 
 long transarea = 0, totalarea = 0, beforedrawrooms = 1;
@@ -487,19 +489,53 @@ drawrooms(long daposx, long daposy, long daposz,
 
 	cosglobalang = sintable[(globalang+512)&2047];
 	singlobalang = sintable[globalang&2047];
+#if (LIBVER_BUILDREV >= 19960427L)
 	cosviewingrangeglobalang = mulscale16(cosglobalang,viewingrange);
 	sinviewingrangeglobalang = mulscale16(singlobalang,viewingrange);
+#endif
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev
+	if (stereofps != 0)
+#else
 	if ((stereomode != 0) || (vidoption == 6))
+#endif
 	{
 		if (stereopixelwidth != ostereopixelwidth)
 		{
 			ostereopixelwidth = stereopixelwidth;
+#if (LIBVER_BUILDREV < 19960427L)
+			xdimen = xdim+(stereopixelwidth<<1); halfxdimen = (xdimen>>1);
+			xdimenrecip = divscale32(1L,xdimen);
+			setaspect((long)divscale16(xdim+(stereopixelwidth<<1),xdim),65536L);
+#else
 			xdimen = (windowx2-windowx1+1)+(stereopixelwidth<<1); halfxdimen = (xdimen>>1);
 			xdimenrecip = divscale32(1L,xdimen);
 			setaspect((long)divscale16(xdimen,windowx2-windowx1+1),yxaspect);
+#endif
 		}
 
+#if (LIBVER_BUILDREV < 19960427L)
+		if (stereopage == 0)
+		{
+			for(i=0;i<xdimen-xdim;i++) { startumost[i] = 1, startdmost[i] = 0; }
+			for(i=xdimen-xdim;i<xdimen;i++) { startumost[i] = windowy1, startdmost[i] = windowy2+1; }
+			viewoffset = -(xdimen-xdim);
+			globalposx += mulscale24(singlobalang,stereowidth);
+			globalposy -= mulscale24(cosglobalang,stereowidth);
+			if (ooption0 == 7)
+				frameplace = FP_OFF(screen);
+		}
+		else
+		{
+			for(i=xdim;i<xdimen;i++) { startumost[i] = 1, startdmost[i] = 0; }
+			for(i=0;i<xdim;i++) { startumost[i] = windowy1, startdmost[i] = windowy2+1; }
+			viewoffset = 0;
+			globalposx -= mulscale24(singlobalang,stereowidth);
+			globalposy += mulscale24(cosglobalang,stereowidth);
+			if (ooption0 == 7)
+				frameplace = FP_OFF(screen)+65536;
+		}
+#else // LIBVER_BUILDREV
 #if (LIBVER_BUILDREV < 19970602L)
 		if ((activepage&1) == 0)
 #else
@@ -521,14 +557,23 @@ drawrooms(long daposx, long daposy, long daposz,
 		globalposx += mulscale24(singlobalang,i);
 		globalposy -= mulscale24(cosglobalang,i);
 		if (vidoption == 6) frameplace = FP_OFF(screen)+(activepage&1)*65536;
+#endif // LIBVER_BUILDREV
 	}
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev
+	if (chainnumpages > 0) koutp(0x3c4,2);
+
+	frameoffset = frameplace+viewoffset;
+
+	clearbuf((long)(&gotsector[0]),(long)((numsectors+31)>>5),0L);
+#else
 	if ((xyaspect != oxyaspect) || (xdimen != oxdimen) || (viewingrange != oviewingrange))
 		dosetaspect();
 
 	frameoffset = frameplace+viewoffset;
 
 	clearbufbyte((long)(&gotsector[0]),(long)((numsectors+7)>>3),0L);
+#endif
 
 	shortptr1 = (short *)&startumost[windowx1];
 	shortptr2 = (short *)&startdmost[windowx1];
@@ -549,6 +594,9 @@ drawrooms(long daposx, long daposy, long daposz,
 	numhits = xdimen; numscans = 0; numbunches = 0;
 	maskwallcnt = 0; smostwallcnt = 0; smostcnt = 0; spritesortcnt = 0;
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev
+	updatesector(globalposx,globalposy,&globalcursectnum);
+#else
 	if (globalcursectnum >= MAXSECTORS)
 		globalcursectnum -= MAXSECTORS;
 	else
@@ -563,6 +611,7 @@ drawrooms(long daposx, long daposy, long daposz,
 	getzsofslope(globalcursectnum,globalposx,globalposy,&cz,&fz);
 	if (globalposz < cz) globparaceilclip = 0;
 	if (globalposz > fz) globparaflorclip = 0;
+#endif
 
 	scansector(globalcursectnum);
 
@@ -698,7 +747,11 @@ scansector (short sectnum)
 			if ((z == startwall) || (wall[z-1].point2 != z))
 			{
 				xp1 = dmulscale6(y1,cosglobalang,-x1,singlobalang);
+#if (LIBVER_BUILDREV < 19960427L)
+				yp1 = mulscale16(dmulscale6(x1,cosglobalang,y1,singlobalang),viewingrange);
+#else
 				yp1 = dmulscale6(x1,cosviewingrangeglobalang,y1,sinviewingrangeglobalang);
+#endif
 			}
 			else
 			{
@@ -706,7 +759,11 @@ scansector (short sectnum)
 				yp1 = yp2;
 			}
 			xp2 = dmulscale6(y2,cosglobalang,-x2,singlobalang);
+#if (LIBVER_BUILDREV < 19960427L)
+			yp2 = mulscale16(dmulscale6(x2,cosglobalang,y2,singlobalang),viewingrange);
+#else
 			yp2 = dmulscale6(x2,cosviewingrangeglobalang,y2,sinviewingrangeglobalang);
+#endif
 			if ((yp1 < 256) && (yp2 < 256)) goto skipitaddwall;
 
 				//If wall's NOT facing you
@@ -838,13 +895,25 @@ drawalls (long bunch)
 {
 	sectortype *sec, *nextsec;
 	walltype *wal;
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, j, k, l, m, n, x, y, x1, x2;
+#else
 	long i, j, k, l, m, n, x, y, x1, x2, cz[5], fz[5];
+#endif
 	long z, wallnum, sectnum, nextsectnum, globalhorizbak;
 	long startsmostwallcnt, startsmostcnt, gotswall;
+#if (LIBVER_BUILDREV < 19960427L)
+	char cstat2, cstat1, andwstat2, andwstat1, redtouchflag;
+#else
 	char andwstat1, andwstat2;
+#endif
 
 	z = bunchfirst[bunch];
 	sectnum = thesector[z]; sec = &sector[sectnum];
+#if (LIBVER_BUILDREV < 19960427L)
+	cstat1 = sec->ceilingstat;
+	cstat2 = sec->floorstat;
+#endif
 
 	andwstat1 = 0xff; andwstat2 = 0xff;
 	for(;z>=0;z=p2[z])  //uplc/dplc calculation
@@ -855,21 +924,279 @@ drawalls (long bunch)
 
 	if ((andwstat1&3) != 3)     //draw ceilings
 	{
+#if (LIBVER_BUILDREV >= 19960427L)
 		if ((sec->ceilingstat&3) == 2)
 			grouscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],sectnum,0);
 		else if ((sec->ceilingstat&1) == 0)
 			ceilscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],sectnum);
 		else
 			parascan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],sectnum,0,bunch);
+#else
+		if ((cstat1&3) == 2)
+		{
+			grouscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],(short)sectnum,0);
+		}
+		else if ((cstat1&1) == 0)
+		{
+			ceilscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],(short)sectnum);
+		}
+		else
+		{
+			globalhorizbak = globalhoriz;
+			if (parallaxyscale != 65536)
+				globalhoriz = mulscale16(globalhoriz-(ydimen>>1),parallaxyscale)+(ydimen>>1);
+			globalpal = sec->ceilingpal;
+			globalorientation = 0L;
+			globalpicnum = sec->ceilingpicnum;
+			if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+			globalshade = sec->ceilingshade;
+			globvis = globalpisibility;
+			if (sec->visibility != 0) globvis = mulscale4(globvis,(long)((unsigned char)(sec->visibility+16)));
+			globalxpanning = sec->ceilingxpanning;
+			globalypanning = sec->ceilingypanning;
+			if ((picanm[globalpicnum]&192) != 0)
+				globalpicnum += animateoffs(globalpicnum,(short)sectnum);
+			globalshiftval = (picsiz[globalpicnum]>>4);
+			if (pow2long[globalshiftval] != tilesizy[globalpicnum]) globalshiftval++;
+			globalshiftval = 32-globalshiftval;
+			globalzd = (((tilesizy[globalpicnum]>>1)+parallaxyoffs)<<globalshiftval)+(globalypanning<<24);
+			globalyscale = (8<<(globalshiftval-19));
+			if (globalorientation&256) globalyscale = -globalyscale, globalzd = -globalzd;
+
+			k = 11 - (picsiz[globalpicnum]&15) - pskybits;
+
+			x = -1;
+
+			for(z=bunchfirst[bunch];z>=0;z=p2[z])
+			{
+				wallnum = thewall[z]; nextsectnum = wall[wallnum].nextsector;
+
+				if ((nextsectnum == -1) || ((sector[nextsectnum].ceilingstat&1) == 0) || ((wall[wallnum].cstat&32) > 0))
+				{
+					if (x == -1) x = xb1[z];
+
+					if (parallaxtype == 0)
+					{
+						n = mulscale16(xdimenrecip,viewingrange);
+						for(j=xb1[z];j<=xb2[z];j++)
+							lplc[j] = (((mulscale23(j-halfxdimen,n)+globalang)&2047)>>k);
+					}
+					else
+					{
+						for(j=xb1[z];j<=xb2[z];j++)
+							lplc[j] = ((((long)radarang2[j]+globalang)&2047)>>k);
+					}
+					if (parallaxtype == 2)
+					{
+						n = mulscale16(xdimscale,viewingrange);
+						for(j=xb1[z];j<=xb2[z];j++)
+							swplc[j] = mulscale14(sintable[((long)radarang2[j]+512)&2047],n);
+					}
+					else
+						clearbuf((long)(&swplc[xb1[z]]),xb2[z]-xb1[z]+1,mulscale16(xdimscale,viewingrange));
+				}
+				else if (x >= 0)
+				{
+					l = globalpicnum; m = (picsiz[globalpicnum]&15);
+					globalpicnum = l+pskyoff[lplc[x]>>m];
+
+					if (((lplc[x]^lplc[xb1[z]-1])>>m) == 0)
+					{
+						wallscan(x,xb1[z]-1,umost,uplc,swplc,lplc);
+					}
+					else
+					{
+						j = x;
+						while (x < xb1[z])
+						{
+							n = l+pskyoff[lplc[x]>>m];
+							if (n != globalpicnum)
+							{
+								wallscan(j,x-1,umost,uplc,swplc,lplc);
+								j = x;
+								globalpicnum = n;
+							}
+							x++;
+						}
+						if (j < x)
+							wallscan(j,x-1,umost,uplc,swplc,lplc);
+					}
+
+					globalpicnum = l;
+					x = -1;
+				}
+			}
+
+			if (x >= 0)
+			{
+				l = globalpicnum; m = (picsiz[globalpicnum]&15);
+				globalpicnum = l+pskyoff[lplc[x]>>m];
+
+				if (((lplc[x]^lplc[xb2[bunchlast[bunch]]])>>m) == 0)
+				{
+					wallscan(x,xb2[bunchlast[bunch]],umost,uplc,swplc,lplc);
+				}
+				else
+				{
+					j = x;
+					while (x <= xb2[bunchlast[bunch]])
+					{
+						n = l+pskyoff[lplc[x]>>m];
+						if (n != globalpicnum)
+						{
+							wallscan(j,x-1,umost,uplc,swplc,lplc);
+							j = x;
+							globalpicnum = n;
+						}
+						x++;
+					}
+					if (j <= x)
+						wallscan(j,x,umost,uplc,swplc,lplc);
+				}
+
+				globalpicnum = l;
+			}
+			globalhoriz = globalhorizbak;
+		}
+#endif // LIBVER_BUILDREV
 	}
 	if ((andwstat2&12) != 12)   //draw floors
 	{
+#if (LIBVER_BUILDREV >= 19960427L)
 		if ((sec->floorstat&3) == 2)
 			grouscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],sectnum,1);
 		else if ((sec->floorstat&1) == 0)
 			florscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],sectnum);
 		else
 			parascan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],sectnum,1,bunch);
+#else
+		if ((cstat2&3) == 2)
+		{
+			grouscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],(short)sectnum,1);
+		}
+		else if ((cstat2&1) == 0)
+		{
+			florscan(xb1[bunchfirst[bunch]],xb2[bunchlast[bunch]],(short)sectnum);
+		}
+		else
+		{
+			globalhorizbak = globalhoriz;
+			if (parallaxyscale != 65536)
+				globalhoriz = mulscale16(globalhoriz-(ydimen>>1),parallaxyscale)+(ydimen>>1);
+			globalpal = sec->floorpal;
+			globalorientation = 0L;
+			globalpicnum = sec->floorpicnum;
+			if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+			globalshade = sec->floorshade;
+			globvis = globalpisibility;
+			if (sec->visibility != 0) globvis = mulscale4(globvis,(long)((unsigned char)(sec->visibility+16)));
+			globalxpanning = sec->floorxpanning;
+			globalypanning = sec->floorypanning;
+			if ((picanm[globalpicnum]&192) != 0)
+				globalpicnum += animateoffs(globalpicnum,(short)sectnum);
+			globalshiftval = (picsiz[globalpicnum]>>4);
+			if (pow2long[globalshiftval] != tilesizy[globalpicnum]) globalshiftval++;
+			globalshiftval = 32-globalshiftval;
+			globalzd = (((tilesizy[globalpicnum]>>1)+parallaxyoffs)<<globalshiftval)+(globalypanning<<24);
+			globalyscale = (8<<(globalshiftval-19));
+			if (globalorientation&256) globalyscale = -globalyscale, globalzd = -globalzd;
+
+			k = 11 - (picsiz[globalpicnum]&15) - pskybits;
+
+			x = -1;
+
+			for(z=bunchfirst[bunch];z>=0;z=p2[z])
+			{
+				wallnum = thewall[z]; nextsectnum = wall[wallnum].nextsector;
+
+				if ((nextsectnum == -1) || ((sector[nextsectnum].floorstat&1) == 0) || ((wall[wallnum].cstat&32) > 0))
+				{
+					if (x == -1) x = xb1[z];
+
+					if (parallaxtype == 0)
+					{
+						n = mulscale16(xdimenrecip,viewingrange);
+						for(j=xb1[z];j<=xb2[z];j++)
+							lplc[j] = (((mulscale23(j-halfxdimen,n)+globalang)&2047)>>k);
+					}
+					else
+					{
+						for(j=xb1[z];j<=xb2[z];j++)
+							lplc[j] = ((((long)radarang2[j]+globalang)&2047)>>k);
+					}
+					if (parallaxtype == 2)
+					{
+						n = mulscale16(xdimscale,viewingrange);
+						for(j=xb1[z];j<=xb2[z];j++)
+							swplc[j] = mulscale14(sintable[((long)radarang2[j]+512)&2047],n);
+					}
+					else
+						clearbuf((long)(&swplc[xb1[z]]),xb2[z]-xb1[z]+1,mulscale16(xdimscale,viewingrange));
+				}
+				else if (x >= 0)
+				{
+					l = globalpicnum; m = (picsiz[globalpicnum]&15);
+					globalpicnum = l+pskyoff[lplc[x]>>m];
+
+					if (((lplc[x]^lplc[xb1[z]-1])>>m) == 0)
+					{
+						wallscan(x,xb1[z]-1,dplc,dmost,swplc,lplc);
+					}
+					else
+					{
+						j = x;
+						while (x < xb1[z])
+						{
+							n = l+pskyoff[lplc[x]>>m];
+							if (n != globalpicnum)
+							{
+								wallscan(j,x-1,dplc,dmost,swplc,lplc);
+								j = x;
+								globalpicnum = n;
+							}
+							x++;
+						}
+						if (j < x)
+							wallscan(j,x-1,dplc,dmost,swplc,lplc);
+					}
+
+					globalpicnum = l;
+					x = -1;
+				}
+			}
+
+			if (x >= 0)
+			{
+				l = globalpicnum; m = (picsiz[globalpicnum]&15);
+				globalpicnum = l+pskyoff[lplc[x]>>m];
+
+				if (((lplc[x]^lplc[xb2[bunchlast[bunch]]])>>m) == 0)
+				{
+					wallscan(x,xb2[bunchlast[bunch]],dplc,dmost,swplc,lplc);
+				}
+				else
+				{
+					j = x;
+					while (x <= xb2[bunchlast[bunch]])
+					{
+						n = l+pskyoff[lplc[x]>>m];
+						if (n != globalpicnum)
+						{
+							wallscan(j,x-1,dplc,dmost,swplc,lplc);
+							j = x;
+							globalpicnum = n;
+						}
+						x++;
+					}
+					if (j <= x)
+						wallscan(j,x,dplc,dmost,swplc,lplc);
+				}
+
+				globalpicnum = l;
+			}
+			globalhoriz = globalhorizbak;
+		}
+#endif // LIBVER_BUILDREV
 	}
 
 		//DRAW WALLS SECTION!
@@ -882,9 +1209,11 @@ drawalls (long bunch)
 				if (umost[x] < dmost[x]) break;
 			if (x >= x2)
 			{
+#if (LIBVER_BUILDREV >= 19960427L)
 				smostwall[smostwallcnt] = z;
 				smostwalltype[smostwallcnt] = 0;
 				smostwallcnt++;
+#endif
 				continue;
 			}
 		}
@@ -909,10 +1238,77 @@ drawalls (long bunch)
 				searchsector = sectnum; searchwall = wallnum;
 				searchstat = 2; searchit = 1;
 			}
+#if (LIBVER_BUILDREV < 19960427L)
+			else if (nextsectnum < 0)
+			{
+				searchsector = sectnum; searchwall = wallnum;
+				searchstat = 0; searchit = 1;
+			}
+#endif
 		}
 
-		if (nextsectnum >= 0)
+#if (LIBVER_BUILDREV < 19960427L)
+		if (nextsectnum < 0)
 		{
+			globalorientation = (long)wal->cstat;
+			globalpicnum = wal->picnum;
+			if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+			globalxpanning = (long)wal->xpanning;
+			globalypanning = (long)wal->ypanning;
+			if ((picanm[globalpicnum]&192) != 0)
+				globalpicnum += animateoffs(globalpicnum,(short)wallnum+16384);
+			globalshade = (long)wal->shade;
+			globvis = globalvisibility;
+			if (sec->visibility != 0) globvis = mulscale4(globvis,(long)((unsigned char)(sec->visibility+16)));
+			globalpal = (long)wal->pal;
+			globalshiftval = (picsiz[globalpicnum]>>4);
+			if (pow2long[globalshiftval] != tilesizy[globalpicnum]) globalshiftval++;
+			globalshiftval = 32-globalshiftval;
+			globalyscale = (wal->yrepeat<<(globalshiftval-19));
+			if ((globalorientation&4) == 0)
+				globalzd = (((globalposz-sec->ceilingz)*globalyscale)<<8);
+			else
+				globalzd = (((globalposz-sec->floorz)*globalyscale)<<8);
+			globalzd += (globalypanning<<24);
+			if (globalorientation&256) globalyscale = -globalyscale, globalzd = -globalzd;
+			if (gotswall == 0) prepwall(z,wal);
+
+			wallscan(x1,x2,uplc,dplc,swall,lwall);
+
+			for(x=x1;x<=x2;x++)
+				if (umost[x] <= dmost[x])
+				{
+					umost[x] = 1;
+					dmost[x] = 0;
+					numhits--;
+				}
+			smostwall[smostwallcnt] = z;
+			smostwalltype[smostwallcnt] = 0;
+			smostwallcnt++;
+		}
+		else
+#else // LIBVER_BUILDREV
+		if (nextsectnum >= 0)
+#endif
+		{
+#if (LIBVER_BUILDREV < 19960427L)
+			if (nextsec->ceilingz == nextsec->floorz)
+			{
+				if (((nextsec->ceilingstat|nextsec->floorstat)&2) != 0)
+					redtouchflag = (nextsec->ceilingheinum==nextsec->floorheinum);
+				else
+					redtouchflag = 1;
+				if (redtouchflag)
+				{
+					smostwall[smostwallcnt] = z;
+					smostwalltype[smostwallcnt] = 0;
+					smostwallcnt++;
+				}
+			}
+			else
+				redtouchflag = 0;
+			if ((wal->cstat&16) != 0) maskwall[maskwallcnt++] = z;
+#else
 			getzsofslope((short)sectnum,wal->x,wal->y,&cz[0],&fz[0]);
 			getzsofslope((short)sectnum,wall[wal->point2].x,wall[wal->point2].y,&cz[1],&fz[1]);
 			getzsofslope((short)nextsectnum,wal->x,wal->y,&cz[2],&fz[2]);
@@ -920,9 +1316,40 @@ drawalls (long bunch)
 			getzsofslope((short)nextsectnum,globalposx,globalposy,&cz[4],&fz[4]);
 
 			if ((wal->cstat&48) == 16) maskwall[maskwallcnt++] = z;
+#endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+			if (((cstat1&1) == 0) || ((nextsec->ceilingstat&1) == 0))
+#else
 			if (((sec->ceilingstat&1) == 0) || ((nextsec->ceilingstat&1) == 0))
+#endif
 			{
+#if (LIBVER_BUILDREV < 19960427L)
+				if (nextsec->ceilingz <= sec->ceilingz && ((cstat1|nextsec->ceilingstat)&2) == 0)
+				{
+					for(x=x1;x<=x2;x++)
+						if (umost[x] <= dmost[x])
+							if (uplc[x] > umost[x])
+							{
+								umost[x] = uplc[x];
+								if (umost[x] > dmost[x]) numhits--;
+							}
+
+					if ((nextsec->ceilingz < sec->ceilingz) && (redtouchflag == 0))
+					{
+						i = x2-x1+1;
+						if (smostcnt+i < MAXYSAVES)
+						{
+							smoststart[smostwallcnt] = smostcnt;
+							smostwall[smostwallcnt] = z;
+							smostwalltype[smostwallcnt] = 1;   //1 for umost
+							smostwallcnt++;
+							copybufbyte((long)&umost[x1],(long)&smost[smostcnt],i*sizeof(smost[0]));
+							smostcnt += i;
+						}
+					}
+				}
+#else // LIBVER_BUILDREV
 				if ((cz[2] <= cz[0]) && (cz[3] <= cz[1]))
 				{
 					if (globparaceilclip)
@@ -934,10 +1361,13 @@ drawalls (long bunch)
 									if (umost[x] > dmost[x]) numhits--;
 								}
 				}
+#endif // LIBVER_BUILDREV
 				else
 				{
 					wallmost(dwall,z,nextsectnum,(char)0);
+#if (LIBVER_BUILDREV >= 19960427L)
 					if ((cz[2] > fz[0]) || (cz[3] > fz[1]))
+#endif
 						for(i=x1;i<=x2;i++) if (dwall[i] > dplc[i]) dwall[i] = dplc[i];
 
 					if ((searchit == 2) && (searchx >= x1) && (searchx <= x2))
@@ -949,7 +1379,11 @@ drawalls (long bunch)
 
 					globalorientation = (long)wal->cstat;
 					globalpicnum = wal->picnum;
+#if (LIBVER_BUILDREV < 19960427L)
+					if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 					if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 					globalxpanning = (long)wal->xpanning;
 					globalypanning = (long)wal->ypanning;
 					globalshiftval = (picsiz[globalpicnum]>>4);
@@ -969,8 +1403,35 @@ drawalls (long bunch)
 					if (globalorientation&256) globalyscale = -globalyscale, globalzd = -globalzd;
 
 					if (gotswall == 0) { gotswall = 1; prepwall(z,wal); }
+
 					wallscan(x1,x2,uplc,dwall,swall,lwall);
 
+#if (LIBVER_BUILDREV < 19960427L)
+					for(x=x1;x<=x2;x++)
+						if (umost[x] <= dmost[x])
+						{
+							i = max(uplc[x],dwall[x]);
+							if (i > umost[x])
+							{
+								umost[x] = i;
+								if (umost[x] > dmost[x]) numhits--;
+							}
+						}
+
+					if (((globalposz < nextsec->ceilingz) && (redtouchflag == 0)) || ((cstat1|nextsec->ceilingstat)&2) != 0)
+					{
+						i = x2-x1+1;
+						if (smostcnt+i < MAXYSAVES)
+						{
+							smoststart[smostwallcnt] = smostcnt;
+							smostwall[smostwallcnt] = z;
+							smostwalltype[smostwallcnt] = 1;   //1 for umost
+							smostwallcnt++;
+							copybufbyte((long)&umost[x1],(long)&smost[smostcnt],i*sizeof(smost[0]));
+							smostcnt += i;
+						}
+					}
+#else // LIBVER_BUILDREV
 					if ((cz[2] >= cz[0]) && (cz[3] >= cz[1]))
 					{
 						for(x=x1;x<=x2;x++)
@@ -994,7 +1455,9 @@ drawalls (long bunch)
 								}
 							}
 					}
+#endif // LIBVER_BUILDREV
 				}
+#if (LIBVER_BUILDREV >= 19960427L)
 				if ((cz[2] < cz[0]) || (cz[3] < cz[1]) || (globalposz < cz[4]))
 				{
 					i = x2-x1+1;
@@ -1008,9 +1471,40 @@ drawalls (long bunch)
 						smostcnt += i;
 					}
 				}
+#endif // LIBVER_BUILDREV
 			}
+#if (LIBVER_BUILDREV < 19960427L)
+			if (((cstat2&1) == 0) || ((nextsec->floorstat&1) == 0))
+#else
 			if (((sec->floorstat&1) == 0) || ((nextsec->floorstat&1) == 0))
+#endif
 			{
+#if (LIBVER_BUILDREV < 19960427L)
+				if (nextsec->floorz >= sec->floorz && ((cstat2|nextsec->floorstat)&2) == 0)
+				{
+					for(x=x1;x<=x2;x++)
+						if (umost[x] <= dmost[x])
+							if (dplc[x] < dmost[x])
+							{
+								dmost[x] = dplc[x];
+								if (umost[x] > dmost[x]) numhits--;
+							}
+
+					if ((nextsec->floorz > sec->floorz) && (redtouchflag == 0))
+					{
+						i = x2-x1+1;
+						if (smostcnt+i < MAXYSAVES)
+						{
+							smoststart[smostwallcnt] = smostcnt;
+							smostwall[smostwallcnt] = z;
+							smostwalltype[smostwallcnt] = 2;   //2 for dmost
+							smostwallcnt++;
+							copybufbyte((long)&dmost[x1],(long)&smost[smostcnt],i*sizeof(smost[0]));
+							smostcnt += i;
+						}
+					}
+				}
+#else // LIBVER_BUILDREV
 				if ((fz[2] >= fz[0]) && (fz[3] >= fz[1]))
 				{
 					if (globparaflorclip)
@@ -1022,10 +1516,13 @@ drawalls (long bunch)
 									if (umost[x] > dmost[x]) numhits--;
 								}
 				}
+#endif // LIBVER_BUILDREV
 				else
 				{
 					wallmost(uwall,z,nextsectnum,(char)1);
+#if (LIBVER_BUILDREV >= 19960427L)
 					if ((fz[2] < cz[0]) || (fz[3] < cz[1]))
+#endif
 						for(i=x1;i<=x2;i++) if (uwall[i] < uplc[i]) uwall[i] = uplc[i];
 
 					if ((searchit == 2) && (searchx >= x1) && (searchx <= x2))
@@ -1041,7 +1538,11 @@ drawalls (long bunch)
 						wallnum = wal->nextwall; wal = &wall[wallnum];
 						globalorientation = (long)wal->cstat;
 						globalpicnum = wal->picnum;
+#if (LIBVER_BUILDREV < 19960427L)
+						if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 						if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 						globalxpanning = (long)wal->xpanning;
 						globalypanning = (long)wal->ypanning;
 						if (picanm[globalpicnum]&192) globalpicnum += animateoffs(globalpicnum,(short)wallnum+16384);
@@ -1053,7 +1554,11 @@ drawalls (long bunch)
 					{
 						globalorientation = (long)wal->cstat;
 						globalpicnum = wal->picnum;
+#if (LIBVER_BUILDREV < 19960427L)
+						if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 						if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 						globalxpanning = (long)wal->xpanning;
 						globalypanning = (long)wal->ypanning;
 						if (picanm[globalpicnum]&192) globalpicnum += animateoffs(globalpicnum,(short)wallnum+16384);
@@ -1074,8 +1579,35 @@ drawalls (long bunch)
 					if (globalorientation&256) globalyscale = -globalyscale, globalzd = -globalzd;
 
 					if (gotswall == 0) { gotswall = 1; prepwall(z,wal); }
+
 					wallscan(x1,x2,uwall,dplc,swall,lwall);
 
+#if (LIBVER_BUILDREV < 19960427L)
+					for(x=x1;x<=x2;x++)
+						if (umost[x] <= dmost[x])
+						{
+							i = min(dplc[x],uwall[x]);
+							if (i < dmost[x])
+							{
+								dmost[x] = i;
+								if (umost[x] > dmost[x]) numhits--;
+							}
+						}
+
+					if (((globalposz > nextsec->floorz) && (redtouchflag == 0)) || ((cstat2|nextsec->floorstat)&2) != 0)
+					{
+						i = x2-x1+1;
+						if (smostcnt+i < MAXYSAVES)
+						{
+							smoststart[smostwallcnt] = smostcnt;
+							smostwall[smostwallcnt] = z;
+							smostwalltype[smostwallcnt] = 2;   //2 for dmost
+							smostwallcnt++;
+							copybufbyte((long)&dmost[x1],(long)&smost[smostcnt],i*sizeof(smost[0]));
+							smostcnt += i;
+						}
+					}
+#else // LIBVER_BUILDREV
 					if ((fz[2] <= fz[0]) && (fz[3] <= fz[1]))
 					{
 						for(x=x1;x<=x2;x++)
@@ -1099,7 +1631,9 @@ drawalls (long bunch)
 								}
 							}
 					}
+#endif // LIBVER_BUILDREV
 				}
+#if (LIBVER_BUILDREV >= 19960427L)
 				if ((fz[2] > fz[0]) || (fz[3] > fz[1]) || (globalposz > fz[4]))
 				{
 					i = x2-x1+1;
@@ -1113,9 +1647,66 @@ drawalls (long bunch)
 						smostcnt += i;
 					}
 				}
+#endif // LIBVER_BUILDREV
 			}
+#if (LIBVER_BUILDREV < 19960427L)
+			if ((wal->cstat&32) > 0)   //1-way wall
+			{
+				globalorientation = (long)wal->cstat;
+				globalpicnum = wal->overpicnum;
+				if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+				globalxpanning = (long)wal->xpanning;
+				globalypanning = (long)wal->ypanning;
+				if ((picanm[globalpicnum]&192) != 0)
+					globalpicnum += animateoffs(globalpicnum,(short)wallnum+16384);
+				globalshade = (long)wal->shade;
+				globvis = globalvisibility;
+				if (sec->visibility != 0) globvis = mulscale4(globvis,(long)((unsigned char)(sec->visibility+16)));
+				globalpal = (long)wal->pal;
+				globalshiftval = (picsiz[globalpicnum]>>4);
+				if (pow2long[globalshiftval] != tilesizy[globalpicnum]) globalshiftval++;
+				globalshiftval = 32-globalshiftval;
+				globalyscale = (wal->yrepeat<<(globalshiftval-19));
+				if ((globalorientation&4) == 0)
+					globalzd = (((globalposz-nextsec->ceilingz)*globalyscale)<<8);
+				else
+					globalzd = (((globalposz-sec->ceilingz)*globalyscale)<<8);
+				globalzd += (globalypanning<<24);
+				if (globalorientation&256) globalyscale = -globalyscale, globalzd = -globalzd;
+
+				if (gotswall == 0) prepwall(z,wal);
+
+				wallscan(x1,x2,uplc,dplc,swall,lwall);
+
+				for(x=x1;x<=x2;x++)
+					if (umost[x] <= dmost[x])
+					{
+						umost[x] = 1;
+						dmost[x] = 0;
+						numhits--;
+					}
+				smostwall[smostwallcnt] = z;
+				smostwalltype[smostwallcnt] = 0;
+				smostwallcnt++;
+
+				if ((searchit == 2) && (searchx >= x1) && (searchx <= x2))
+				{
+					searchsector = sectnum; searchwall = wallnum;
+					searchstat = 4; searchit = 1;
+				}
+			}
+#endif // LIBVER_BUILDREV
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - CHANGE OF FLOW
+		}
+#endif
+
 			if (numhits < 0) return;
+#if (LIBVER_BUILDREV < 19960427L)
+			if ((gotsector[nextsectnum>>3]&pow2char[nextsectnum&7]) == 0)
+				if ((nextsectnum >= 0) && ((wal->cstat&32) == 0))
+#else
 			if ((!(wal->cstat&32)) && ((gotsector[nextsectnum>>3]&pow2char[nextsectnum&7]) == 0))
+#endif
 			{
 				if (umost[x2] < dmost[x2])
 					scansector(nextsectnum);
@@ -1127,17 +1718,29 @@ drawalls (long bunch)
 
 						//If can't see sector beyond, then cancel smost array and just
 						//store wall!
+#if (LIBVER_BUILDREV < 19960427L)
+					if (x1 == x2)
+#else
 					if (x == x2)
+#endif
 					{
+#if (LIBVER_BUILDREV >= 19960427L)
 						smostwallcnt = startsmostwallcnt;
+#endif
 						smostcnt = startsmostcnt;
+#if (LIBVER_BUILDREV < 19960427L)
+						smostwallcnt = startsmostwallcnt;
+#endif
 						smostwall[smostwallcnt] = z;
 						smostwalltype[smostwallcnt] = 0;
 						smostwallcnt++;
 					}
 				}
 			}
+#if (LIBVER_BUILDREV >= 19960427L) // VERSIONS RESTORATION - CHANGE OF FLOW
 		}
+#endif
+#if (LIBVER_BUILDREV >= 19960427L)
 		if ((nextsectnum < 0) || (wal->cstat&32))   //White/1-way wall
 		{
 			globalorientation = (long)wal->cstat;
@@ -1184,6 +1787,7 @@ drawalls (long bunch)
 				if (nextsectnum < 0) searchstat = 0; else searchstat = 4;
 			}
 		}
+#endif // LIBVER_BUILDREV
 	}
 }
 
@@ -1267,7 +1871,11 @@ prepwall(long z, walltype *wal)
 #if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - HACK
 #define slowhline hline
 #endif
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev.
+ceilscan (long x1, long x2, short sectnum)
+#else
 ceilscan (long x1, long x2, long sectnum)
+#endif
 {
 	long i, j, ox, oy, x, y1, y2, twall, bwall;
 	sectortype *sec;
@@ -1282,13 +1890,24 @@ ceilscan (long x1, long x2, long sectnum)
 	globalzd = sec->ceilingz-globalposz;
 	if (globalzd > 0) return;
 	globalpicnum = sec->ceilingpicnum;
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev.
+	if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+	if ((picanm[globalpicnum]&192) != 0)
+		globalpicnum += animateoffs((short)globalpicnum,sectnum);
+#else
 	if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
 	setgotpic(globalpicnum);
+#endif
 	if ((tilesizx[globalpicnum] <= 0) || (tilesizy[globalpicnum] <= 0)) return;
+#if (LIBVER_BUILDREV >= 19960427L)
 	if (picanm[globalpicnum]&192) globalpicnum += animateoffs((short)globalpicnum,(short)sectnum);
+#endif
 
 	if (waloff[globalpicnum] == 0) loadtile(globalpicnum);
 	globalbufplc = waloff[globalpicnum];
+#if (LIBVER_BUILDREV < 19960427L)
+	setgotpic(globalpicnum);
+#endif
 
 	globalshade = (long)sec->ceilingshade;
 	globvis = globalcisibility;
@@ -1435,7 +2054,11 @@ ceilscan (long x1, long x2, long sectnum)
 	faketimerhandler();
 }
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev.
+florscan (long x1, long x2, short sectnum)
+#else
 florscan (long x1, long x2, long sectnum)
+#endif
 {
 	long i, j, ox, oy, x, y1, y2, twall, bwall;
 	sectortype *sec;
@@ -1450,7 +2073,11 @@ florscan (long x1, long x2, long sectnum)
 	globalzd = globalposz-sec->floorz;
 	if (globalzd > 0) return;
 	globalpicnum = sec->floorpicnum;
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev.
+	if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 	if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 	setgotpic(globalpicnum);
 	if ((tilesizx[globalpicnum] <= 0) || (tilesizy[globalpicnum] <= 0)) return;
 	if (picanm[globalpicnum]&192) globalpicnum += animateoffs((short)globalpicnum,(short)sectnum);
@@ -8910,7 +9537,11 @@ wallmost(short *mostbuf, long w, long sectnum, char dastat)
 }
 
 #define BITSOFPRECISION 3  //Don't forget to change this in A.ASM also!
+#if (LIBVER_BUILDREV < 19960427L)
+grouscan (long dax1, long dax2, short sectnum, char dastat)
+#else
 grouscan (long dax1, long dax2, long sectnum, char dastat)
+#endif
 {
 	long i, j, k, l, m, n, x, y, dx, dy, wx, wy, x1, y1, x2, y2, daz;
 	long daslope, dasqr;
@@ -8944,9 +9575,14 @@ grouscan (long dax1, long dax2, long sectnum, char dastat)
 	}
 
 	if ((picanm[globalpicnum]&192) != 0) globalpicnum += animateoffs(globalpicnum,sectnum);
+#if (LIBVER_BUILDREV >= 19960427L)
 	setgotpic(globalpicnum);
+#endif
 	if ((tilesizx[globalpicnum] <= 0) || (tilesizy[globalpicnum] <= 0)) return;
 	if (waloff[globalpicnum] == 0) loadtile(globalpicnum);
+#if (LIBVER_BUILDREV < 19960427L)
+	setgotpic(globalpicnum);
+#endif
 
 	wal = &wall[sec->wallptr];
 	wx = wall[wal->point2].x - wal->x;
@@ -9057,6 +9693,15 @@ grouscan (long dax1, long dax2, long sectnum, char dastat)
 			globalx3 = (globalx2>>10);
 			globaly3 = (globaly2>>10);
 			asm3 = mulscale16(y2,globalzd) + (globalzx>>6);
+#if (LIBVER_BUILDREV < 19960427L)
+			if (chainstat != 0)
+			{
+				koutp(0x3c5,pow2char[(x+viewoffset)&3]);
+				slopevlin(ylookup[y2]+((x+viewoffset)>>2)+chainplace,krecipasm(asm3>>3),(long)nptr2,y2-y1+1,globalx1,globaly1);
+
+			}
+			else
+#endif
 			slopevlin(ylookup[y2]+x+frameoffset,krecipasm(asm3>>3),(long)nptr2,y2-y1+1,globalx1,globaly1);
 
 			if ((x&15) == 0) faketimerhandler();
@@ -9073,6 +9718,7 @@ getpalookup(long davis, long dashade)
 	return(min(max(dashade+(davis>>8),0),numpalookups-1));
 }
 
+#if (LIBVER_BUILDREV >= 19960427L)
 parascan (long dax1, long dax2, long sectnum, char dastat, long bunch)
 {
 	sectortype *sec;
@@ -9655,4 +10301,6 @@ setfirstwall(short sectnum, short newfirstwall)
 	for(i=startwall;i<endwall;i++)
 		if (wall[i].nextwall >= 0) wall[wall[i].nextwall].nextwall = i;
 }
-#endif // LIBVER_BUILDREV
+#endif // LIBVER_BUILDREV >= 19961012L
+#endif // LIBVER_BUILDREV >= 19960427L
+
