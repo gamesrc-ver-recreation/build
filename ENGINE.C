@@ -1718,11 +1718,7 @@ drawalls (long bunch)
 
 						//If can't see sector beyond, then cancel smost array and just
 						//store wall!
-#if (LIBVER_BUILDREV < 19960427L)
-					if (x1 == x2)
-#else
 					if (x == x2)
-#endif
 					{
 #if (LIBVER_BUILDREV >= 19960427L)
 						smostwallcnt = startsmostwallcnt;
