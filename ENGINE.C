@@ -76,7 +76,11 @@ void kloadvoxel(long voxindex);
 #else
 #define MAXVOXMIPS 5
 #endif
+#if (LIBVER_BUILDREV < 19960427L)
+long voxoff[MAXVOXELS][MAXVOXMIPS], voxsiz[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
+#else
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
+#endif
 #if (LIBVER_BUILDREV < 19960820L)
 static long ggxinc[MAXXSIZ], ggyinc[MAXXSIZ];
 static long lowrecip[1024];
@@ -97,6 +101,7 @@ static char moustat = 0;
 #if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
 char chainstat = 0;
 long chainplace, chainsiz, chainnumpages = 0;
+long page;
 
 static long ooption0, stereopage, stereofps = 0;
 #endif
@@ -2275,9 +2280,15 @@ florscan (long x1, long x2, long sectnum)
 
 wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, x, xinc, xinc3, startx, xnice, ynice, fpalookup, shade;
+	long y1ve[4], y2ve[4], u4, d4, dax, z, p, tsizx, tsizy;
+	char bad, startplane, plane;
+#else
 	long i, x, xnice, ynice, fpalookup, shade;
 	long y1ve[4], y2ve[4], u4, d4, dax, z, tsizx, tsizy;
 	char bad;
+#endif
 
 	tsizx = tilesizx[globalpicnum];
 	tsizy = tilesizy[globalpicnum];
@@ -2288,6 +2299,21 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 	if (waloff[globalpicnum] == 0) loadtile(globalpicnum);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		xinc = 4; xinc3 = 12;
+		plane = pow2char[(viewoffset+x1)&3];
+		startplane = plane;
+		if (x2-x1 < 4) startplane = pow2char[(x2+1+viewoffset)&3];
+		koutp(0x3c5,plane);
+	}
+	else
+	{
+		xinc = 1; xinc3 = 3;
+	}
+	startx = x1;
+#endif
 	xnice = (pow2long[picsiz[globalpicnum]&15] == tsizx);
 	if (xnice) tsizx--;
 	ynice = (pow2long[picsiz[globalpicnum]>>4] == tsizy);
@@ -2297,6 +2323,119 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 	setupvlineasm(globalshiftval);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	do
+	{
+		x = startx;
+		while ((umost[x] > dmost[x]) && (x <= x2)) x += xinc;
+
+		if (chainstat != 0)
+			p = chainplace+((x+viewoffset)>>2);
+		else
+			p = x+frameoffset;
+
+		for(;(x<=x2)&&(p&3);x+=xinc,p++)
+		{
+			y1ve[0] = max(uwal[x],umost[x]);
+			y2ve[0] = min(dwal[x],dmost[x]);
+			if (y2ve[0] <= y1ve[0]) continue;
+
+			palookupoffse[0] = fpalookup+(getpalookup((long)mulscale16(swal[x],globvis),globalshade)<<8);
+
+			bufplce[0] = lwal[x] + globalxpanning;
+			if (bufplce[0] >= tsizx) { if (xnice == 0) bufplce[0] %= tsizx; else bufplce[0] &= tsizx; }
+			if (ynice == 0) bufplce[0] *= tsizy; else bufplce[0] <<= tsizy;
+
+			vince[0] = swal[x]*globalyscale;
+			vplce[0] = globalzd + vince[0]*(y1ve[0]-globalhoriz+1);
+
+			vlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],p+ylookup[y1ve[0]]);
+		}
+		for(;x<=x2-xinc3;x+=(xinc<<2),p += 4)
+		{
+			bad = 0;
+			for(z=3,dax=x+xinc3;z>=0;z--,dax-=xinc)
+			{
+				y1ve[z] = max(uwal[dax],umost[dax]);
+				y2ve[z] = min(dwal[dax],dmost[dax])-1;
+				if (y2ve[z] < y1ve[z]) { bad += pow2char[z]; continue; }
+
+				i = lwal[dax] + globalxpanning;
+				if (i >= tsizx) { if (xnice == 0) i %= tsizx; else i &= tsizx; }
+				if (ynice == 0) i *= tsizy; else i <<= tsizy;
+				bufplce[z] = waloff[globalpicnum]+i;
+
+				vince[z] = swal[dax]*globalyscale;
+				vplce[z] = globalzd + vince[z]*(y1ve[z]-globalhoriz+1);
+			}
+			if (bad == 15) continue;
+
+			palookupoffse[0] = fpalookup+(getpalookup((long)mulscale16(swal[x],globvis),globalshade)<<8);
+			palookupoffse[3] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc3],globvis),globalshade)<<8);
+
+			if ((palookupoffse[0] == palookupoffse[3]) && ((bad&0x9) == 0))
+			{
+				palookupoffse[1] = palookupoffse[0];
+				palookupoffse[2] = palookupoffse[0];
+			}
+			else
+			{
+				palookupoffse[1] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc],globvis),globalshade)<<8);
+				palookupoffse[2] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc*2],globvis),globalshade)<<8);
+			}
+
+			u4 = max(max(y1ve[0],y1ve[1]),max(y1ve[2],y1ve[3]));
+			d4 = min(min(y2ve[0],y2ve[1]),min(y2ve[2],y2ve[3]));
+
+			if ((bad != 0) || (u4 >= d4))
+			{
+				if (!(bad&1)) prevlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0],vplce[0],bufplce[0],ylookup[y1ve[0]]+p+0);
+				if (!(bad&2)) prevlineasm1(vince[1],palookupoffse[1],y2ve[1]-y1ve[1],vplce[1],bufplce[1],ylookup[y1ve[1]]+p+1);
+				if (!(bad&4)) prevlineasm1(vince[2],palookupoffse[2],y2ve[2]-y1ve[2],vplce[2],bufplce[2],ylookup[y1ve[2]]+p+2);
+				if (!(bad&8)) prevlineasm1(vince[3],palookupoffse[3],y2ve[3]-y1ve[3],vplce[3],bufplce[3],ylookup[y1ve[3]]+p+3);
+				continue;
+			}
+
+			if (u4 > y1ve[0]) vplce[0] = prevlineasm1(vince[0],palookupoffse[0],u4-y1ve[0]-1,vplce[0],bufplce[0],ylookup[y1ve[0]]+p+0);
+			if (u4 > y1ve[1]) vplce[1] = prevlineasm1(vince[1],palookupoffse[1],u4-y1ve[1]-1,vplce[1],bufplce[1],ylookup[y1ve[1]]+p+1);
+			if (u4 > y1ve[2]) vplce[2] = prevlineasm1(vince[2],palookupoffse[2],u4-y1ve[2]-1,vplce[2],bufplce[2],ylookup[y1ve[2]]+p+2);
+			if (u4 > y1ve[3]) vplce[3] = prevlineasm1(vince[3],palookupoffse[3],u4-y1ve[3]-1,vplce[3],bufplce[3],ylookup[y1ve[3]]+p+3);
+
+			if (d4 >= u4) vlineasm4(d4-u4+1,ylookup[u4]+p);
+
+			i = p+ylookup[d4+1];
+			if (y2ve[0] > d4) prevlineasm1(vince[0],palookupoffse[0],y2ve[0]-d4-1,vplce[0],bufplce[0],i+0);
+			if (y2ve[1] > d4) prevlineasm1(vince[1],palookupoffse[1],y2ve[1]-d4-1,vplce[1],bufplce[1],i+1);
+			if (y2ve[2] > d4) prevlineasm1(vince[2],palookupoffse[2],y2ve[2]-d4-1,vplce[2],bufplce[2],i+2);
+			if (y2ve[3] > d4) prevlineasm1(vince[3],palookupoffse[3],y2ve[3]-d4-1,vplce[3],bufplce[3],i+3);
+		}
+		for(;x<=x2;x+=xinc,p++)
+		{
+			y1ve[0] = max(uwal[x],umost[x]);
+			y2ve[0] = min(dwal[x],dmost[x]);
+			if (y2ve[0] <= y1ve[0]) continue;
+
+			palookupoffse[0] = fpalookup+(getpalookup((long)mulscale16(swal[x],globvis),globalshade)<<8);
+
+			bufplce[0] = lwal[x] + globalxpanning;
+			if (bufplce[0] >= tsizx) { if (xnice == 0) bufplce[0] %= tsizx; else bufplce[0] &= tsizx; }
+			if (ynice == 0) bufplce[0] *= tsizy; else bufplce[0] <<= tsizy;
+
+			vince[0] = swal[x]*globalyscale;
+			vplce[0] = globalzd + vince[0]*(y1ve[0]-globalhoriz+1);
+
+			vlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],p+ylookup[y1ve[0]]);
+		}
+		if (chainstat != 0)
+		{
+			plane <<= 1;
+			if (plane == 16)
+				plane = 1;
+			koutp(0x3c5,plane);
+			startx++;
+		}
+	} while (xinc == 4 && plane != startplane);
+#else // LIBVER_BUILDREV
 	x = x1;
 	while ((umost[x] > dmost[x]) && (x <= x2)) x++;
 
@@ -2392,14 +2531,21 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 		vlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],x+frameoffset+ylookup[y1ve[0]]);
 	}
+#endif // LIBVER_BUILDREV
 	faketimerhandler();
 }
 
 maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, x, xinc, xinc3, startx, xnice, ynice, fpalookup, shade;
+	long y1ve[4], y2ve[4], u4, d4, dax, z, p, tsizx, tsizy;
+	char startplane, plane, bad;
+#else
 	long i, x, startx, xnice, ynice, fpalookup, shade;
 	long y1ve[4], y2ve[4], u4, d4, dax, z, p, tsizx, tsizy;
 	char bad;
+#endif
 
 	tsizx = tilesizx[globalpicnum];
 	tsizy = tilesizy[globalpicnum];
@@ -2410,6 +2556,20 @@ maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 	if (waloff[globalpicnum] == 0) loadtile(globalpicnum);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		xinc = 4; xinc3 = 12;
+		plane = pow2char[(viewoffset+x1)&3];
+		startplane = plane;
+		if (x2-x1 < 4) startplane = pow2char[(x2+1+viewoffset)&3];
+		koutp(0x3c5,plane);
+	}
+	else
+	{
+		xinc = 1; xinc3 = 3;
+	}
+#endif
 	startx = x1;
 
 	xnice = (pow2long[picsiz[globalpicnum]&15] == tsizx);
@@ -2421,6 +2581,120 @@ maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 	setupmvlineasm(globalshiftval);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	do
+	{
+		x = startx;
+		while ((startumost[x+windowx1] > startdmost[x+windowx1]) && (x <= x2)) x += xinc;
+
+		if (chainstat != 0)
+			p = ((x+viewoffset)>>2)+chainplace;
+		else
+			p = x+frameoffset;
+
+		for(;(x<=x2)&&(p&3);x+=xinc,p++)
+		{
+			y1ve[0] = max(uwal[x],startumost[x+windowx1]-windowy1);
+			y2ve[0] = min(dwal[x],startdmost[x+windowx1]-windowy1);
+			if (y2ve[0] <= y1ve[0]) continue;
+
+			palookupoffse[0] = fpalookup+(getpalookup((long)mulscale16(swal[x],globvis),globalshade)<<8);
+
+			bufplce[0] = lwal[x] + globalxpanning;
+			if (bufplce[0] >= tsizx) { if (xnice == 0) bufplce[0] %= tsizx; else bufplce[0] &= tsizx; }
+			if (ynice == 0) bufplce[0] *= tsizy; else bufplce[0] <<= tsizy;
+
+			vince[0] = swal[x]*globalyscale;
+			vplce[0] = globalzd + vince[0]*(y1ve[0]-globalhoriz+1);
+
+			mvlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],p+ylookup[y1ve[0]]);
+		}
+		for(;x<=x2-xinc3;x+=(xinc<<2),p+=4)
+		{
+			bad = 0;
+			for(z=3,dax=x+xinc3;z>=0;z--,dax-=xinc)
+			{
+				y1ve[z] = max(uwal[dax],startumost[dax+windowx1]-windowy1);
+				y2ve[z] = min(dwal[dax],startdmost[dax+windowx1]-windowy1)-1;
+
+				if (y2ve[z] < y1ve[z]) { bad += pow2char[z]; continue; }
+
+				i = lwal[dax] + globalxpanning;
+				if (i >= tsizx) { if (xnice == 0) i %= tsizx; else i &= tsizx; }
+				if (ynice == 0) i *= tsizy; else i <<= tsizy;
+				bufplce[z] = waloff[globalpicnum]+i;
+
+				vince[z] = swal[dax]*globalyscale;
+				vplce[z] = globalzd + vince[z]*(y1ve[z]-globalhoriz+1);
+			}
+			if (bad == 15) continue;
+
+			palookupoffse[0] = fpalookup+(getpalookup((long)mulscale16(swal[x],globvis),globalshade)<<8);
+			palookupoffse[3] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc3],globvis),globalshade)<<8);
+
+			if ((palookupoffse[0] == palookupoffse[3]) && ((bad&0x9) == 0))
+			{
+				palookupoffse[1] = palookupoffse[0];
+				palookupoffse[2] = palookupoffse[0];
+			}
+			else
+			{
+				palookupoffse[1] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc],globvis),globalshade)<<8);
+				palookupoffse[2] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc*2],globvis),globalshade)<<8);
+			}
+
+			u4 = max(max(y1ve[0],y1ve[1]),max(y1ve[2],y1ve[3]));
+			d4 = min(min(y2ve[0],y2ve[1]),min(y2ve[2],y2ve[3]));
+
+			if ((bad > 0) || (u4 >= d4))
+			{
+				if (!(bad&1)) mvlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0],vplce[0],bufplce[0],ylookup[y1ve[0]]+p+0);
+				if (!(bad&2)) mvlineasm1(vince[1],palookupoffse[1],y2ve[1]-y1ve[1],vplce[1],bufplce[1],ylookup[y1ve[1]]+p+1);
+				if (!(bad&4)) mvlineasm1(vince[2],palookupoffse[2],y2ve[2]-y1ve[2],vplce[2],bufplce[2],ylookup[y1ve[2]]+p+2);
+				if (!(bad&8)) mvlineasm1(vince[3],palookupoffse[3],y2ve[3]-y1ve[3],vplce[3],bufplce[3],ylookup[y1ve[3]]+p+3);
+				continue;
+			}
+
+			if (u4 > y1ve[0]) vplce[0] = mvlineasm1(vince[0],palookupoffse[0],u4-y1ve[0]-1,vplce[0],bufplce[0],ylookup[y1ve[0]]+p+0);
+			if (u4 > y1ve[1]) vplce[1] = mvlineasm1(vince[1],palookupoffse[1],u4-y1ve[1]-1,vplce[1],bufplce[1],ylookup[y1ve[1]]+p+1);
+			if (u4 > y1ve[2]) vplce[2] = mvlineasm1(vince[2],palookupoffse[2],u4-y1ve[2]-1,vplce[2],bufplce[2],ylookup[y1ve[2]]+p+2);
+			if (u4 > y1ve[3]) vplce[3] = mvlineasm1(vince[3],palookupoffse[3],u4-y1ve[3]-1,vplce[3],bufplce[3],ylookup[y1ve[3]]+p+3);
+
+			if (d4 >= u4) mvlineasm4(d4-u4+1,ylookup[u4]+p);
+
+			i = p+ylookup[d4+1];
+			if (y2ve[0] > d4) mvlineasm1(vince[0],palookupoffse[0],y2ve[0]-d4-1,vplce[0],bufplce[0],i+0);
+			if (y2ve[1] > d4) mvlineasm1(vince[1],palookupoffse[1],y2ve[1]-d4-1,vplce[1],bufplce[1],i+1);
+			if (y2ve[2] > d4) mvlineasm1(vince[2],palookupoffse[2],y2ve[2]-d4-1,vplce[2],bufplce[2],i+2);
+			if (y2ve[3] > d4) mvlineasm1(vince[3],palookupoffse[3],y2ve[3]-d4-1,vplce[3],bufplce[3],i+3);
+		}
+		for(;x<=x2;x+=xinc,p++)
+		{
+			y1ve[0] = max(uwal[x],startumost[x+windowx1]-windowy1);
+			y2ve[0] = min(dwal[x],startdmost[x+windowx1]-windowy1);
+			if (y2ve[0] <= y1ve[0]) continue;
+
+			palookupoffse[0] = fpalookup+(getpalookup((long)mulscale16(swal[x],globvis),globalshade)<<8);
+
+			bufplce[0] = lwal[x] + globalxpanning;
+			if (bufplce[0] >= tsizx) { if (xnice == 0) bufplce[0] %= tsizx; else bufplce[0] &= tsizx; }
+			if (ynice == 0) bufplce[0] *= tsizy; else bufplce[0] <<= tsizy;
+
+			vince[0] = swal[x]*globalyscale;
+			vplce[0] = globalzd + vince[0]*(y1ve[0]-globalhoriz+1);
+
+			mvlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],p+ylookup[y1ve[0]]);
+		}
+		if (chainstat != 0)
+		{
+			plane <<= 1;
+			if (plane == 16)
+				plane = 1;
+			koutp(0x3c5,plane);
+			startx++;
+		}
+	} while (xinc == 4 && plane != startplane);
+#else // LIBVER_BUILDREV
 	x = startx;
 	while ((startumost[x+windowx1] > startdmost[x+windowx1]) && (x <= x2)) x++;
 
@@ -2518,6 +2792,7 @@ maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 		mvlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],p+ylookup[y1ve[0]]);
 	}
+#endif // LIBVER_BUILDREV
 	faketimerhandler();
 }
 
@@ -2622,6 +2897,9 @@ transmaskvline2 (long x)
 #endif
 transmaskwallscan(long x1, long x2)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	char startplane, plane;
+#endif
 	long x, startx;
 
 	setgotpic(globalpicnum);
@@ -2631,11 +2909,37 @@ transmaskwallscan(long x1, long x2)
 
 	setuptvlineasm(globalshiftval);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		plane = (x1+viewoffset)&3;
+		startplane = plane;
+		if (x2-x1 < 4) startplane = (x2+1+viewoffset)&3;
+		startx = x1;
+		do
+		{
+			koutp(0x3c5,pow2char[plane]);
+			koutpw(0x3ce,4+((((short)plane)&3)<<8));
+			x = startx;
+			while ((startumost[x+windowx1] > startdmost[x+windowx1]) && (x <= x2)) x += 4;
+			if ((x <= x2) && (x&1)) transmaskvline(x), x += 4;
+			while (x < x2-4) transmaskvline2(x), x += 8;
+			while (x <= x2) transmaskvline(x), x += 4;
+			plane = (plane+1)&3;
+			startx++;
+		} while (plane != startplane);
+	}
+	else
+	{
+#endif
 	x = x1;
 	while ((startumost[x+windowx1] > startdmost[x+windowx1]) && (x <= x2)) x++;
 	if ((x <= x2) && (x&1)) transmaskvline(x), x++;
 	while (x < x2) transmaskvline2(x), x += 2;
 	while (x <= x2) transmaskvline(x), x++;
+#if (LIBVER_BUILDREV < 19960427L)
+	}
+#endif
 	faketimerhandler();
 }
 
@@ -2783,7 +3087,11 @@ loadpalette()
 
 	paletteloaded = 1;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (ooption0 == 7)
+#else
 	if (vidoption == 6)
+#endif
 	{
 		for(k=0;k<MAXPALOOKUPS;k++)
 			if (palookup[k] != NULL)
@@ -2828,9 +3136,76 @@ setgamemode()
 	if (getkensmessagecrc(FP_OFF(kensmessage)) != 0x56c764d4)
 		{ setvmode(0x3); printf("Nice try.\n"); exit(0); }
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (ooption0 == 6 || ooption0 == 7)
+	{
+		setvmode(0x13);
+		if (ooption0 == 6) stereoinit();
+		stereopage = 0;
+		bytesperline = xdim;
+	}
+	else
+	{
+		page = 0;
+		if (vidoption == 0)
+		{
+			setvmode(0x13);
+			if (setxmode(xdim,ydim) < 0) return -1;
+			chainplace = 0xa0000;
+			koutp(0x3c4,0x2);
+			if (chainstat != 0)
+				bytesperline = xdim>>2;
+			else
+				bytesperline = xdim;
+		}
+		if (vidoption == 1)
+		{
+			if (setvesa(xdim,ydim) < 0) return -1;
+		}
+		if (vidoption == 2)
+		{
+			xdim = 320;
+			ydim = 200;
+			setvmode(0x13);
+			bytesperline = xdim;
+		}
+		if (vidoption == 3)
+		{
+			xdim = 320;
+			ydim = 200;
+			setvmode(0x13);
+			koutp(0x3cd,page+(page<<4));
+			bytesperline = xdim;
+		}
+		if (vidoption == 4)
+		{
+			xdim = 320;
+			ydim = 200;
+			setvmode(0x13);
+			koutpw(0x3ce,0x50f);
+			koutpw(0x3d5,0x8529);
+			koutpw(0x3c4,0x4806);
+			koutpw(0x3d4,0x2f);
+			koutpw(0x3ce,(page<<12)+9);
+			bytesperline = xdim;
+		}
+		if (vidoption == 5)
+		{
+			xdim = 320;
+			ydim = 200;
+			setvmode(0x13);
+			koutpw(0x3d4,0x4838);
+			koutpw(0x3d4,0xa539);
+			koutp(0x3d4,0x31);
+			koutp(0x3d5,kinp(0x3d5)|9);
+			koutpw(0x3d4,(page<<8)+0x35);
+			bytesperline = xdim;
+		}
+	}
+#else // LIBVER_BUILDREV (19960427L)
 #if (LIBVER_BUILDREV >= 19970602L)
 	ostereomode = stereomode; if (stereomode) setstereo(0L);
-#elif (LIBVER_BUILDREV >= 19961012)
+#elif (LIBVER_BUILDREV >= 19961012L)
 	ostereomode = stereomode;
 	if (stereomode) uninitstereo();
 #endif
@@ -2886,7 +3261,7 @@ setgamemode()
 		setvmode(0x13);
 		bytesperline = xdim;
 	}
-#else // LIBVER_BUILDREV
+#else // LIBVER_BUILDREV (19961012L)
 	switch(vidoption)
 	{
 		case 1: i = xdim*ydim; break;
@@ -2931,15 +3306,23 @@ setgamemode()
 
 		//Force drawrooms to call dosetaspect & recalculate stuff
 	oxyaspect = oxdimen = oviewingrange = -1;
-#endif // LIBVER_BUILDREV
+#endif // LIBVER_BUILDREV (19961012L)
+#endif // LIBVER_BUILDREV (19960427L)
 
 	setvlinebpl(bytesperline);
 	j = 0;
 	for(i=0;i<=ydim;i++) ylookup[i] = j, j += bytesperline;
 
 	numpages = 1;
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+		numpages = chainnumpages;
+
+#endif
 	if (vidoption == 1) numpages = min(maxpages,8);
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (removed modes)
+#if (LIBVER_BUILDREV < 19960427L)
+	if (vidoption >= 3) numpages = 4;
+#elif (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (removed modes)
 	if ((vidoption >= 3) && (vidoption <= 5)) numpages = 4;
 #endif
 
@@ -2976,6 +3359,29 @@ hline (long xr, long yp)
 	s = ((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8);
 #endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat == 0)
+	{
+		hlineasm4(xr-xl,0L,((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8),
+			globalx2*r+globalypanning,globaly1*r+globalxpanning,
+			ylookup[yp]+xr+frameoffset);
+		return;
+	}
+	x = globaly1*r+globalxpanning;
+	y = globalx2*r+globalypanning;
+	shade = ((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8);
+	ox = asm1; asm1 <<= 2;
+	oy = asm2; asm2 <<= 2;
+	p = ylookup[yp]+chainplace;
+	setuphlineasm4(asm1,asm2);
+	r = max(xl-1,xr-4);
+	while (r < xr)
+	{
+		koutp(0x3c5,pow2char[(xr+viewoffset)&3]);
+		hlineasm4((xr-xl)>>2,-1L,shade,y,x,p+((xr+viewoffset)>>2));
+		x -= ox; y -= oy; xr--;
+	}
+#else // LIBVER_BUILDREV (19960427L)
 #if (LIBVER_BUILDREV < 19970602L)
 	hlineasm4(xr-xl,0L,(long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8,
 		globalx2*r+globalypanning,globaly1*r+globalxpanning,
@@ -2983,6 +3389,7 @@ hline (long xr, long yp)
 	hlineasm4(xr-xl,0L,s,globalx2*r+globalypanning,globaly1*r+globalxpanning,
 #endif
 		ylookup[yp]+xr+frameoffset);
+#endif // LIBVER_BUILDREV (19960427L)
 }
 
 #if (LIBVER_BUILDREV >= 19961012L)
@@ -3030,6 +3437,11 @@ transmaskvline (long x)
 	if (i >= tilesizx[globalpicnum]) i %= tilesizx[globalpicnum];
 	bufplc = waloff[globalpicnum]+i*tilesizy[globalpicnum];
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+		p = ylookup[y1v]+((x+viewoffset)>>2)+chainplace;
+	else
+#endif
 	p = ylookup[y1v]+x+frameoffset;
 
 	tvlineasm1(vinc,palookupoffs,y2v-y1v,vplc,bufplc,p);
@@ -3045,6 +3457,11 @@ transmaskvline2 (long x)
 	if ((x < 0) || (x >= xdimen)) return;
 	if (x == xdimen-1) { transmaskvline(x); return; }
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+		x2 = x+4;
+	else
+#endif
 	x2 = x+1;
 
 	y1ve[0] = max(uwall[x],startumost[x+windowx1]-windowy1);
@@ -3075,6 +3492,11 @@ transmaskvline2 (long x)
 	y1 = max(y1ve[0],y1ve[1]);
 	y2 = min(y2ve[0],y2ve[1]);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+		i = ((x+viewoffset)>>2)+chainplace;
+	else
+#endif
 	i = x+frameoffset;
 
 	if (y1ve[0] != y1ve[1])
@@ -3127,6 +3549,22 @@ initengine()
 #endif
 	loadtables();
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if ((horizlookup = (long*)kkmalloc((ydim*3)*sizeof(long))) == NULL)
+	{
+		printf("OUT OF MEMORY\n");
+		exit(0);
+	}
+
+	if ((horizlookup2 = (long*)kkmalloc((ydim*3)*sizeof(long))) == NULL)
+	{
+		printf("OUT OF MEMORY\n");
+		exit(0);
+	}
+
+	horizycent = (ydim*3)>>1;
+
+#endif
 	xyaspect = -1;
 
 	pskyoff[0] = 0; pskybits = 0;
@@ -3137,6 +3575,9 @@ initengine()
 #ifdef SUPERBUILD
 #if (LIBVER_BUILDREV < 19960820L)
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<16)-1)/i;
+#if (LIBVER_BUILDREV < 19960427L)
+	for(i=1;i<4096;i++) distrecip[i] = divscale14(320,i);
+#endif
 #else
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<24)-1)/i;
 #endif
@@ -3144,6 +3585,9 @@ initengine()
 		for(j=0;j<MAXVOXMIPS;j++)
 		{
 			voxoff[i][j] = 0L;
+#if (LIBVER_BUILDREV < 19960427L)
+			voxsiz[i][j] = 0L;
+#endif
 			voxlock[i][j] = 200;
 		}
 #endif
@@ -3177,41 +3621,97 @@ initengine()
 	visibility = 512;
 	parallaxvisibility = 512;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	chainnumpages = 0;
+	chainstat = 0;
+#endif
 #if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (Modified signature + removed modes)
 	switch(vidoption)
 	{
-	case 1:
-		if ((screen = (char *)kkmalloc((xdim+8)*ydim)) == NULL)
-		{
-			printf("Not enough memory for screen allocation\n");
-			exit(0);
-		}
-		frameplace = FP_OFF(screen);
-		break;
-	case 3:
-	case 4:
-	case 5:
-		frameplace = 0xa0000;
-		break;
-	case 6:
-		if ((screen = (char *)kkmalloc(0x20000)) == NULL)
-		{
-			printf("Not enough memory for screen allocation\n");
-			exit(0);
-		}
-		frameplace = FP_OFF(screen);
-		break;
-	default:
-		xdim = 320; ydim = 200;
-		if ((screen = (char *)kkmalloc(xdim*ydim)) == NULL)
-		{
-			printf("Not enough memory for screen allocation\n");
-			exit(0);
-		}
-		frameplace = FP_OFF(screen);
-		break;
+#if (LIBVER_BUILDREV < 19960427L)
+		case 0:
+			chainplace = 0xa0000;
+			chainsiz = ((((xdim*ydim)>>2)+255)&0xffffff00);
+			chainnumpages = 65536/chainsiz;
+			if (chainnumpages >= 2)
+				chainstat = 1;
+			if (chainnumpages == 1)
+			{
+				screen = (char*)kkmalloc(xdim*ydim);
+				if (screen == NULL)
+				{
+					printf("Not enough memory for screen allocation\n");
+					exit(0);
+				}
+				frameplace = FP_OFF(screen);
+			}
+			break;
+#endif
+		case 1:
+			if ((screen = (char *)kkmalloc((xdim+8)*ydim)) == NULL)
+			{
+				printf("Not enough memory for screen allocation\n");
+				exit(0);
+			}
+			frameplace = FP_OFF(screen);
+			break;
+#if (LIBVER_BUILDREV < 19960427L)
+		case 2:
+			if ((screen = (char*)kkmalloc(xdim*ydim)) == NULL)
+			{
+				printf("Not enough memory for screen allocation\n");
+				exit(0);
+			}
+			frameplace = FP_OFF(screen);
+			break;
+#endif
+		case 3:
+		case 4:
+		case 5:
+			frameplace = 0xa0000;
+			break;
+#if (LIBVER_BUILDREV < 19960427L)
+		case 6:
+			if ((screen = (char*)kkmalloc(0x10000)) == NULL)
+			{
+				printf("Not enough memory for screen allocation\n");
+				exit(0);
+			}
+			frameplace = FP_OFF(screen);
+			ooption0 = vidoption;
+			vidoption = 2;
+			stereofps = 1;
+			break;
+		case 7:
+#else
+		case 6:
+#endif
+			if ((screen = (char *)kkmalloc(0x20000)) == NULL)
+			{
+				printf("Not enough memory for screen allocation\n");
+				exit(0);
+			}
+			frameplace = FP_OFF(screen);
+#if (LIBVER_BUILDREV < 19960427L)
+			ooption0 = vidoption;
+			vidoption = 2;
+			stereofps = 1;
+#endif
+			break;
+#if (LIBVER_BUILDREV >= 19960427L)
+		default:
+			xdim = 320; ydim = 200;
+			if ((screen = (char *)kkmalloc(xdim*ydim)) == NULL)
+			{
+				printf("Not enough memory for screen allocation\n");
+				exit(0);
+			}
+			frameplace = FP_OFF(screen);
+			break;
+#endif
 	}
 
+#if (LIBVER_BUILDREV >= 19960427L)
 	if ((horizlookup = (long *)kkmalloc(ydim*16)) == NULL)
 	{
 		printf("OUT OF MEMORY\n");
@@ -3223,7 +3723,8 @@ initengine()
 		exit(0);
 	}
 	horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
-#endif // LIBVER_BUILDREV
+#endif // LIBVER_BUILDREV >= 19960427L
+#endif // LIBVER_BUILDREV < 19961012L
 	loadpalette();
 }
 
@@ -3231,6 +3732,10 @@ uninitengine()
 {
 	long i;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	koutp(0x43,54); koutp(0x40,255); koutp(0x40,255);
+
+#endif
 	if (vidoption == 1) uninitvesa();
 	if (artfil != -1) kclose(artfil);
 
@@ -3240,17 +3745,19 @@ uninitengine()
 #endif
 	if (transluc != NULL) { kkfree(transluc); transluc = NULL; }
 	if (pic != NULL) { kkfree(pic); pic = NULL; }
-#if (LIBVER_BUILDREV < 19961012L)
-	if (screen != NULL) { kkfree(screen); screen = NULL; }
-	if (horizlookup != NULL) { kkfree(horizlookup); horizlookup = NULL; }
-	if (horizlookup2 != NULL) { kkfree(horizlookup2); horizlookup2 = NULL; }
-#else
 	if (screen != NULL)
 	{
+#if (LIBVER_BUILDREV < 19961012L)
+		kkfree(screen);
+#else
 		if (screenalloctype == 0) kkfree((void *)screen);
 		//if (screenalloctype == 1) suckcache(screen);  //Cache already gone
+#endif
 		screen = NULL;
 	}
+#if (LIBVER_BUILDREV < 19961012L)
+	if (horizlookup != NULL) { kkfree(horizlookup); horizlookup = NULL; }
+	if (horizlookup2 != NULL) { kkfree(horizlookup2); horizlookup2 = NULL; }
 #endif
 	for(i=0;i<MAXPALOOKUPS;i++)
 		if (palookup[i] != NULL) { kkfree(palookup[i]); palookup[i] = NULL; }
