@@ -10607,6 +10607,9 @@ char getpixel(long x, long y)
 static long setviewcnt = 0;
 static long bakvidoption[4];
 static long bakframeplace[4], bakxsiz[4], bakysiz[4];
+#if (LIBVER_BUILDREV < 19960427L)
+static long bakchainnumpages[4], bakchainstat[4];
+#endif
 static long bakwindowx1[4], bakwindowy1[4];
 static long bakwindowx2[4], bakwindowy2[4];
 
@@ -10617,6 +10620,10 @@ setviewtotile(short tilenume, long xsiz, long ysiz)
 		//DRAWROOMS TO TILE BACKUP&SET CODE
 	tilesizx[tilenume] = xsiz; tilesizy[tilenume] = ysiz;
 	bakxsiz[setviewcnt] = xsiz; bakysiz[setviewcnt] = ysiz;
+#if (LIBVER_BUILDREV < 19960427L)
+	bakchainnumpages[setviewcnt] = chainnumpages; chainnumpages = 0;
+	bakchainstat[setviewcnt] = chainstat; chainstat = 0;
+#endif
 	bakvidoption[setviewcnt] = vidoption; vidoption = 2;
 	bakframeplace[setviewcnt] = frameplace; frameplace = waloff[tilenume];
 	bakwindowx1[setviewcnt] = windowx1; bakwindowy1[setviewcnt] = windowy1;
@@ -10641,6 +10648,10 @@ setviewback()
 			  bakwindowx2[setviewcnt],bakwindowy2[setviewcnt]);
 	copybufbyte(&bakumost[windowx1],&startumost[windowx1],(windowx2-windowx1+1)*sizeof(startumost[0]));
 	copybufbyte(&bakdmost[windowx1],&startdmost[windowx1],(windowx2-windowx1+1)*sizeof(startdmost[0]));
+#if (LIBVER_BUILDREV < 19960427L)
+	chainnumpages = bakchainnumpages[setviewcnt];
+	chainstat = bakchainstat[setviewcnt];
+#endif
 	vidoption = bakvidoption[setviewcnt];
 	frameplace = bakframeplace[setviewcnt];
 	if (setviewcnt == 0)
@@ -10678,7 +10689,11 @@ static short mirbakdasector;
 #endif
 preparemirror(long dax, long day, long daz, short daang, long dahoriz, short dawall, short dasector, long *tposx, long *tposy, short *tang)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, j, x, y, dx, dy, p;
+#else
 	long i, j, x, y, dx, dy;
+#endif
 
 	x = wall[dawall].x; dx = wall[wall[dawall].point2].x-x;
 	y = wall[dawall].y; dy = wall[wall[dawall].point2].y-y;
@@ -10697,7 +10712,21 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 		if ((daz<<1) > sector[dasector].ceilingz+sector[dasector].floorz)
 			mirthoriz--; else mirthoriz++;
 		mirthoriz = min(max(mirthoriz,windowy1),windowy2);
-		clearbufbyte(frameplace+ylookup[mirthoriz]+windowx1,windowx2-windowx1+1,0xffffffff);
+#if (LIBVER_BUILDREV < 19960427L)
+		if (chainstat != 0)
+		{
+			koutp(0x3c4,2);
+			p = chainplace+ylookup[mirthoriz];
+			j = min(windowx2+1,windowx1+4)-1;
+			for(x=j;x>=windowx1;x--)
+			{
+				koutp(0x3c5,pow2char[x&3]);
+				clearbufbyte(p+(x>>2),(windowx2+4-x)>>2,-1L);
+			}
+		}
+		else
+#endif
+			clearbufbyte(frameplace+ylookup[mirthoriz]+windowx1,windowx2-windowx1+1,-1L);
 	}
 #else
 	inpreparemirror = 1;
@@ -10707,9 +10736,75 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 completemirror()
 {
 #if (LIBVER_BUILDREV < 19970212L)
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, j, k, l, x1, y1, x2, y2, dx, dy, p;
+#else
 	long i, j, k, l, x1, y1, x2, y2, dy, templong;
+#endif
 	char *ptr;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		koutp(0x3ce,4);
+		koutp(0x3c4,2);
+		x1 = windowx1;
+		x2 = windowx2;
+		if (mirbakdaz > sector[mirbakdasector].ceilingz && mirbakdaz < sector[mirbakdasector].floorz)
+		{
+			while (x2 >= x1)
+			{
+				koutp(0x3cf,x1&3);
+				if (*(char*)(chainplace+ylookup[mirthoriz]+(x1>>2)) != 255)
+					break;
+				x1++;
+			}
+			while (x2 >= x1)
+			{
+				koutp(0x3cf,x2&3);
+				if (*(char*)(chainplace+ylookup[mirthoriz]+(x2>>2)) != 255)
+					break;
+				x2--;
+			}
+			if (x1 > windowx1)
+				x1--;
+			if (x2 < windowx2)
+				x2++;
+		}
+		if (x2 >= x1)
+		{
+			transarea += (x2-x1)*(windowy2-windowy1);
+			for(i=windowy1;i<=windowy2;i++)
+			{
+				j = 0;
+				for(k=min(x2-x1,3);k>=0;k--)
+				{
+					dx = (x2+1-(x1+k)+3)>>2;
+					l = x1+k;
+					koutp(0x3cf,l&3);
+					ptr = chainplace+ylookup[i]+(l>>2);
+					copybufbyte(ptr,&tempbuf[j],dx);
+					j += dx;
+				}
+				j = 0;
+				for(k=min(x2-x1,3);k>=0;k--)
+				{
+					dx = (x2+1-(x1+k)+3)>>2;
+					l = (windowx1+windowx2-(x1+k))-((dx-1)<<2);
+					koutp(0x3c5,pow2char[l&3]);
+					ptr = chainplace+ylookup[i]+(l>>2);
+					copybufreverse(&tempbuf[j+dx-1],ptr,dx);
+					j += dx;
+				}
+				faketimerhandler();
+			}
+		}
+	}
+	else
+	{
+// FIXME HACK
+#undef dx
+#endif
 		//Get pink pixels on horizon to get mirror l&r bounds.
 	x1 = 0; x2 = windowx2-windowx1;
 	if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
@@ -10734,10 +10829,18 @@ completemirror()
 			copybufbyte(&ptr[x1+1],&tempbuf[0],y2);
 			tempbuf[x2] = tempbuf[x2-1];
 			copybufreverse(&tempbuf[x2],&ptr[y1],y2);
-			ptr += ylookup[1];
+#if (LIBVER_BUILDREV < 19960427L)
 			faketimerhandler();
+#endif
+			ptr += ylookup[1];
+#if (LIBVER_BUILDREV >= 19960427L)
+			faketimerhandler();
+#endif
 		}
 	}
+#if (LIBVER_BUILDREV < 19960427L)
+	}
+#endif
 #else /* LIBVER_BUILDREV */
 	long i, dy, p;
 
@@ -11011,29 +11114,47 @@ wallmost(short *mostbuf, long w, long sectnum, char dastat)
 	}
 
 	i = thewall[w];
+#if (LIBVER_BUILDREV >= 19960427L)
 	if (i == sector[sectnum].wallptr) return(owallmost(mostbuf,w,z));
+#endif
 
 	x1 = wall[i].x; x2 = wall[wall[i].point2].x-x1;
 	y1 = wall[i].y; y2 = wall[wall[i].point2].y-y1;
 
 	fw = sector[sectnum].wallptr; i = wall[fw].point2;
 	dx = wall[i].x-wall[fw].x; dy = wall[i].y-wall[fw].y;
+#if (LIBVER_BUILDREV < 19960427L)
+	dasqr = max(nsqrtasm(dx*dx+dy*dy),16);
+#else
 	dasqr = krecipasm(nsqrtasm(dx*dx+dy*dy));
+#endif
 
 	if (xb1[w] == 0)
+#if (LIBVER_BUILDREV < 19960427L)
+		{ xv = cosglobalang+mulscale16(singlobalang,viewingrange); yv = singlobalang-mulscale16(cosglobalang,viewingrange); }
+#else
 		{ xv = cosglobalang+sinviewingrangeglobalang; yv = singlobalang-cosviewingrangeglobalang; }
+#endif
 	else
 		{ xv = x1-globalposx; yv = y1-globalposy; }
 	i = xv*(y1-globalposy)-yv*(x1-globalposx); j = yv*x2-xv*y2;
 	if (klabs(j) > klabs(i>>3)) i = divscale28(i,j);
 	if (dastat == 0)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		t = divscale15(sector[sectnum].ceilingheinum,dasqr);
+#else
 		t = mulscale15(sector[sectnum].ceilingheinum,dasqr);
+#endif
 		z1 = sector[sectnum].ceilingz;
 	}
 	else
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		t = divscale15(sector[sectnum].floorheinum,dasqr);
+#else
 		t = mulscale15(sector[sectnum].floorheinum,dasqr);
+#endif
 		z1 = sector[sectnum].floorz;
 	}
 	z1 = dmulscale24(dx*t,mulscale20(y2,i)+((y1-wall[fw].y)<<8),
@@ -11041,19 +11162,31 @@ wallmost(short *mostbuf, long w, long sectnum, char dastat)
 
 
 	if (xb2[w] == xdimen-1)
+#if (LIBVER_BUILDREV < 19960427L)
+		{ xv = cosglobalang-mulscale16(singlobalang,viewingrange); yv = singlobalang+mulscale16(cosglobalang,viewingrange); }
+#else
 		{ xv = cosglobalang-sinviewingrangeglobalang; yv = singlobalang+cosviewingrangeglobalang; }
+#endif
 	else
 		{ xv = (x2+x1)-globalposx; yv = (y2+y1)-globalposy; }
 	i = xv*(y1-globalposy)-yv*(x1-globalposx); j = yv*x2-xv*y2;
 	if (klabs(j) > klabs(i>>3)) i = divscale28(i,j);
 	if (dastat == 0)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		t = divscale15(sector[sectnum].ceilingheinum,dasqr);
+#else
 		t = mulscale15(sector[sectnum].ceilingheinum,dasqr);
+#endif
 		z2 = sector[sectnum].ceilingz;
 	}
 	else
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		t = divscale15(sector[sectnum].floorheinum,dasqr);
+#else
 		t = mulscale15(sector[sectnum].floorheinum,dasqr);
+#endif
 		z2 = sector[sectnum].floorz;
 	}
 	z2 = dmulscale24(dx*t,mulscale20(y2,i)+((y1-wall[fw].y)<<8),
