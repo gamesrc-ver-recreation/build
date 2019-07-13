@@ -5896,7 +5896,11 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	daxscale <<= (i+8); dayscale <<= (i+8);
 	odayscale = dayscale;
 	daxscale = mulscale16(daxscale,xyaspect);
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960427L)
+	daxscale = scale(daxscale,mulscale16(xdimenscale,viewingrangerecip),320<<8);
+	dayscale = scale(dayscale,mulscale16(xdimenscale,viewingrangerecip),320<<8);
+	davoxptr = (char *)voxoff[daindex][i];
+#elif (LIBVER_BUILDREV < 19961012L)
 	daxscale = scale(daxscale,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8);
 	dayscale = scale(dayscale,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8);
 	davoxptr = (char *)voxoff[daindex][i];
@@ -5905,8 +5909,13 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	dayscale = scale(dayscale,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8);
 #endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+	daxscalerecip = krecipasm(daxscale);
+	dayscalerecip = krecipasm(dayscale);
+#else
 	daxscalerecip = (1<<30)/daxscale;
 	dayscalerecip = (1<<30)/dayscale;
+#endif
 
 	longptr = (long *)davoxptr;
 	daxsiz = longptr[0]; daysiz = longptr[1]; dazsiz = longptr[2];
@@ -5948,7 +5957,10 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 		ggyinc[i] = y; y += gyinc;
 	}
 
-#if (LIBVER_BUILDREV < 19960820L)
+#if (LIBVER_BUILDREV < 19960427L)
+	syoff = mulscale5(globalposz-dasprz,dayscalerecip);
+	syoff = scale(syoff,mulscale16(xdimenscale,viewingrangerecip),320<<8) + (dazpivot<<11);
+#elif (LIBVER_BUILDREV < 19960820L)
 	syoff = mulscale5(globalposz-dasprz,dayscalerecip);
 	syoff = scale(syoff,mulscale16(xdimenscale,viewingrangerecip),xdimen<<8) + (dazpivot<<11);
 #elif (LIBVER_BUILDREV < 19961012L)
@@ -6018,12 +6030,14 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 				 else { dagxinc = -gxinc; dagyinc = -mulscale16(gyinc,viewingrangerecip); }
 #endif
 
+#if (LIBVER_BUILDREV < 19960427L)
 			//Fix for non 90 degree viewing ranges
 #if (LIBVER_BUILDREV < 19961012L)
 		nxoff = x2-x1;
 #else
 		nxoff = mulscale16(x2-x1,viewingrangerecip);
 		x1 = mulscale16(x1,viewingrangerecip);
+#endif
 #endif
 
 		ggxstart = gxstart+ggyinc[ys];
