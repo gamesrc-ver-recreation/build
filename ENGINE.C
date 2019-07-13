@@ -4503,7 +4503,7 @@ initksqrt()
 {
 #if (LIBVER_BUILDREV < 19960427L)
 	unsigned long i, root, num;
-	long diff,temp;
+	long temp;
 
 	for(i=0;i<2048;i++)
 	{
@@ -4514,15 +4514,15 @@ initksqrt()
 			temp = root;
 			root = (root+num/root)>>1;
 		} while((temp-root+1) > 2);
-		diff = root*root-num;
-		while (klabs(diff-2*root+1) < klabs(diff))
+		temp = root*root-num;
+		while (klabs(temp-2*root+1) < klabs(temp))
 		{
-			diff += -(2*root)+1;
+			temp += -(2*root)+1;
 			root--;
 		}
-		while (klabs(diff+2*root+1) < klabs(diff))
+		while (klabs(temp+2*root+1) < klabs(temp))
 		{
-			diff += 2*root+1;
+			temp += 2*root+1;
 			root++;
 		}
 		sqrtable[i] = root;
