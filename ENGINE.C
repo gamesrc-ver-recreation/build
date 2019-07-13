@@ -110,7 +110,11 @@ static long ooption0, stereopage, stereofps = 0;
 
 long transarea = 0, totalarea = 0, beforedrawrooms = 1;
 
+#if (LIBVER_BUILDREV < 19960427L)
+static long oxdimen = -1, oviewingrange = -1;
+#else
 static long oxdimen = -1, oviewingrange = -1, oxyaspect = -1;
+#endif
 
 #if (LIBVER_BUILDREV < 19970602L)
 long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
@@ -6197,7 +6201,11 @@ ceilspritescan (long x1, long x2)
 
 ceilspritehline (long x2, long y)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long x1, v, bx, by, x, xend, bxinc, byinc, p;
+#else
 	long x1, v, bx, by;
+#endif
 
 	//x = x1 + (x2-x1)t + (y1-y2)u  ³  x = 160v
 	//y = y1 + (y2-y1)t + (x2-x1)u  ³  y = (scrx-160)v
@@ -6213,6 +6221,72 @@ ceilspritehline (long x2, long y)
 
 	asm3 = FP_OFF(palookup[globalpal]) + (getpalookup((long)mulscale28(klabs(v),globvis),globalshade)<<8);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		bxinc = asm1; asm1 <<= 2;
+		byinc = asm2; asm2 <<= 2;
+		x1 += viewoffset; x2 += viewoffset;
+		p = ylookup[y]+chainplace;
+		xend = x1+3;
+		if(x2 < xend) xend = x2;
+		if ((globalorientation&2) == 0)
+		{
+			x = x1;
+			if (x <= xend)
+			{
+				koutp(0x3c5,pow2char[x&3]);
+				mhline(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+				bx += bxinc;
+				by += byinc;
+				x++;
+			}
+			while (x <= xend)
+			{
+				koutp(0x3c5,pow2char[x&3]);
+				mhlineskipmodify(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+				bx += bxinc;
+				by += byinc;
+				x++;
+			}
+		}
+		else
+		{
+			koutp(0x3ce,4);
+			x = x1;
+			if (x <= xend)
+			{
+				koutp(0x3c5,pow2char[x&3]);
+				koutp(0x3cf,x&3);
+				thline(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+				bx += bxinc;
+				by += byinc;
+				x++;
+			}
+			while (x <= xend)
+			{
+				koutp(0x3c5,pow2char[x&3]);
+				koutp(0x3cf,x&3);
+				thlineskipmodify(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+				bx += bxinc;
+				by += byinc;
+				x++;
+			}
+			transarea += (x2 - x1);
+		}
+	}
+	else
+	{
+		p = ylookup[y]+x1+frameoffset;
+		if ((globalorientation&2) == 0)
+			mhline(globalbufplc,bx,(x2-x1)<<16,0L,by,p);
+		else
+		{
+			thline(globalbufplc,bx,(x2-x1)<<16,0L,by,p);
+			transarea += (x2-x1);
+		}
+	}
+#else // LIBVER_BUILDREV >= 19960427L
 	if ((globalorientation&2) == 0)
 		mhline(globalbufplc,bx,(x2-x1)<<16,0L,by,ylookup[y]+x1+frameoffset);
 	else
@@ -6220,6 +6294,7 @@ ceilspritehline (long x2, long y)
 		thline(globalbufplc,bx,(x2-x1)<<16,0L,by,ylookup[y]+x1+frameoffset);
 		transarea += (x2-x1);
 	}
+#endif
 }
 
 setsprite(short spritenum, long newx, long newy, long newz)
@@ -7670,6 +7745,25 @@ drawline256 (long x1, long y1, long x2, long y2, char col)
 		inc = divscale12(dy,dx);
 		plc = y1+mulscale12((2047-x1)&4095,inc);
 		i = ((x1+2048)>>12); daend = ((x2+2048)>>12);
+#if (LIBVER_BUILDREV < 19960427L)
+		if (chainstat != 0)
+		{
+			koutp(0x3c4,2);
+			for(;i<daend;i++)
+			{
+				j = (plc>>12);
+				if ((j >= startumost[i]) && (j < startdmost[i]))
+				{
+					koutp(0x3c5,pow2char[i&3]);
+					drawpixel(ylookup[j]+(i>>2)+chainplace,col);
+				}
+				plc += inc;
+
+			}
+		}
+		else
+		{
+#endif
 		for(;i<daend;i++)
 		{
 			j = (plc>>12);
@@ -7677,6 +7771,9 @@ drawline256 (long x1, long y1, long x2, long y2, char col)
 				drawpixel(ylookup[j]+i+frameplace,col);
 			plc += inc;
 		}
+#if (LIBVER_BUILDREV < 19960427L)
+		}
+#endif
 	}
 	else
 	{
@@ -7689,6 +7786,25 @@ drawline256 (long x1, long y1, long x2, long y2, char col)
 		inc = divscale12(dx,dy);
 		plc = x1+mulscale12((2047-y1)&4095,inc);
 		i = ((y1+2048)>>12); daend = ((y2+2048)>>12);
+#if (LIBVER_BUILDREV < 19960427L)
+		if (chainstat != 0)
+		{
+			koutp(0x3c4,2);
+			p = ylookup[i]+chainplace;
+			for(;i<daend;i++)
+			{
+				j = (plc>>12);
+				if ((i >= startumost[j]) && (i < startdmost[j]))
+				{
+					koutp(0x3c5,pow2char[j&3]);
+					drawpixel((j>>2)+p,col);
+				}
+				plc += inc; p += ylookup[1];
+			}
+		}
+		else
+		{
+#endif
 		p = ylookup[i]+frameplace;
 		for(;i<daend;i++)
 		{
@@ -7697,6 +7813,9 @@ drawline256 (long x1, long y1, long x2, long y2, char col)
 				drawpixel(j+p,col);
 			plc += inc; p += ylookup[1];
 		}
+#if (LIBVER_BUILDREV < 19960427L)
+		}
+#endif
 	}
 }
 
@@ -7804,7 +7923,11 @@ qsetmode640350()
 {
 	if (qsetmode != 350)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		if (stereofps != 0) stereofps = 1;
+#else
 		stereomode = 0;
+#endif
 
 		setvmode(0x10);
 
@@ -7825,7 +7948,11 @@ qsetmode640480()
 
 	if (qsetmode != 480)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		if (stereofps != 0) stereofps = 1;
+#else
 		stereomode = 0;
+#endif
 
 		setvmode(0x12);
 
@@ -7938,7 +8065,11 @@ draw2dgrid(long posxe, long posye, short ange, long zoome, short gride)
 			yp1 = (((posye-i)*zoome)>>14);
 			if (yp1 != tempy)
 			{
+#if (LIBVER_BUILDREV < 19960427L)
+				if ((yp1 > -200) && (yp1 <= 200))
+#else
 				if ((yp1 > 200-ydim16) && (yp1 <= 200))
+#endif
 				{
 					drawline16(320-xp1,200-yp1,320-xp2,200-yp1,8);
 					tempy = yp1;
@@ -8228,6 +8359,36 @@ printext256(long xpos, long ypos, short col, short backcol, char name[82], char 
 	if (fontsize) { fontptr = smalltextfont; charxsiz = 4; }
 				else { fontptr = textfont; charxsiz = 8; }
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		koutp(0x3c4,2);
+		for(i=0;name[i];i++)
+		{
+			letptr = &fontptr[name[i]<<3];
+			ptr = (char *)(ylookup[ypos+7]+chainplace);
+			for(y=7;y>=0;y--)
+			{
+				for(x=charxsiz-1;x>=0;x--)
+				{
+					if (letptr[y]&pow2char[7-fontsize-x])
+					{
+						koutp(0x3c5,pow2long[(stx+x-fontsize)&3]);
+						ptr[(stx+x-fontsize)>>2] = (char)col;
+					}
+					else if (backcol >= 0)
+					{
+						koutp(0x3c5,pow2long[(stx+x-fontsize)&3]);
+						ptr[(stx+x-fontsize)>>2] = (char)backcol;
+					}
+				}
+				ptr -= ylookup[1];
+			}
+			stx += charxsiz;
+		}
+	}
+	else
+#endif
 	for(i=0;name[i];i++)
 	{
 		letptr = &fontptr[name[i]<<3];
@@ -8467,6 +8628,20 @@ setview(long x1, long y1, long x2, long y2)
 		{ startumost[i] = windowy1, startdmost[i] = windowy2+1; }
 	for(i=windowx2+1;i<xdim;i++) { startumost[i] = 1, startdmost[i] = 0; }
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+		viewoffset = windowy1*(bytesperline<<2) + windowx1;
+	else
+		viewoffset = windowy1*bytesperline + windowx1;
+
+	if (stereofps != 0)
+	{
+		ostereopixelwidth = stereopixelwidth;
+		xdimen = xdim+(stereopixelwidth<<1); halfxdimen = (xdimen>>1);
+		xdimenrecip = divscale32(1L,xdimen);
+		setaspect((long)divscale16(xdim+(stereopixelwidth<<1),xdim),65536L);
+	}
+#else
 	viewoffset = windowy1*bytesperline + windowx1;
 
 	if ((stereomode) || (vidoption == 6))
@@ -8476,29 +8651,45 @@ setview(long x1, long y1, long x2, long y2)
 		xdimenrecip = divscale32(1L,xdimen);
 		setaspect((long)divscale16(xdimen,windowx2-windowx1+1),yxaspect);
 	}
+#endif
 }
 
 setaspect(long daxrange, long daaspect)
 {
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Function got split at some point
+	long i, j, k, x, y, xinc, oxyaspect;
+
+#endif
 	viewingrange = daxrange;
 	viewingrangerecip = divscale32(1L,daxrange);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	oxyaspect = xyaspect;
+#endif
 	yxaspect = daaspect;
 	xyaspect = divscale32(1,yxaspect);
 	xdimenscale = scale(xdimen,yxaspect,320);
 	xdimscale = scale(320,xyaspect,xdimen);
+#if (LIBVER_BUILDREV >= 19960427L) // VERSIONS RESTORATION - Again function was split
 }
 
 dosetaspect()
 {
 	long i, j, k, x, y, xinc;
+#endif
 
 	if (xyaspect != oxyaspect)
 	{
+#if (LIBVER_BUILDREV >= 19960427L)
 		oxyaspect = xyaspect;
+#endif
 		j = xyaspect*320;
 		horizlookup2[horizycent-1] = divscale26(131072,j);
+#if (LIBVER_BUILDREV < 19960427L)
+		for(i=ydim*3-1;i>=0;i--)
+#else
 		for(i=ydim*4-1;i>=0;i--)
+#endif
 			if (i != (horizycent-1))
 			{
 				horizlookup[i] = divscale28(1,i-(horizycent-1));
@@ -8517,7 +8708,8 @@ dosetaspect()
 			if (j != 0) j = mulscale16((long)radarang[k+1]-(long)radarang[k],j);
 			radarang2[i] = (short)(((long)radarang[k]+j)>>6);
 		}
-#ifdef SUPERBUILD
+#if (defined SUPERBUILD) && (LIBVER_BUILDREV >= 19960427L)
+//#ifdef SUPERBUILD
 #if (LIBVER_BUILDREV < 19960820L)
 		for(i=1;i<4096;i++) distrecip[i] = divscale14(xdimen,i);
 #elif (LIBVER_BUILDREV < 19961012L)
@@ -8616,6 +8808,10 @@ rotatesprite (long sx, long sy, long z, short a, short picnum, signed char dasha
 
 		permhead = ((permhead+1)&(MAXPERMS-1));
 	}
+#if (LIBVER_BUILDREV < 19960427L)
+	else
+		permanentupdate = 1;
+#endif
 }
 
 dorotatesprite (long sx, long sy, long z, short a, short picnum, signed char dashade, char dapalnum, char dastat, long cx1, long cy1, long cx2, long cy2)
@@ -8643,7 +8839,9 @@ dorotatesprite (long sx, long sy, long z, short a, short picnum, signed char das
 		if ((dastat&8) == 0)
 		{
 			x = xdimenscale;   //= scale(xdimen,yxaspect,320);
+#if (LIBVER_BUILDREV >= 19960427L)
 			if (stereomode) x = scale(windowx2-windowx1+1,yxaspect,320);
+#endif
 			sx = ((cx1+cx2+2)<<15)+scale(sx-(320<<15),xdimen,320);
 			sy = ((cy1+cy2+2)<<15)+mulscale16(sy-(200<<15),x);
 		}
@@ -8743,19 +8941,38 @@ dorotatesprite (long sx, long sy, long z, short a, short picnum, signed char das
 	by = dmulscale16(x,yv2,y,yv);
 	if (dastat&4) { yv = -yv; yv2 = -yv2; by = (ysiz<<16)-1-by; }
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (vidoption == 1)
+#else
 	if ((vidoption == 1) && (origbuffermode == 0))
+#endif
 	{
 		if (dastat&128)
 		{
+#if (LIBVER_BUILDREV < 19960427L)
+			if (origbuffermode == 0)
+			{
+				obuffermode = buffermode;
+				buffermode = 0;
+				setactivepage(page);
+			}
+#else
 			obuffermode = buffermode;
 			buffermode = 0;
 			setactivepage(activepage);
+#endif
 		}
 	}
+#if (LIBVER_BUILDREV >= 19960427L)
 	else if (dastat&8)
 		 permanentupdate = 1;
+#endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if ((chainstat == 0) && ((dastat&1) == 0))
+#else
 	if ((dastat&1) == 0)
+#endif
 	{
 		if (((a&1023) == 0) && (ysiz <= 256))  //vlineasm4 has 256 high limit!
 		{
@@ -8983,6 +9200,16 @@ dorotatesprite (long sx, long sy, long z, short a, short picnum, signed char das
 				default: bx += xv*(y1-oy); by += yv*(y1-oy); oy = y1; break;
 			}
 
+#if (LIBVER_BUILDREV < 19960427L)
+			if (chainstat != 0)
+			{
+				koutpw(0x3c4,(256<<(x&3))+2);
+
+				if ((dastat&1) != 0) koutpw(0x3ce,4+((x&3)<<8));
+				p = ylookup[y1]+(x>>2)+chainplace;
+			}
+			else
+#endif
 			p = ylookup[y1]+x+frameplace;
 
 			if ((dastat&1) == 0)
@@ -9004,7 +9231,11 @@ dorotatesprite (long sx, long sy, long z, short a, short picnum, signed char das
 	if ((vidoption == 1) && (dastat&128) && (origbuffermode == 0))
 	{
 		buffermode = obuffermode;
+#if (LIBVER_BUILDREV < 19960427L)
+		setactivepage(page);
+#else
 		setactivepage(activepage);
+#endif
 	}
 }
 
@@ -9103,7 +9334,11 @@ makepalookup(long palnum, char *remapbuf, signed char r, signed char g, signed c
 		}
 	}
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if ((ooption0 == 7) && (qsetmode == 200))
+#else
 	if ((vidoption == 6) && (qsetmode == 200))
+#endif
 	{
 		for(i=0;i<256;i++)
 		{
@@ -9197,6 +9432,68 @@ getclosestcol(long r, long g, long b)
 	return(retcol);
 }
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Based on '95 revision
+stereoinit()
+{
+	long i;
+
+	setverts(510L,487L,0L,479L,12L,479L);
+
+	koutp(0x3d4,0x38); koutp(0x3d5,0x48);           //S3 Extensions enable #1
+	koutp(0x3d4,0x39); koutp(0x3d5,0xa5);           //S3 Extensions enable #2
+	koutp(0x3d4,0x31); koutp(0x3d5,kinp(0x3d5)|9);   //Init for start address
+
+	koutp(0x3d4,0x9); koutp(0x3d5,kinp(0x3d5)&(255-1));
+}
+
+setverts(long vertotal, long startverblank, long endverblank,
+			long veretstart, long veretend, long verdispenab)
+{
+	char oflow;
+
+	koutp(0x3d4,0x11); koutp(0x3d5,kinp(0x3d5)&127);
+	koutp(0x3d4,0x6); koutp(0x3d5,vertotal&255);
+
+	oflow = 0;
+	oflow += ((vertotal&256)>>8);
+	oflow += ((verdispenab&256)>>7);
+	oflow += ((veretstart&256)>>6);
+	oflow += ((startverblank&256)>>5);
+	oflow += ((vertotal&512)>>4);
+	oflow += ((verdispenab&512)>>3);
+	oflow += ((veretstart&512)>>2);
+	koutp(0x3d4,0x7); koutp(0x3d5,(kinp(0x3d5)&0x10)|oflow);
+
+	koutp(0x3d4,0x9); koutp(0x3d5,(kinp(0x3d5)&(255-32))|((startverblank&512)>>4));
+	koutp(0x3d4,0x10); koutp(0x3d5,veretstart&255);
+	koutp(0x3d4,0x11); koutp(0x3d5,(kinp(0x3d5)&0xf0)+(veretend&15));
+	koutp(0x3d4,0x12); koutp(0x3d5,verdispenab&255);
+	koutp(0x3d4,0x15); koutp(0x3d5,startverblank&255);
+	koutp(0x3d4,0x16); koutp(0x3d5,endverblank&255);
+
+	koutp(0x3d4,0x9); koutp(0x3d5,kinp(0x3d5)&(255-1));
+}
+
+stereoblit(long dastereopage, char *stereobuf)
+{
+	if (stereopixelwidth >= 0)
+	{
+		if (dastereopage == 0)
+		{
+			koutp(0x3d4,0x35); koutp(0x3d5,page+0); copybuf(stereobuf+stereopixelwidth,0xa0000,64000>>2);
+		}
+		else
+		{
+			koutp(0x3d4,0x35); koutp(0x3d5,page+1); copybuf(stereobuf,0xa4000,49152>>2);
+			koutp(0x3d4,0x35); koutp(0x3d5,page+2); copybuf(stereobuf+49152,0xa0000,14848>>2);
+		}
+	}
+	else
+	{
+	}
+}
+#endif // LIBVER_BUILDREV < 19960427L
+
 setbrightness(char dabrightness, char *dapal)
 {
 	char *ptr;
@@ -9205,7 +9502,11 @@ setbrightness(char dabrightness, char *dapal)
 	curbrightness = min(max((long)dabrightness,0),15);
 
 	k = 0;
+#if (LIBVER_BUILDREV < 19960427L)
+	if (ooption0 == 7)
+#else
 	if (vidoption == 6)
+#endif
 	{
 		for(j=0;j<16;j++)
 			for(i=0;i<16;i++)
@@ -9262,6 +9563,11 @@ drawmapview (long dax, long day, long zoome, short ang)
 	xvect2 = mulscale16(xvect,yxaspect);
 	yvect2 = mulscale16(yvect,yxaspect);
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainnumpages > 0)
+		koutp(0x3c4,2);
+
+#endif
 	sortnum = 0;
 	for(s=0,sec=&sector[s];s<numsectors;s++,sec++)
 		if (show2dsector[s>>3]&pow2char[s&7])
@@ -9315,7 +9621,11 @@ drawmapview (long dax, long day, long zoome, short ang)
 				setpalookupaddress(globalpalwritten);
 			}
 			globalpicnum = sec->floorpicnum;
+#if (LIBVER_BUILDREV < 19960427L)
+			if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 			if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 			setgotpic(globalpicnum);
 			if ((tilesizx[globalpicnum] <= 0) || (tilesizy[globalpicnum] <= 0)) continue;
 			if ((picanm[globalpicnum]&192) != 0) globalpicnum += animateoffs((short)globalpicnum,s);
@@ -9378,6 +9688,23 @@ drawmapview (long dax, long day, long zoome, short ang)
 			fillpolygon(npoints);
 		}
 
+#if (LIBVER_BUILDREV < 19960427L)
+	gap = sortnum;  //Sort sprite list
+	do
+	{
+		gap >>= 1;
+		for(i=0;i<sortnum-gap;i++)
+		{
+			j = i;
+			while ((sprite[tsprite[j].owner].z > sprite[tsprite[j+gap].owner].z) && (j >= 0))
+			{
+				k = tsprite[j].owner; tsprite[j].owner = tsprite[j+gap].owner; tsprite[j+gap].owner = k;
+				j -= gap;
+			}
+		}
+	}
+	while (gap > 1);
+#else // LIBVER_BUILDREV
 		//Sort sprite list
 	gap = 1; while (gap < sortnum) gap = (gap<<1)+1;
 	for(gap>>=1;gap>0;gap>>=1)
@@ -9387,6 +9714,7 @@ drawmapview (long dax, long day, long zoome, short ang)
 				if (sprite[tsprite[j].owner].z <= sprite[tsprite[j+gap].owner].z) break;
 				swapshort(&tsprite[j].owner,&tsprite[j+gap].owner);
 			}
+#endif // LIBVER_BUILDREV
 
 	for(s=sortnum-1;s>=0;s--)
 	{
@@ -9472,7 +9800,11 @@ drawmapview (long dax, long day, long zoome, short ang)
 			}
 
 			globalpicnum = spr->picnum;
+#if (LIBVER_BUILDREV < 19960427L)
+			if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 			if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 			setgotpic(globalpicnum);
 			if ((tilesizx[globalpicnum] <= 0) || (tilesizy[globalpicnum] <= 0)) continue;
 			if ((picanm[globalpicnum]&192) != 0) globalpicnum += animateoffs((short)globalpicnum,s);
@@ -9807,6 +10139,11 @@ fillpolygon(long npoints)
 	globalposx += oy*globalx1;
 	globalposy += oy*globaly2;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+		setuphlineasm4(asm1<<2,asm2<<2);
+	else
+#endif
 	setuphlineasm4(asm1,asm2);
 
 	ptr = smost;
@@ -9832,8 +10169,32 @@ fillpolygon(long npoints)
 				bx = ox*asm1 + globalposx;
 				by = ox*asm2 - globalposy;
 
+#if (LIBVER_BUILDREV < 19960427L)
+				if (chainstat != 0)
+				{
+					ox = asm1; asm1 <<= 2;
+					oy = asm2; asm2 <<= 2;
+					r = max(x1-1,x2-4);
+					p = ylookup[y]+chainplace;
+					while (x2 > r)
+					{
+						koutp(0x3c5,pow2char[x2&3]);
+						hlineasm4((x2-x1)>>2,-1L,globalshade<<8,by,bx,p+(x2>>2));
+						bx -= ox;
+						by -= oy;
+						x2--;
+					}
+					asm1 = ox;
+					asm2 = oy;
+				}
+				else
+				{
+#endif
 				p = ylookup[y]+x2+frameplace;
 				hlineasm4(x2-x1,-1L,globalshade<<8,by,bx,p);
+#if (LIBVER_BUILDREV < 19960427L)
+				}
+#endif
 			}
 			else
 			{
@@ -9842,6 +10203,60 @@ fillpolygon(long npoints)
 				bx = ox*asm1 + globalposx;
 				by = ox*asm2 - globalposy;
 
+#if (LIBVER_BUILDREV < 19960427L)
+				if (chainstat != 0)
+				{
+					bxinc = asm1; asm1 <<= 2;
+					byinc = asm2; asm2 <<= 2;
+					p = ylookup[y]+chainplace;
+					xend = x1+3;
+					if (x2 < xend) xend = x2;
+					if (globalpolytype == 1)
+					{
+						x = x1;
+						if (x <= xend)
+						{
+							koutp(0x3c5,pow2char[x&3]);
+							mhline(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+							bx += bxinc; by += byinc;
+							x++;
+						}
+						while (x <= xend)
+						{
+							koutp(0x3c5,pow2char[x&3]);
+							mhlineskipmodify(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+							bx += bxinc; by += byinc;
+							x++;
+						}
+					}
+					else
+					{
+						koutp(0x3ce,4);
+						x = x1;
+						if (x <= xend)
+						{
+							koutp(0x3c5,pow2char[x&3]);
+							koutp(0x3cf,x&3);
+							thline(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+							bx += bxinc; by += byinc;
+							x++;
+						}
+						while (x <= xend)
+						{
+							koutp(0x3c5,pow2char[x&3]);
+							koutp(0x3cf,x&3);
+							thlineskipmodify(globalbufplc,bx,((x2-x)>>2)<<16,0L,by,p+(x>>2));
+							bx += bxinc; by += byinc;
+							x++;
+						}
+						transarea += (x2-x1);
+					}
+					asm1 = bxinc;
+					asm2 = byinc;
+				}
+				else
+				{
+#endif
 				p = ylookup[y]+x1+frameplace;
 				if (globalpolytype == 1)
 					mhline(globalbufplc,bx,(x2-x1)<<16,0L,by,p);
@@ -9850,6 +10265,9 @@ fillpolygon(long npoints)
 					thline(globalbufplc,bx,(x2-x1)<<16,0L,by,p);
 					transarea += (x2-x1);
 				}
+#if (LIBVER_BUILDREV < 19960427L)
+				}
+#endif
 			}
 		}
 		globalposx += globalx1;
@@ -9858,6 +10276,167 @@ fillpolygon(long npoints)
 	}
 	faketimerhandler();
 }
+
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev.
+setxmode(long daxdim, long daydim)
+{
+	long vlinum;
+
+	koutp(0x3d4,0x11); koutp(0x3d5,(kinp(0x3d5)&0x7f));
+	koutpw(0x03d4,0x0014);
+	koutpw(0x03d4,0xe317);
+	koutpw(0x03c4,0x0604);
+
+	switch(xdim)
+	{
+		case 256:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0xf3)|0x00));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x5f00);
+			koutpw(0x03d4,0x8203);
+			koutpw(0x03d4,0x4e04);
+			koutpw(0x03d4,0x9605);
+			break;
+		case 320:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0xf3)|0x00));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x5f00);
+			koutpw(0x03d4,0x8203);
+			koutpw(0x03d4,0x5404);
+			koutpw(0x03d4,0x8005);
+			break;
+		case 360:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0xf3)|0x04));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x6b00);
+			koutpw(0x03d4,0x8e03);
+			koutpw(0x03d4,0x5e04);
+			koutpw(0x03d4,0x8a05);
+			break;
+		case 400:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0xf3)|0x04));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x7100 + 0x300);   //Add 0x300 for Ken's ViewSonic17
+			koutpw(0x03d4,0x9203);
+			koutpw(0x03d4,0x6504);
+			koutpw(0x03d4,0x6c04);
+			koutpw(0x03d4,0x8205 - 0x100);   //Sub 0x100 for Ken's ViewSonic17
+			break;
+		default: return(-1);
+	}
+	koutpw(0x03d4,(((xdim>>2)-1)<<8)+0x1);
+	koutpw(0x03d4,((xdim>>2)<<8)+0x2);
+	koutpw(0x03d4,((xdim>>3)<<8)+0x13);
+
+	switch(ydim)
+	{
+		case 300:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0x3f)|0x80));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x4606);
+			koutpw(0x03d4,0x1f07);
+			koutpw(0x03d4,0x4009);
+			koutpw(0x03d4,0x3110);
+			koutpw(0x03d4,0x8011);
+			koutpw(0x03d4,0x2b12);
+			koutpw(0x03d4,0x2f15);
+			koutpw(0x03d4,0x4416);
+			break;
+		case 350:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0x3f)|0x80));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x7c06);
+			koutpw(0x03d4,0x1f07);
+			koutpw(0x03d4,0x4009);
+			koutpw(0x03d4,0x6210);
+			koutpw(0x03d4,0x8011);
+			koutpw(0x03d4,0x5d12);
+			koutpw(0x03d4,0x5d15);
+			koutpw(0x03d4,0x7a16);
+			break;
+		case 360:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0x3f)|0x40));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0xbf06);
+			koutpw(0x03d4,0x1f07);
+			koutpw(0x03d4,0x4009);
+			koutpw(0x03d4,0x8810);
+			koutpw(0x03d4,0x8511);
+			koutpw(0x03d4,0x6712);
+			koutpw(0x03d4,0x6d15);
+			koutpw(0x03d4,0xba16);
+			break;
+		case 400: case 200:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0x3f)|0x40));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0xbf06);
+			koutpw(0x03d4,0x1f07);
+			koutpw(0x03d4,0x4009);
+			koutpw(0x03d4,0x9c10);
+			koutpw(0x03d4,0x8e11);
+			koutpw(0x03d4,0x8f12);
+			koutpw(0x03d4,0x9615);
+			koutpw(0x03d4,0xb916);
+			break;
+		case 480: case 240:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0x3f)|0xc0));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x0d06);
+			koutpw(0x03d4,0x3e07);
+			koutpw(0x03d4,0x4009);
+			koutpw(0x03d4,0xea10);
+			koutpw(0x03d4,0xac11);
+			koutpw(0x03d4,0xdf12);
+			koutpw(0x03d4,0xe715);
+			koutpw(0x03d4,0x0616);
+			break;
+		case 512: case 256:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0x3f)|0xc0));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x2306);
+			koutpw(0x03d4,0xb207);
+			koutpw(0x03d4,0x6009);
+			koutpw(0x03d4,0x0a10);
+			koutpw(0x03d4,0xac11);
+			koutpw(0x03d4,0xff12);
+			koutpw(0x03d4,0x0715);
+			koutpw(0x03d4,0x1a16);
+			break;
+		case 540: case 270:
+			koutpw(0x03c4,0x0100);
+			koutp(0x03c2,((kinp(0x03cc)&0x3f)|0xc0));
+			koutpw(0x03c4,0x0300);
+			koutpw(0x03d4,0x3006);
+			koutpw(0x03d4,0xf007);
+			koutpw(0x03d4,0x6009);
+			koutpw(0x03d4,0x2010);
+			koutpw(0x03d4,0xa911);
+			koutpw(0x03d4,0x1b12);
+			koutpw(0x03d4,0x1f15);
+			koutpw(0x03d4,0x2f16);
+			break;
+	}
+	switch(ydim)
+	{
+		case 200: case 240: case 256: case 270:
+			vlinum = 1; break;
+		case 300: case 350: case 360: case 400: case 480: case 512: case 540:
+			vlinum = 0; break;
+	}
+	koutp(0x3d4,0x09); koutp(0x3d5,((kinp(0x3d5)&0x00e0)|(vlinum&0x001f)));
+	return(0);
+}
+#endif // LIBVER_BUILDREV < 19960427L
 
 clearview(long dacol)
 {
@@ -9868,7 +10447,11 @@ clearview(long dacol)
 
 	dx = windowx2-windowx1+1;
 	dacol += (dacol<<8); dacol += (dacol<<16);
+#if (LIBVER_BUILDREV < 19960427L)
+	if (stereofps != 0)
+#else
 	if (vidoption == 6)
+#endif
 	{
 		p = FP_OFF(screen)+ylookup[windowy1]+windowx1;
 		for(y=windowy1;y<=windowy2;y++)
@@ -9880,9 +10463,46 @@ clearview(long dacol)
 		faketimerhandler();
 		return;
 	}
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		x1 = windowx1;
+		x2 = windowx2+1;
+		koutp(0x3c4,2);
+		if ((x1&3) != 0)
+		{
+			koutp(0x3c5,0x10-pow2char[x1&3]);
+			ptr = (char*)(chainplace+(x1>>2));
+			for(y=windowy1;y<=windowy2;y++)
+				*(ptr+ylookup[y]) = dacol;
+		}
+		if ((x2&3) != 0)
+		{
+			koutp(0x3c5,pow2char[x2&3]-1);
+			ptr = (char*)(chainplace+(x2>>2));
+			for(y=windowy1;y<=windowy2;y++)
+				*(ptr+ylookup[y]) = dacol;
+		}
+		x1 = (x1+3)>>2;
+		x2 = x2>>2;
+		if (x1 < x2)
+		{
+			koutp(0x3c5,0xf);
+			dx = x2-x1;
+			p = chainplace+ylookup[windowy1]+x1;
+			for(y=windowy1;y<=windowy2;y++)
+				{ clearbufbyte(p,dx,dacol); p += ylookup[1]; }
+		}
+	}
+	else
+	{
+#endif
 	p = frameplace+ylookup[windowy1]+windowx1;
 	for(y=windowy1;y<=windowy2;y++)
 		{ clearbufbyte(p,dx,dacol); p += ylookup[1]; }
+#if (LIBVER_BUILDREV < 19960427L)
+	}
+#endif
 	faketimerhandler();
 }
 
@@ -9893,22 +10513,46 @@ clearallviews(long dacol)
 	if (qsetmode != 200) return;
 	dacol += (dacol<<8); dacol += (dacol<<16);
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Based on '95 rev.
+	if (stereofps != 0)
+	{
+		if (ooption0 == 6)
+		{
+			for(i=0;i<4;i++)
+				{ koutpw(0x3d4,0x35+(i<<8)); clearbuf(0xa0000,65536>>2,0L); }
+		}
+		clearbuf(screen,128000L>>2,dacol);
+	}
+	else
+	{
+#endif
 	switch(vidoption)
 	{
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Based on '95 rev
+		case 0:
+			koutpw(0x3c4,0x0f02); clearbuf(0xa0000,(65536L>>2),0L);
+			break;
+#endif
 		case 1:
 			for(i=0;i<numpages;i++)
 			{
 				setactivepage(i);
 				clearbufbyte(frameplace,imageSize,0L);
 			}
+#if (LIBVER_BUILDREV >= 19960427L)
 			setactivepage(activepage);
+#endif
 		case 2:
 			clearbuf(frameplace,(xdim*ydim)>>2,0L);
 			break;
 #if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 rev; See also BUILD2.TXT, 9/25/96 (removed modes)
 		case 3:
 			for(i=0;i<4;i++)
+#if (LIBVER_BUILDREV < 19960427L)
+				{ koutp(0x3c4,i); clearbuf(0xa0000,16000L,0L); }
+#else
 				{ koutp(0x3cd,i); clearbuf(0xa0000,16000L,0L); }
+#endif
 			break;
 		case 4:
 			for(i=0;i<4;i++)
@@ -9920,19 +10564,42 @@ clearallviews(long dacol)
 			break;
 #endif
 		case 6:
+#if (LIBVER_BUILDREV < 19960427L)
+		case 7:
+#else
 			clearbuf(screen,128000L>>2,dacol);
+#endif
 			break;
+#if (LIBVER_BUILDREV < 19960427L)
+	}
+#endif
 	}
 	faketimerhandler();
 }
 
 plotpixel(long x, long y, char col)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		outpw(0x3c4,2+(0x100<<(x&3)));
+		drawpixel(ylookup[y]+(x>>2)+chainplace,(long)col);
+	}
+	else
+#endif
 	drawpixel(ylookup[y]+x+frameplace,(long)col);
 }
 
 char getpixel(long x, long y)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		koutpw(0x3ce,4+((x&3)<<8));
+		return(readpixel(ylookup[y]+(x>>2)+chainplace));
+	}
+	else
+#endif
 	return(readpixel(ylookup[y]+x+frameplace));
 }
 
