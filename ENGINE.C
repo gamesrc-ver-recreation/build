@@ -3784,6 +3784,24 @@ nextpage()
 	switch(qsetmode)
 	{
 		case 200:
+#if (LIBVER_BUILDREV < 19960427L)
+			if (stereofps != 0)
+			{
+				if (ooption0 == 6)
+				{
+					stereoblit(stereopage,screen);
+					stereopage ^= 1;
+				}
+				else
+				{
+					if (stereopage == 0)
+						redblueblit(screen,&screen[65536],64000L);
+					stereopage ^= 1;
+				}
+			}
+			else
+			{
+#endif
 			for(i=permtail;i!=permhead;i=((i+1)&(MAXPERMS-1)))
 			{
 				per = &permfifo[i];
@@ -3795,6 +3813,63 @@ nextpage()
 
 			switch(vidoption)
 			{
+#if (LIBVER_BUILDREV < 19960427L)
+					case 0:
+						if (chainstat != 0)
+						{
+							koutpw(0x3d4,0xc+(chainplace&0xff00));
+							chainplace += chainsiz;
+							if (chainplace+chainsiz >= 0xb0000) chainplace = 0xa0000;
+							if (chainnumpages == 2)
+							{
+								limitrate();
+								faketimerhandler();
+							}
+						}
+						else
+						{
+							koutp(0x3c4,2); j = frameplace; k = 0xa0000;
+							for (i=0;i<ydim;i+=2)
+							{
+								koutp(0x3c5,1); chainblit(j,k,xdim>>3);
+								koutp(0x3c5,2); chainblit(j+1,k,xdim>>3);
+								koutp(0x3c5,4); chainblit(j+2,k,xdim>>3);
+								koutp(0x3c5,8); chainblit(j+3,k,xdim>>3);
+								j += (xdim<<1); k += (xdim>>1);
+								faketimerhandler();
+							}
+						}
+						break;
+					case 1:
+						setvisualpage(page);
+						if (!origbuffermode)
+						{
+							buffermode = ((transarea<<3) > totalarea);
+							transarea = 0;
+							totalarea = 0;
+						}
+						page++; if (page >= numpages) page = 0;
+						setactivepage(page);
+						break;
+					case 2:
+						copybuf(frameplace,0xa0000,64000>>2);
+						break;
+					case 3:
+						koutpw(0x3d4,0xc+(page<<14));
+						page = ((page+1)&3);
+						koutp(0x3cd,page+(page<<4));
+						break;
+					case 4:
+						koutpw(0x3d4,0xc+(page<<14));
+						page = ((page+1)&3);
+						koutpw(0x3ce,0x9+(page<<12));
+						break;
+					case 5:
+						koutpw(0x3d4,0xc+(page<<14));
+						page = ((page+1)&3);
+						koutpw(0x3d4,0x35+(page<<8));
+						break;
+#else // LIBVER_BUILDREV (19960427L)
 				case 1:
 					if (stereomode)
 					{
@@ -3859,6 +3934,7 @@ nextpage()
 					if (!activepage) redblueblit(screen,&screen[65536],64000L);
 					activepage ^= 1;
 					break;
+#endif // LIBVER_BUILDREV (19960427L)
 			}
 
 
@@ -3873,6 +3949,9 @@ nextpage()
 				if (per->pagesleft&127) per->pagesleft--;
 				if (((per->pagesleft&127) == 0) && (i == permtail))
 					permtail = ((permtail+1)&(MAXPERMS-1));
+#if (LIBVER_BUILDREV < 19960427L)
+			}
+#endif
 			}
 			break;
 
@@ -3903,7 +3982,11 @@ loadtile (short tilenume)
 	char *ptr;
 	long i, dasiz;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if ((tilenume < 0) || (tilenume >= MAXTILES)) return;
+#else
 	if ((unsigned)tilenume >= (unsigned)MAXTILES) return;
+#endif
 	dasiz = tilesizx[tilenume]*tilesizy[tilenume];
 	if (dasiz <= 0) return;
 
@@ -3944,7 +4027,11 @@ allocatepermanenttile(short tilenume, long xsiz, long ysiz)
 {
 	long i, j, x, y, dasiz;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if ((xsiz <= 0) || (ysiz <= 0) || ((tilenume & ~(MAXTILES-1)) != 0))
+#else
 	if ((xsiz <= 0) || (ysiz <= 0) || ((unsigned)tilenume >= (unsigned)MAXTILES))
+#endif
 		return(0);
 
 	dasiz = xsiz*ysiz;
@@ -4047,25 +4134,39 @@ loadpics(char *filename)
 #ifdef SUPERBUILD
 qloadkvx(long voxindex, char *filename)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, fil;
+#else
 #if (LIBVER_BUILDREV < 19961012L)
 	long i, fil, dasiz, lengcnt;
 #else
 	long i, fil, dasiz, lengcnt, lengtot;
 #endif
 	char *ptr;
+#endif // 19960427L
 
 	if ((fil = kopen4load(filename,0)) == -1) return;
 
+#if (LIBVER_BUILDREV >= 19960427L)
 	lengcnt = 0;
 #if (LIBVER_BUILDREV >= 19961012L)
 	lengtot = kfilelength(fil);
 #endif
+#endif
 
 	for(i=0;i<MAXVOXMIPS;i++)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		kread(fil,&voxsiz[voxindex][i],4);
+#else
 		kread(fil,&dasiz,4);
+#endif
 			//Must store filenames to use cacheing system :(
 		voxlock[voxindex][i] = 200;
+#if (LIBVER_BUILDREV < 19960427L)
+		allocache(&voxoff[voxindex][i],voxsiz[voxindex][i],&voxlock[voxindex][i]);
+		kread(fil,voxoff[voxindex][i],voxsiz[voxindex][i]);
+#else
 		allocache(&voxoff[voxindex][i],dasiz,&voxlock[voxindex][i]);
 		ptr = (char *)voxoff[voxindex][i];
 		kread(fil,ptr,dasiz);
@@ -4074,6 +4175,7 @@ qloadkvx(long voxindex, char *filename)
 #if (LIBVER_BUILDREV >= 19961012L)
 		if (lengcnt >= lengtot-768) break;
 #endif
+#endif // 19960427L
 	}
 	kclose(fil);
 }
@@ -4205,6 +4307,11 @@ screencapture(char *filename, char inverseit)
 
 	if (qsetmode == 200)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		if (chainstat != 0)
+			ptr = (char *)chainplace;
+		else
+#endif
 		ptr = (char *)frameplace;
 		numbytes = xdim*ydim;
 		xres = xdim;
@@ -4220,7 +4327,17 @@ screencapture(char *filename, char inverseit)
 	{
 		koutp(97,kinp(97)|3);
 
+#if (LIBVER_BUILDREV < 19960427L)
+		if (qsetmode == 200)
+		{
+			if (chainstat != 0)
+				{ koutpw(0x3ce,((p&3)<<8)+4); col = *ptr; p++; if ((p&3) == 0) ptr++; }
+			else
+				{ col = *ptr; p++; ptr++; }
+		}
+#else
 		if (qsetmode == 200) { col = *ptr; p++; ptr++; }
+#endif
 		else
 		{
 			col = readpixel16(p);
@@ -4230,7 +4347,17 @@ screencapture(char *filename, char inverseit)
 
 		leng = 1;
 
+#if (LIBVER_BUILDREV < 19960427L)
+		if (qsetmode == 200)
+		{
+			if (chainstat != 0)
+				{ koutpw(0x3ce,((p&3)<<8)+4); ncol = *ptr; }
+			else
+				ncol = *ptr;
+		}
+#else
 		if (qsetmode == 200) ncol = *ptr;
+#endif
 		else
 		{
 			ncol = readpixel16(p);
@@ -4241,7 +4368,17 @@ screencapture(char *filename, char inverseit)
 		{
 			leng++;
 
+#if (LIBVER_BUILDREV < 19960427L)
+			if (qsetmode == 200)
+			{
+				if (chainstat != 0)
+					{ p++; if ((p&3) == 0) ptr++; koutpw(0x3ce,((p&3)<<8)+4); ncol = *ptr; }
+				else
+					{ p++; ptr++; ncol = *ptr; }
+			}
+#else
 			if (qsetmode == 200) { p++; ptr++; ncol = *ptr; }
+#endif
 			else
 			{
 				p++;
@@ -4302,7 +4439,11 @@ inside (long x, long y, short sectnum)
 {
 	walltype *wal;
 	long i, x1, y1, x2, y2;
+#if (LIBVER_BUILDREV < 19960427L)
+	long cnt;
+#else
 	unsigned long cnt;
+#endif
 
 	if ((sectnum < 0) || (sectnum >= numsectors)) return(-1);
 
@@ -4315,11 +4456,22 @@ inside (long x, long y, short sectnum)
 		if ((y1^y2) < 0)
 		{
 			x1 = wal->x-x; x2 = wall[wal->point2].x-x;
+#if (LIBVER_BUILDREV < 19960427L)
+			if ((x1^x2) < 0)
+				cnt ^= (x1*y2-x2*y1)^(y1-y2);
+			else
+				cnt ^= -x1;
+#else
 			if ((x1^x2) >= 0) cnt ^= x1; else cnt ^= (x1*y2-x2*y1)^y2;
+#endif
 		}
 		wal++; i--;
 	} while (i);
+#if (LIBVER_BUILDREV < 19960427L)
+	return(cnt<0);
+#else
 	return(cnt>>31);
+#endif
 }
 
 getangle(long xvect, long yvect)
