@@ -4586,22 +4586,40 @@ drawmasks()
 	long i, j, k, l, gap, xs, ys, zs, xp, yp, zp, z1, z2, yoff, yspan;
 #endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+	spritetype *ts1, *ts2, *tempts;
+	if (chainnumpages > 0) koutp(0x3c4,2);
+#else
 	for(i=spritesortcnt-1;i>=0;i--) tspriteptr[i] = &tsprite[i];
+#endif
 	for(i=spritesortcnt-1;i>=0;i--)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		xs = tsprite[i].x-globalposx; ys = tsprite[i].y-globalposy;
+		yp = mulscale16(dmulscale6(xs,cosglobalang,ys,singlobalang),viewingrange);
+#else
 		xs = tspriteptr[i]->x-globalposx; ys = tspriteptr[i]->y-globalposy;
 		yp = dmulscale6(xs,cosviewingrangeglobalang,ys,sinviewingrangeglobalang);
+#endif
 		if (yp > (4<<8))
 		{
 			xp = dmulscale6(ys,cosglobalang,-xs,singlobalang);
 			spritesx[i] = scale(xp+yp,xdimen<<7,yp);
 		}
+#if (LIBVER_BUILDREV < 19960427L)
+		else if ((tsprite[i].cstat&48) == 0)
+#else
 		else if ((tspriteptr[i]->cstat&48) == 0)
+#endif
 		{
 			spritesortcnt--;  //Delete face sprite if on wrong side!
 			if (i != spritesortcnt)
 			{
+#if (LIBVER_BUILDREV < 19960427L)
+				copybufbyte(&tsprite[spritesortcnt],&tsprite[i],sizeof(spritetype));
+#else
 				tspriteptr[i] = tspriteptr[spritesortcnt];
+#endif
 				spritesx[i] = spritesx[spritesortcnt];
 				spritesy[i] = spritesy[spritesortcnt];
 			}
@@ -4610,29 +4628,68 @@ drawmasks()
 		spritesy[i] = yp;
 	}
 
+#if (LIBVER_BUILDREV < 19960427L)
+	tempts = &tsprite[MAXSPRITESONSCREEN-2];
+
+	for(gap=spritesortcnt>>1;gap>0;gap>>=1)      //Sort sprite list
+#else
 	gap = 1; while (gap < spritesortcnt) gap = (gap<<1)+1;
 	for(gap>>=1;gap>0;gap>>=1)      //Sort sprite list
+#endif
 		for(i=0;i<spritesortcnt-gap;i++)
 			for(l=i;l>=0;l-=gap)
 			{
 #if (LIBVER_BUILDREV < 19961012L)
 				j = spritesy[l] - spritesy[l+gap];
 				if (j < 0) break;
+#if (LIBVER_BUILDREV < 19960427L)
+				ts1 = &tsprite[l];
+				ts2 = &tsprite[l+gap];
+#endif
 				if (j == 0)
 				{
+#if (LIBVER_BUILDREV < 19960427L)
+					j = ts1->statnum - ts2->statnum;
+#else
 					j = tspriteptr[l]->statnum - tspriteptr[l+gap]->statnum;
+#endif
 	    				if (j < 0) break;
 	    				if (j == 0)
 					{
+#if (LIBVER_BUILDREV < 19960427L)
+						if ((ts1->cstat&48) == 32)
+						{
+							j = ts1->z-globalposz;
+							k = ts2->z-globalposz;
+							if ((ts2->cstat&48) != 32)
+								k -= 256;
+							if ((j<k) != (j<0)) break;
+						}
+						else if((ts2->cstat&48) == 32)
+						{
+							j = ts1->z-globalposz-256;
+							k = ts2->z-globalposz;
+							if ((j>k) == (k<0)) break;
+						}
+#else
 						if (klabs(tspriteptr[l]->z - globalposz) < klabs(tspriteptr[l+gap]->z - globalposz)) break;
+#endif
 					}
 				}
 #else // LIBVER_BUILDREV
 				if (spritesy[l] <= spritesy[l+gap]) break;
 #endif
+#if (LIBVER_BUILDREV < 19960427L)
+				copybufbyte(ts1,tempts,sizeof(spritetype));
+				copybufbyte(ts2,ts1,sizeof(spritetype));
+				copybufbyte(tempts,ts2,sizeof(spritetype));
+				j = spritesx[l]; spritesx[l] = spritesx[l+gap]; spritesx[l+gap] = j;
+				j = spritesy[l]; spritesy[l] = spritesy[l+gap]; spritesy[l+gap] = j;
+#else
 				swaplong(&tspriteptr[l],&tspriteptr[l+gap]);
 				swaplong(&spritesx[l],&spritesx[l+gap]);
 				swaplong(&spritesy[l],&spritesy[l+gap]);
+#endif
 			}
 
 #if (LIBVER_BUILDREV >= 19961012L)
@@ -4700,7 +4757,11 @@ drawmasks()
 	while ((spritesortcnt > 0) && (maskwallcnt > 0))  //While BOTH > 0
 	{
 		j = maskwall[maskwallcnt-1];
+#if (LIBVER_BUILDREV < 19960427L)
+		if (spritewallfront(&tsprite[spritesortcnt-1],(long)thewall[j]) == 0)
+#else
 		if (spritewallfront(tspriteptr[spritesortcnt-1],(long)thewall[j]) == 0)
+#endif
 			drawsprite(--spritesortcnt);
 		else
 		{
@@ -4709,21 +4770,37 @@ drawmasks()
 			gap = 0;
 			for(i=spritesortcnt-2;i>=0;i--)
 				if ((xb1[j] <= (spritesx[i]>>8)) && ((spritesx[i]>>8) <= xb2[j]))
+#if (LIBVER_BUILDREV < 19960427L)
+					if (spritewallfront(&tsprite[i],(long)thewall[j]) == 0)
+#else
 					if (spritewallfront(tspriteptr[i],(long)thewall[j]) == 0)
+#endif
 					{
 						drawsprite(i);
+#if (LIBVER_BUILDREV < 19960427L)
+						tsprite[i].owner = -1;
+#else
 						tspriteptr[i]->owner = -1;
+#endif
 						k = i;
 						gap++;
 					}
 			if (k >= 0)       //remove holes in sprite list
 			{
 				for(i=k;i<spritesortcnt;i++)
+#if (LIBVER_BUILDREV < 19960427L)
+					if (tsprite[i].owner >= 0)
+#else
 					if (tspriteptr[i]->owner >= 0)
+#endif
 					{
 						if (i > k)
 						{
+#if (LIBVER_BUILDREV < 19960427L)
+							copybufbyte(&tsprite[i], &tsprite[k], sizeof(spritetype));
+#else
 							tspriteptr[k] = tspriteptr[i];
+#endif
 							spritesx[k] = spritesx[i];
 							spritesy[k] = spritesy[i];
 						}
