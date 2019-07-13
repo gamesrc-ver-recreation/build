@@ -59,6 +59,7 @@ void kkfree(void *buffer);
 	parm [eax]\
 
 #ifdef SUPERBUILD
+#if (LIBVER_BUILDREV >= 19960427L)
 	//MUST CALL LOADVOXEL THIS WAY BECAUSE WATCOM STINKS!
 void loadvoxel(long voxindex) { }
 void kloadvoxel(long voxindex);
@@ -66,6 +67,7 @@ void kloadvoxel(long voxindex);
 	"call loadvoxel",\
 	parm [eax]\
 
+#endif // LIBVER_BUILDREV
 	//These variables need to be copied into BUILD
 #define MAXXSIZ 128
 #define MAXYSIZ 128
@@ -4840,7 +4842,11 @@ drawmaskwall(short damaskwallcnt)
 
 	globalorientation = (long)wal->cstat;
 	globalpicnum = wal->overpicnum;
+#if (LIBVER_BUILDREV < 19960427L)
+	if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 	if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 	globalxpanning = (long)wal->xpanning;
 	globalypanning = (long)wal->ypanning;
 	if (picanm[globalpicnum]&192) globalpicnum += animateoffs(globalpicnum,(short)thewall[z]+16384);
@@ -4922,9 +4928,17 @@ drawsprite (long snum)
 	long npoints, npoints2, zz, t, zsgn, zzsgn, *longptr;
 	signed short shade;
 	short tilenum, spritenum;
+#if (LIBVER_BUILDREV < 19960427L)
+	char swapped;
+#else
 	char swapped, daclip;
+#endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+	tspr = &tsprite[snum];
+#else
 	tspr = tspriteptr[snum];
+#endif
 
 	xb = spritesx[snum];
 	yp = spritesy[snum];
@@ -5030,10 +5044,14 @@ drawsprite (long snum)
 			uwall[x] = max(startumost[x+windowx1]-windowy1,(short)startum);
 			dwall[x] = min(startdmost[x+windowx1]-windowy1,(short)startdm);
 		}
+#if (LIBVER_BUILDREV >= 19960427L)
 		daclip = 0;
+#endif
 		for(i=smostwallcnt-1;i>=0;i--)
 		{
+#if (LIBVER_BUILDREV >= 19960427L)
 			if (smostwalltype[i]&daclip) continue;
+#endif
 			j = smostwall[i];
 			if ((xb1[j] > rx) || (xb2[j] < lx)) continue;
 			if ((yp <= yb1[j]) && (yp <= yb2[j])) continue;
@@ -5054,13 +5072,17 @@ drawsprite (long snum)
 					k = smoststart[i] - xb1[j];
 					for(x=dalx2;x<=darx2;x++)
 						if (smost[k+x] > uwall[x]) uwall[x] = smost[k+x];
+#if (LIBVER_BUILDREV >= 19960427L)
 					if ((dalx2 == lx) && (darx2 == rx)) daclip |= 1;
+#endif
 					break;
 				case 2:
 					k = smoststart[i] - xb1[j];
 					for(x=dalx2;x<=darx2;x++)
 						if (smost[k+x] < dwall[x]) dwall[x] = smost[k+x];
+#if (LIBVER_BUILDREV >= 19960427L)
 					if ((dalx2 == lx) && (darx2 == rx)) daclip |= 2;
+#endif
 					break;
 			}
 		}
@@ -5090,7 +5112,11 @@ drawsprite (long snum)
 
 		globalorientation = 0;
 		globalpicnum = tilenum;
+#if (LIBVER_BUILDREV < 19960427L)
+		if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 		if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 		globalxpanning = 0L;
 		globalypanning = 0L;
 		globvis = globalvisibility;
@@ -5126,8 +5152,13 @@ drawsprite (long snum)
 		x1 = tspr->x-globalposx-mulscale16(xv,i); x2 = x1+mulscale16(xv,xspan);
 		y1 = tspr->y-globalposy-mulscale16(yv,i); y2 = y1+mulscale16(yv,xspan);
 
+#if (LIBVER_BUILDREV < 19960427L)
+		yp1 = mulscale16(dmulscale6(x1,cosglobalang,y1,singlobalang),viewingrange);
+		yp2 = mulscale16(dmulscale6(x2,cosglobalang,y2,singlobalang),viewingrange);
+#else
 		yp1 = dmulscale6(x1,cosviewingrangeglobalang,y1,sinviewingrangeglobalang);
 		yp2 = dmulscale6(x2,cosviewingrangeglobalang,y2,sinviewingrangeglobalang);
+#endif
 		if ((yp1 <= 0) && (yp2 <= 0)) return;
 		xp1 = dmulscale6(y1,cosglobalang,-x1,singlobalang);
 		xp2 = dmulscale6(y2,cosglobalang,-x2,singlobalang);
@@ -5233,7 +5264,11 @@ drawsprite (long snum)
 
 		globalorientation = 0;
 		globalpicnum = tilenum;
+#if (LIBVER_BUILDREV < 19960427L)
+		if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 		if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 		globalxpanning = 0L;
 		globalypanning = 0L;
 		globvis = globalvisibility;
@@ -5638,7 +5673,11 @@ drawsprite (long snum)
 
 		globalorientation = cstat;
 		globalpicnum = tilenum;
+#if (LIBVER_BUILDREV < 19960427L)
+		if ((globalpicnum & ~(MAXTILES-1)) != 0) globalpicnum = 0;
+#else
 		if ((unsigned)globalpicnum >= (unsigned)MAXTILES) globalpicnum = 0;
+#endif
 		//if (picanm[globalpicnum]&192) globalpicnum += animateoffs((short)globalpicnum,spritenum+32768);
 
 		if (waloff[globalpicnum] == 0) loadtile(globalpicnum);
@@ -5722,7 +5761,9 @@ drawsprite (long snum)
 			if (x == rx) return;
 		}
 
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Had just 3 mipmaps
+#if (LIBVER_BUILDREV < 19960427L)
+		if (voxsiz[tilenum][0] == 0) return;
+#elif (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Had just 3 mipmaps
 		if (!voxoff[tilenum][0] || !voxoff[tilenum][1] || !voxoff[tilenum][2])
 		{
 			kloadvoxel(tilenum);
