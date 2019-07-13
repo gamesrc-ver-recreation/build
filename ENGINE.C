@@ -4136,14 +4136,12 @@ qloadkvx(long voxindex, char *filename)
 {
 #if (LIBVER_BUILDREV < 19960427L)
 	long i, fil;
-#else
-#if (LIBVER_BUILDREV < 19961012L)
+#elif (LIBVER_BUILDREV < 19961012L)
 	long i, fil, dasiz, lengcnt;
 #else
 	long i, fil, dasiz, lengcnt, lengtot;
 #endif
 	char *ptr;
-#endif // 19960427L
 
 	if ((fil = kopen4load(filename,0)) == -1) return;
 
@@ -4165,7 +4163,8 @@ qloadkvx(long voxindex, char *filename)
 		voxlock[voxindex][i] = 200;
 #if (LIBVER_BUILDREV < 19960427L)
 		allocache(&voxoff[voxindex][i],voxsiz[voxindex][i],&voxlock[voxindex][i]);
-		kread(fil,voxoff[voxindex][i],voxsiz[voxindex][i]);
+		ptr = (char *)voxoff[voxindex][i];
+		kread(fil,ptr,voxsiz[voxindex][i]);
 #else
 		allocache(&voxoff[voxindex][i],dasiz,&voxlock[voxindex][i]);
 		ptr = (char *)voxoff[voxindex][i];
