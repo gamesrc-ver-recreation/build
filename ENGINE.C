@@ -2939,7 +2939,7 @@ transmaskwallscan(long x1, long x2)
 			x = startx;
 			while ((startumost[x+windowx1] > startdmost[x+windowx1]) && (x <= x2)) x += 4;
 			if ((x <= x2) && (x&1)) transmaskvline(x), x += 4;
-			while (x < x2-4) transmaskvline2(x), x += 8;
+			while (x <= x2-4) transmaskvline2(x), x += 8;
 			while (x <= x2) transmaskvline(x), x += 4;
 			plane = (plane+1)&3;
 			startx++;
@@ -3199,7 +3199,7 @@ setgamemode()
 			ydim = 200;
 			setvmode(0x13);
 			koutpw(0x3ce,0x50f);
-			koutpw(0x3d5,0x8529);
+			koutpw(0x3d4,0x8529);
 			koutpw(0x3c4,0x4806);
 			koutpw(0x3d4,0x2f);
 			koutpw(0x3ce,(page<<12)+9);
@@ -10560,11 +10560,7 @@ clearallviews(long dacol)
 #if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - From 1995 rev; See also BUILD2.TXT, 9/25/96 (removed modes)
 		case 3:
 			for(i=0;i<4;i++)
-#if (LIBVER_BUILDREV < 19960427L)
-				{ koutp(0x3c4,i); clearbuf(0xa0000,16000L,0L); }
-#else
 				{ koutp(0x3cd,i); clearbuf(0xa0000,16000L,0L); }
-#endif
 			break;
 		case 4:
 			for(i=0;i<4;i++)
