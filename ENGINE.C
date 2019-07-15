@@ -4465,7 +4465,7 @@ inside (long x, long y, short sectnum)
 			if ((x1^x2) < 0)
 				cnt ^= (x1*y2-x2*y1)^(y1-y2);
 			else
-				cnt ^= -x1;
+				cnt ^= ~x1;
 #else
 			if ((x1^x2) >= 0) cnt ^= x1; else cnt ^= (x1*y2-x2*y1)^y2;
 #endif
