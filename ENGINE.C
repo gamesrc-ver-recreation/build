@@ -104,19 +104,19 @@ static char moustat = 0;
 char chainstat = 0;
 long chainplace, chainsiz, chainnumpages = 0;
 long page;
-
-static long ooption0, stereopage, stereofps = 0;
 #endif
 
 long transarea = 0, totalarea = 0, beforedrawrooms = 1;
 
 #if (LIBVER_BUILDREV < 19960427L)
-static long oxdimen = -1, oviewingrange = -1;
+long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
+long stereofps = 0;
+static long ooption0, stereopage;
 #else
 static long oxdimen = -1, oviewingrange = -1, oxyaspect = -1;
 #endif
 
-#if (LIBVER_BUILDREV < 19970602L)
+#if (LIBVER_BUILDREV >= 19960427L) && (LIBVER_BUILDREV < 19970602L)
 long stereowidth = 23040, stereopixelwidth = 28, ostereopixelwidth = -1;
 volatile long stereomode = 0, visualpage, activepage, whiteband, blackband;
 volatile char oa1, o3c2, ortca, ortcb, overtbits, laststereoint;
@@ -197,7 +197,9 @@ static long spritesy[MAXSPRITESONSCREEN];
 static long spritesy[MAXSPRITESONSCREEN+1];
 static long spritesz[MAXSPRITESONSCREEN];
 #endif
+#if (LIBVER_BUILDREV >= 19960427L)
 static spritetype *tspriteptr[MAXSPRITESONSCREEN];
+#endif
 
 short umost[MAXXDIM], dmost[MAXXDIM];
 static short bakumost[MAXXDIM], bakdmost[MAXXDIM];
@@ -215,11 +217,15 @@ static long xsi[8], ysi[8], *horizlookup, *horizlookup2, horizycent;
 long globalposx, globalposy, globalposz, globalhoriz;
 short globalang, globalcursectnum;
 long globalpal, cosglobalang, singlobalang;
+#if (LIBVER_BUILDREV >= 19960427L)
 long cosviewingrangeglobalang, sinviewingrangeglobalang;
+#endif
 char *globalpalwritten;
 long globaluclip, globaldclip, globvis;
 long globalvisibility, globalhisibility, globalpisibility, globalcisibility;
+#if (LIBVER_BUILDREV >= 19960427L)
 char globparaceilclip, globparaflorclip;
+#endif
 
 long xyaspect, viewingrangerecip;
 
@@ -299,6 +305,10 @@ short searchsector, searchwall, searchstat;     //search output
 static char artfilename[20];
 static long numtilefiles, artfil = -1, artfilnum, artfilplc;
 
+#if (LIBVER_BUILDREV < 19960427L)
+char cachedebug = 0;
+static long oxdimen = -1, oviewingrange = -1;
+#endif
 #if (LIBVER_BUILDREV >= 19970212L) // VERSIONS RESTORATION - See BUILD2.TXT, 2/12/97 (mirror code optimization)
 static char inpreparemirror = 0;
 static long mirrorsx1, mirrorsy1, mirrorsx2, mirrorsy2;
@@ -3982,7 +3992,9 @@ nextpage()
 	numframes++;
 }
 
+#if (LIBVER_BUILDREV >= 19960427L)
 char cachedebug = 0;
+#endif
 loadtile (short tilenume)
 {
 	char *ptr;
