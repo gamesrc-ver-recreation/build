@@ -10697,11 +10697,7 @@ static short mirbakdasector;
 #endif
 preparemirror(long dax, long day, long daz, short daang, long dahoriz, short dawall, short dasector, long *tposx, long *tposy, short *tang)
 {
-#if (LIBVER_BUILDREV < 19960427L)
-	long i, j, x, y, dx, dy, p;
-#else
 	long i, j, x, y, dx, dy;
-#endif
 
 	x = wall[dawall].x; dx = wall[wall[dawall].point2].x-x;
 	y = wall[dawall].y; dy = wall[wall[dawall].point2].y-y;
@@ -10724,17 +10720,21 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 		if (chainstat != 0)
 		{
 			koutp(0x3c4,2);
-			p = chainplace+ylookup[mirthoriz];
-			j = min(windowx2+1,windowx1+4)-1;
-			for(x=j;x>=windowx1;x--)
+			j = ylookup[mirthoriz]+chainplace;
+			i = min(windowx2+1,windowx1+4);
+			for(dx=i-1;dx>=windowx1;dx--)
 			{
-				koutp(0x3c5,pow2char[x&3]);
-				clearbufbyte(p+(x>>2),(windowx2+4-x)>>2,-1L);
+				koutp(0x3c5,pow2char[dx&3]);
+				clearbufbyte((dx>>2)+j,(windowx2+4-dx)>>2,-1L);
 			}
 		}
-		else
-#endif
+        else
+        {
 			clearbufbyte(frameplace+ylookup[mirthoriz]+windowx1,windowx2-windowx1+1,-1L);
+        }
+#else
+			clearbufbyte(frameplace+ylookup[mirthoriz]+windowx1,windowx2-windowx1+1,-1L);
+#endif
 	}
 #else
 	inpreparemirror = 1;
@@ -10894,12 +10894,13 @@ sectorofwall(short theline)
 getceilzofslope(short sectnum, long dax, long day)
 {
 #if (LIBVER_BUILDREV < 19960427L)
-	long dx, dy, i, j, wal, wal2;
+	long dx, dy, i, j;
 
 	if (!(sector[sectnum].ceilingstat&2)) return(sector[sectnum].ceilingz);
 	j = sector[sectnum].wallptr;
-	dx = wall[wall[j].point2].x-wall[j].x;
-	dy = wall[wall[j].point2].y-wall[j].y;
+    i = wall[j].point2;
+	dx = wall[i].x-wall[j].x;
+	dy = wall[i].y-wall[j].y;
 	i = (ksqrtasm(dx*dx+dy*dy)); if (i == 0) return(sector[sectnum].ceilingz);
 	i = divscale15(sector[sectnum].ceilingheinum,i);
 	dx *= i; dy *= i;
@@ -10924,8 +10925,9 @@ getflorzofslope(short sectnum, long dax, long day)
 
 	if (!(sector[sectnum].floorstat&2)) return(sector[sectnum].floorz);
 	j = sector[sectnum].wallptr;
-	dx = wall[wall[j].point2].x-wall[j].x;
-	dy = wall[wall[j].point2].y-wall[j].y;
+    i = wall[j].point2;
+	dx = wall[i].x-wall[j].x;
+	dy = wall[i].y-wall[j].y;
 	i = (ksqrtasm(dx*dx+dy*dy)); if (i == 0) return(sector[sectnum].floorz);
 	i = divscale15(sector[sectnum].floorheinum,i);
 	dx *= i; dy *= i;
@@ -10972,8 +10974,9 @@ alignceilslope(short dasect, long x, long y, long z)
 	long i, j, dax, day;
 
 	j = sector[dasect].wallptr;
-	dax = wall[wall[j].point2].x-wall[j].x;
-	day = wall[wall[j].point2].y-wall[j].y;
+    i = wall[j].point2;
+	dax = wall[i].x-wall[j].x;
+	day = wall[i].y-wall[j].y;
 
 	i = (y-wall[j].y)*dax - (x-wall[j].x)*day; if (i == 0) return;
 	sector[dasect].ceilingheinum = scale((z-sector[dasect].ceilingz)<<8,
@@ -11004,8 +11007,9 @@ alignflorslope(short dasect, long x, long y, long z)
 	long i, j, dax, day;
 
 	j = sector[dasect].wallptr;
-	dax = wall[wall[j].point2].x-wall[j].x;
-	day = wall[wall[j].point2].y-wall[j].y;
+    i = wall[j].point2;
+	dax = wall[i].x-wall[j].x;
+	day = wall[i].y-wall[j].y;
 
 	i = (y-wall[j].y)*dax - (x-wall[j].x)*day; if (i == 0) return;
 	sector[dasect].floorheinum = scale((z-sector[dasect].floorz)<<8,
