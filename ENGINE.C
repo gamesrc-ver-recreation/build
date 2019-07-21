@@ -10720,31 +10720,12 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 		if (chainstat != 0)
 		{
 			koutp(0x3c4,2);
-// FIXME DEBUG
-// All choices of ordered subsets of 3 elements of i,j,x,y,dx,dy
-#define PM_Y j
-#define PM_X x
-#define PM_L i
-// Additional choices for code flow
-#define PM_Y_LOOKUP_BEFORE_CHAINPLACE 1
-#define PM_MINUS_BEFORE_LOOP 1
-#if PM_Y_LOOKUP_BEFORE_CHAINPLACE
-			PM_Y = ylookup[mirthoriz]+chainplace;
-#else
-			PM_Y = chainplace+ylookup[mirthoriz];
-#endif
-#if PM_MINUS_BEFORE_LOOP
-			PM_X = min(windowx1+4,windowx2+1)-1;
-//			PM_X = min(windowx2+1,windowx1+4)-1;
-			for(PM_L=PM_X;PM_L>=windowx1;PM_L--)
-#else
-			PM_X = min(windowx1+4,windowx2+1);
-//			PM_X = min(windowx2+1,windowx1+4);
-			for(PM_L=PM_X-1;PM_L>=windowx1;PM_L--)
-#endif
+			j = ylookup[mirthoriz]+chainplace;
+			x = min(windowx1+4,windowx2+1)-1;
+			for(i=x;i>=windowx1;i--)
 			{
-				koutp(0x3c5,pow2char[PM_L&3]);
-				clearbufbyte((PM_L>>2)+PM_Y,(windowx2+4-PM_L)>>2,-1L);
+				koutp(0x3c5,pow2char[i&3]);
+				clearbufbyte((i>>2)+j,(windowx2+4-i)>>2,-1L);
 			}
 		}
         else
