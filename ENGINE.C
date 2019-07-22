@@ -891,7 +891,11 @@ skipitaddwall:
 
 		for(z=bunchfrst;z<numbunches;z++)
 		{
+#if (LIBVER_BUILDREV < 19960427L) // From '95 rev.
+			zz = bunchfirst[z]; while (p2[zz] >= 0) zz = p2[zz];
+#else
 			for(zz=bunchfirst[z];p2[zz]>=0;zz=p2[zz]);
+#endif
 			bunchlast[z] = zz;
 		}
 	} while (sectorbordercnt > 0);
