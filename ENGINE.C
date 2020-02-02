@@ -965,18 +965,19 @@ bunchfront (long b1, long b2)
 
 drawalls (long bunch)
 {
+#if (LIBVER_BUILDREV < 19960427L)
 	sectortype *sec, *nextsec;
 	walltype *wal;
-#if (LIBVER_BUILDREV < 19960427L)
+	long startsmostwallcnt, startsmostcnt, gotswall;
 	long i, j, k, l, m, n, x, y, x1, x2;
+	long z, wallnum, sectnum, nextsectnum, globalhorizbak;
+	char cstat1, cstat2, andwstat1, andwstat2, redtouchflag;
 #else
+	sectortype *sec, *nextsec;
+	walltype *wal;
 	long i, j, k, l, m, n, x, y, x1, x2, cz[5], fz[5];
-#endif
 	long z, wallnum, sectnum, nextsectnum, globalhorizbak;
 	long startsmostwallcnt, startsmostcnt, gotswall;
-#if (LIBVER_BUILDREV < 19960427L)
-	char cstat2, cstat1, andwstat2, andwstat1, redtouchflag;
-#else
 	char andwstat1, andwstat2;
 #endif
 
