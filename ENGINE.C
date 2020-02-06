@@ -966,12 +966,48 @@ bunchfront (long b1, long b2)
 drawalls (long bunch)
 {
 #if (LIBVER_BUILDREV < 19960427L)
+#if 1 // FIXME - RESTORATION: Try a selected permutation instead.
+#define B0 char redtouchflag;
+#define B1 char andwstat1, andwstat2;
+#define B2 char cstat1, cstat2;
+#define B3 long wallnum, sectnum, nextsectnum, globalhorizbak;
+#define B4 long z;
+#define B5 long x1, x2;
+#define B6 long x, y;
+#define B7 long i, j, k, l, m, n;
+#define B8 walltype *wal;
+#define B9 long startsmostwallcnt, startsmostcnt, gotswall;
+#define BA sectortype *sec, *nextsec;
+#define A0 B0
+#define A2 B1
+#define A3 B2
+#define A6 B3
+#define A7 B4
+#define A4 B5
+#define A1 B6
+#define A5 B7
+#define A8 B8
+#define A9 B9
+#define AA BA
+A0
+A1
+A2
+A3
+A4
+A5
+A6
+A7
+A8
+A9
+AA
+#else
 	sectortype *sec, *nextsec;
 	walltype *wal;
 	long startsmostwallcnt, startsmostcnt, gotswall;
 	long i, j, k, l, m, n, x, y, x1, x2;
 	long z, wallnum, sectnum, nextsectnum, globalhorizbak;
 	char cstat1, cstat2, andwstat1, andwstat2, redtouchflag;
+#endif
 #else
 	sectortype *sec, *nextsec;
 	walltype *wal;
@@ -3651,15 +3687,35 @@ initengine()
 	{
 #if (LIBVER_BUILDREV < 19960427L)
 		case 0:
+	// VERSIONS RESTORATION: HACK
+#pragma aux testpragma =\
+	"imul eax, edx",\
+	"sar eax, 2",\
+	"add eax, 0xff",\
+	parm nomemory [eax] [edx]\
+	modify exact [eax]\
+
+#if 0 // BETTER? (For usage of regs before this block.)
+			chainplace = 0xa0000;
+			chainsiz = xdim*ydim;
+			chainsiz >>= 2;
+			chainsiz += 255;
+			chainsiz &= 0xffffff00;
+			chainnumpages = 65536/chainsiz;
+#elif 1 // Match filesize
+			chainsiz = testpragma(xdim,ydim)&0xffffff00;
+			chainplace = 0xa0000;
+			chainnumpages = 65536/chainsiz;
+#else // Code from 95
 			chainplace = 0xa0000;
 			chainsiz = ((((xdim*ydim)>>2)+255)&0xffffff00);
 			chainnumpages = 65536/chainsiz;
+#endif
 			if (chainnumpages >= 2)
 				chainstat = 1;
 			if (chainnumpages == 1)
 			{
-				screen = (char*)kkmalloc(xdim*ydim);
-				if (screen == NULL)
+				if ((screen = (char *)kkmalloc(xdim*ydim)) == NULL)
 				{
 					printf("Not enough memory for screen allocation\n");
 					exit(0);
@@ -3667,7 +3723,7 @@ initengine()
 				frameplace = FP_OFF(screen);
 			}
 			break;
-#endif
+#endif // LIBVER_BUILDREV
 		case 1:
 			if ((screen = (char *)kkmalloc((xdim+8)*ydim)) == NULL)
 			{
