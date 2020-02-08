@@ -1093,7 +1093,7 @@ AA
 					else
 					{
 						for(j=xb1[z];j<=xb2[z];j++)
-							lplc[j] = ((((long)radarang2[j]+globalang)&2047)>>k);
+							lplc[j] = (((globalang+radarang2[j])&2047)>>k);
 					}
 					if (parallaxtype == 2)
 					{
@@ -1231,7 +1231,7 @@ AA
 					else
 					{
 						for(j=xb1[z];j<=xb2[z];j++)
-							lplc[j] = ((((long)radarang2[j]+globalang)&2047)>>k);
+							lplc[j] = (((globalang+(long)radarang2[j])&2047)>>k);
 					}
 					if (parallaxtype == 2)
 					{
@@ -1434,7 +1434,7 @@ AA
 #endif
 			{
 #if (LIBVER_BUILDREV < 19960427L)
-				if (nextsec->ceilingz <= sec->ceilingz && ((cstat1|nextsec->ceilingstat)&2) == 0)
+				if (nextsec->ceilingz <= sec->ceilingz && ((nextsec->ceilingstat|cstat1)&2) == 0)
 				{
 					for(x=x1;x<=x2;x++)
 						if (umost[x] <= dmost[x])
@@ -1589,7 +1589,7 @@ AA
 #endif
 			{
 #if (LIBVER_BUILDREV < 19960427L)
-				if (nextsec->floorz >= sec->floorz && ((cstat2|nextsec->floorstat)&2) == 0)
+				if (nextsec->floorz >= sec->floorz && ((nextsec->floorstat|cstat2)&2) == 0)
 				{
 					for(x=x1;x<=x2;x++)
 						if (umost[x] <= dmost[x])
