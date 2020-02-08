@@ -965,49 +965,17 @@ bunchfront (long b1, long b2)
 
 drawalls (long bunch)
 {
-#if (LIBVER_BUILDREV < 19960427L)
-#if 1 // FIXME - RESTORATION: Try a selected permutation instead.
-#define B0 char redtouchflag;
-#define B1 char andwstat1, andwstat2;
-#define B2 char cstat1, cstat2;
-#define B3 long wallnum, sectnum, nextsectnum, globalhorizbak;
-#define B4 long z;
-#define B5 long x1, x2;
-#define B6 long x, y;
-#define B7 long i, j, k, l, m, n;
-#define B8 walltype *wal;
-#define B9 long startsmostwallcnt, startsmostcnt, gotswall;
-#define BA sectortype *sec, *nextsec;
-#define A0 B8
-#define A1 B2
-#define A2 B6
-#define A3 B0
-#define A4 B1
-#define A5 B5
-#define A6 BA
-#define A7 B4
-#define A8 B3
-#define A9 B7
-#define AA B9
-A0
-A1
-A2
-A3
-A4
-A5
-A6
-A7
-A8
-A9
-AA
-#else
-	sectortype *sec, *nextsec;
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Order appearing to match
 	walltype *wal;
-	long startsmostwallcnt, startsmostcnt, gotswall;
-	long i, j, k, l, m, n, x, y, x1, x2;
+	char cstat1, cstat2;
+	long x, y;
+	char redtouchflag;
+	char andwstat1, andwstat2;
+	long x1, x2;
+	sectortype *sec, *nextsec;
 	long z, wallnum, sectnum, nextsectnum, globalhorizbak;
-	char cstat1, cstat2, andwstat1, andwstat2, redtouchflag;
-#endif
+	long i, j, k, l, m, n;
+	long startsmostwallcnt, startsmostcnt, gotswall;
 #else
 	sectortype *sec, *nextsec;
 	walltype *wal;
