@@ -4627,14 +4627,50 @@ copytilepiece(long tilenume1, long sx1, long sy1, long xsiz, long ysiz,
 
 drawmasks()
 {
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960427L)
+#define B0 spritetype *ts1;
+#define B1 spritetype *ts2;
+#define B2 spritetype *tempts;
+#define B3 long i;
+#define B4 long j;
+#define B5 long k;
+#define B6 long l;
+#define B7 long gap;
+#define B8 long xs;
+#define B9 long ys;
+#define BA long xp;
+#define BB long yp;
+#define A0 B2
+#define A1 B1
+#define A2 B5
+#define A3 BB
+#define A4 B0
+#define A5 B9
+#define A6 B6
+#define A7 B3
+#define A8 B8
+#define A9 B4
+#define AA BA
+#define AB B7
+A0
+A1
+A2
+A3
+A4
+A5
+A6
+A7
+A8
+A9
+AA
+AB
+#elif (LIBVER_BUILDREV < 19961012L)
 	long i, j, k, l, gap, xs, ys, xp, yp;
 #else
 	long i, j, k, l, gap, xs, ys, zs, xp, yp, zp, z1, z2, yoff, yspan;
 #endif
 
 #if (LIBVER_BUILDREV < 19960427L)
-	spritetype *ts1, *ts2, *tempts;
 	if (chainnumpages > 0) koutp(0x3c4,2);
 #else
 	for(i=spritesortcnt-1;i>=0;i--) tspriteptr[i] = &tsprite[i];
@@ -4710,13 +4746,14 @@ drawmasks()
 							k = ts2->z-globalposz;
 							if ((ts2->cstat&48) != 32)
 								k -= 256;
-							if ((j<k) != (j<0)) break;
+							if ((j<0) != (j<k)) break;
 						}
 						else if((ts2->cstat&48) == 32)
 						{
-							j = ts1->z-globalposz-256;
+							j = ts1->z-globalposz;
 							k = ts2->z-globalposz;
-							if ((j>k) == (k<0)) break;
+							j -= 256;
+							if ((k<0) == (j>k)) break;
 						}
 #else
 						if (klabs(tspriteptr[l]->z - globalposz) < klabs(tspriteptr[l+gap]->z - globalposz)) break;
