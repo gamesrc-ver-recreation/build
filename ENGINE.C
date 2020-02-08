@@ -978,17 +978,17 @@ drawalls (long bunch)
 #define B8 walltype *wal;
 #define B9 long startsmostwallcnt, startsmostcnt, gotswall;
 #define BA sectortype *sec, *nextsec;
-#define A0 B0
-#define A2 B1
-#define A3 B2
-#define A6 B3
+#define A0 B8
+#define A1 B2
+#define A2 B6
+#define A3 B0
+#define A4 B1
+#define A5 B5
+#define A6 BA
 #define A7 B4
-#define A4 B5
-#define A1 B6
-#define A5 B7
-#define A8 B8
-#define A9 B9
-#define AA BA
+#define A8 B3
+#define A9 B7
+#define AA B9
 A0
 A1
 A2
