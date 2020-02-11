@@ -4627,43 +4627,19 @@ copytilepiece(long tilenume1, long sx1, long sy1, long xsiz, long ysiz,
 
 drawmasks()
 {
-#if (LIBVER_BUILDREV < 19960427L)
-#define B0 spritetype *ts1;
-#define B1 spritetype *ts2;
-#define B2 spritetype *tempts;
-#define B3 long i;
-#define B4 long j;
-#define B5 long k;
-#define B6 long l;
-#define B7 long gap;
-#define B8 long xs;
-#define B9 long ys;
-#define BA long xp;
-#define BB long yp;
-#define A0 B2
-#define A1 B1
-#define A2 B5
-#define A3 BB
-#define A4 B0
-#define A5 B9
-#define A6 B6
-#define A7 B3
-#define A8 B8
-#define A9 B4
-#define AA BA
-#define AB B7
-A0
-A1
-A2
-A3
-A4
-A5
-A6
-A7
-A8
-A9
-AA
-AB
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Mostly matching order
+	spritetype *tempts;
+	spritetype *ts2;
+	long k;
+	long yp;
+	spritetype *ts1;
+	long ys;
+	long l;
+	long i;
+	long xs;
+	long j;
+	long xp;
+	long gap;
 #elif (LIBVER_BUILDREV < 19961012L)
 	long i, j, k, l, gap, xs, ys, xp, yp;
 #else
