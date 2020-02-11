@@ -10783,18 +10783,17 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 #endif
 }
 
-completemirror()
-{
-#if (LIBVER_BUILDREV < 19970212L)
-#if (LIBVER_BUILDREV < 19960427L)
-	long i, j, k, l, x1, y1, x2, y2, dx, dy, p;
-#else
-	long i, j, k, l, x1, y1, x2, y2, dy, templong;
-#endif
-//	char *ptr;
+// VERSIONS RSETORATION: The separate code for 19960427L is mostly matching
+// in size, although it still differs from the original in differing ways.
+// So, let's just offer both options
 
 #if (LIBVER_BUILDREV < 19960427L)
-// FIXME DEBUG
+
+completemirror()
+{
+	long i, j, k, l, x1, y1, x2, y2, dx, dy, p;
+//	char *ptr;
+
 // All choices of ordered subsets of 3 elements of specific local variable
 #define CM_I j
 #define CM_J p
@@ -10904,7 +10903,6 @@ completemirror()
 	}
 	else
 	{
-#endif
 		//Get pink pixels on horizon to get mirror l&r bounds.
 	x1 = 0; x2 = windowx2-windowx1;
 	if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
@@ -10938,6 +10936,109 @@ completemirror()
 #endif
 		}
 	}
+	}
+}
+
+#else /* LIBVER_BUILDREV >= 19960427L */
+
+completemirror()
+{
+#if (LIBVER_BUILDREV < 19970212L)
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, j, k, l, x1, y1, x2, y2, dx, dy, p;
+#else
+	long i, j, k, l, x1, y1, x2, y2, dy, templong;
+#endif
+	char *ptr;
+
+#if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat != 0)
+	{
+		koutp(0x3ce,4);
+		koutp(0x3c4,2);
+		x1 = windowx1;
+		x2 = windowx2;
+		if (mirbakdaz > sector[mirbakdasector].ceilingz && mirbakdaz < sector[mirbakdasector].floorz)
+		{
+			while (x2 >= x1)
+			{
+				koutp(0x3cf,x1&3);
+				if (*(char*)(chainplace+ylookup[mirthoriz]+(x1>>2)) != 255)
+					break;
+				x1++;
+			}
+			while (x2 >= x1)
+			{
+				koutp(0x3cf,x2&3);
+				if (*(char*)(chainplace+ylookup[mirthoriz]+(x2>>2)) != 255)
+					break;
+				x2--;
+			}
+			if (x1 > windowx1)
+				x1--;
+			if (x2 < windowx2)
+				x2++;
+		}
+		if (x2 >= x1)
+		{
+			transarea += (x2-x1)*(windowy2-windowy1);
+			for(i=windowy1;i<=windowy2;i++)
+			{
+				j = 0;
+				for(k=min(x2-x1,3);k>=0;k--)
+				{
+					dx = (x2+1-(x1+k)+3)>>2;
+					l = x1+k;
+					koutp(0x3cf,l&3);
+					ptr = chainplace+ylookup[i]+(l>>2);
+					copybufbyte(ptr,&tempbuf[j],dx);
+					j += dx;
+				}
+				j = 0;
+				for(k=min(x2-x1,3);k>=0;k--)
+				{
+					dx = (x2+1-(x1+k)+3)>>2;
+					l = (windowx1+windowx2-(x1+k))-((dx-1)<<2);
+					koutp(0x3c5,pow2char[l&3]);
+					ptr = chainplace+ylookup[i]+(l>>2);
+					copybufreverse(&tempbuf[j+dx-1],ptr,dx);
+					j += dx;
+				}
+				faketimerhandler();
+			}
+		}
+	}
+	else
+	{
+#endif
+		//Get pink pixels on horizon to get mirror l&r bounds.
+	x1 = 0; x2 = windowx2-windowx1;
+	if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
+	{
+		ptr = (char *)frameplace+ylookup[mirthoriz]+windowx1;
+		while ((ptr[x1] == 255) && (x2 >= x1)) x1++;
+		while ((ptr[x2] == 255) && (x2 >= x1)) x2--;
+		if (x1 > 0) x1--;
+		if (x2 < windowx2-windowx1) x2++;
+		x2 |= 3;
+		if (x2 > windowx2-windowx1) x2 = windowx2-windowx1;
+	}
+
+	if (x2 >= x1)  //Flip window x-wise
+	{
+		transarea += (x2-x1)*(windowy2-windowy1);
+
+		ptr = (char *)frameplace+ylookup[windowy1]+windowx1;
+		y1 = windowx2-windowx1-x2; x2 -= x1; y2 = x2+1;
+		for(dy=windowy2-windowy1;dy>=0;dy--)
+		{
+			copybufbyte(&ptr[x1+1],&tempbuf[0],y2);
+			tempbuf[x2] = tempbuf[x2-1];
+			copybufreverse(&tempbuf[x2],&ptr[y1],y2);
+			ptr += ylookup[1];
+			faketimerhandler();
+		}
+	}
 #if (LIBVER_BUILDREV < 19960427L)
 	}
 #endif
@@ -10964,6 +11065,8 @@ completemirror()
 	}
 #endif /* LIBVER_BUILDREV */
 }
+
+#endif /* LIBVER_BUILDREV */
 
 sectorofwall(short theline)
 {
