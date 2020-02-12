@@ -54,7 +54,11 @@ char buildkeys[NUMKEYS] =
 
 long posx, posy, posz, horiz = 100;
 short ang, cursectnum;
+#if (LIBVER_BUILDREV < 19960427L)
+static long hvel;
+#else
 long hvel;
+#endif
 
 static long synctics = 0, lockclock = 0;
 
@@ -90,11 +94,21 @@ extern long searchx, searchy;                          //search input
 extern short searchsector, searchwall, searchstat;     //search output
 
 extern short pointhighlight, linehighlight, highlightcnt;
+#if (LIBVER_BUILDREV < 19960427L)
+static short grid = 3, gridlock = 1, showtags = 1;
+static long zoom = 768, gettilezoom = 1;
+
+static long numsprites;
+#else
 short grid = 3, gridlock = 1, showtags = 1;
 long zoom = 768, gettilezoom = 1;
 
 long numsprites;
+#endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+extern char palette[768];
+#endif
 short highlight[MAXWALLS];
 short highlightsector[MAXSECTORS], highlightsectorcnt = -1;
 extern char textfont[128][8];
@@ -102,9 +116,15 @@ extern char textfont[128][8];
 static char pskysearch[MAXSECTORS];
 
 short temppicnum, tempcstat, templotag, temphitag, tempextra;
+#if (LIBVER_BUILDREV < 19960427L)
+char tempshade, temppal, tempvis;
+char somethingintab = 255;
+static char boardfilename[13];
+#else
 char tempshade, temppal, tempvis, tempxrepeat, tempyrepeat;
 char somethingintab = 255;
 static char boardfilename[13], oboardfilename[13];
+#endif
 
 static long repeatcountx, repeatcounty;
 
@@ -304,6 +324,10 @@ showmouse()
 	}
 }
 
+#if (LIBVER_BUILDREV < 19960427L)
+char tempxrepeat, tempyrepeat;
+
+#endif
 editinput()
 {
 	char smooshyalign, repeatpanalign, *ptr, buffer[80];
@@ -2260,7 +2284,11 @@ gettile(long tilenum)
 		if ((keystatus[0xd1] > 0) && (tilenum < MAXTILES-(xtiles<<gettilezoom)))
 		{
 			tilenum+=(tottiles<<(gettilezoom<<1));
+#if (LIBVER_BUILDREV < 19960427L)
+			if (tilenum >= MAXTILES) tilenum = MAXTILES;
+#else
 			if (tilenum >= MAXTILES) tilenum = MAXTILES-1;
+#endif
 			keystatus[0xd1] = 0;
 		}
 		if (keystatus[0x2f] > 0)   //V
@@ -2431,7 +2459,7 @@ drawtilescreen(long pictopleft, long picbox)
 						}
 #if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From older revs
 						dax++;
-						if (chainstat || ((dax&3) == 0))
+						if (!chainstat || ((dax&3) == 0))
 #endif
 						vidpos++;
 					}
@@ -5039,7 +5067,9 @@ overheadeditor()
 					bad = 0;
 					keystatus[0x1e] = 0;
 
+#if (LIBVER_BUILDREV >= 19960427L)
 					strcpy(oboardfilename,boardfilename);
+#endif
 
 					i = 0;
 					while ((boardfilename[i] != 0) && (i < 13))
@@ -5093,7 +5123,9 @@ overheadeditor()
 					}
 					if (bad == 1)
 					{
+#if (LIBVER_BUILDREV >= 19960427L)
 						strcpy(boardfilename,oboardfilename);
+#endif
 						keystatus[1] = 0;
 						printmessage16("Operation cancelled");
 					}
@@ -6468,7 +6500,11 @@ showspritedata(short spritenum)
 
 inittimer()
 {
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Based on 95 rev.
+	outp(0x43,0x34); outp(0x40,9942&255); outp(0x40,9942>>8);  //120 times/sec
+#else
 	outp(0x43,0x34); outp(0x40,(1193181/120)&255); outp(0x40,(1193181/120)>>8);
+#endif
 	oldtimerhandler = _dos_getvect(0x8);
 	_disable(); _dos_setvect(0x8, timerhandler); _enable();
 }
