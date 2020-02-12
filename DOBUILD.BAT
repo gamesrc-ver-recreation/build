@@ -22,7 +22,7 @@ if ERRORLEVEL 1 goto DN3D13B
 :DN3D13B
 call bldhlpr a.obj 19960305
 if ERRORLEVEL 1 goto end
-call bldhlpr build.obj 19960317
+call bldhlpr build.obj 19960419
 if ERRORLEVEL 1 goto end
 call bldhlpr cache1d.obj 19960305
 if ERRORLEVEL 1 goto end

@@ -116,7 +116,7 @@ extern char textfont[128][8];
 static char pskysearch[MAXSECTORS];
 
 short temppicnum, tempcstat, templotag, temphitag, tempextra;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960419L)
 char tempshade, temppal, tempvis;
 char somethingintab = 255;
 static char boardfilename[13];
@@ -324,7 +324,7 @@ showmouse()
 	}
 }
 
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960419L)
 char tempxrepeat, tempyrepeat;
 
 #endif
@@ -5067,7 +5067,7 @@ overheadeditor()
 					bad = 0;
 					keystatus[0x1e] = 0;
 
-#if (LIBVER_BUILDREV >= 19960427L)
+#if (LIBVER_BUILDREV >= 19960419L)
 					strcpy(oboardfilename,boardfilename);
 #endif
 
@@ -5123,7 +5123,7 @@ overheadeditor()
 					}
 					if (bad == 1)
 					{
-#if (LIBVER_BUILDREV >= 19960427L)
+#if (LIBVER_BUILDREV >= 19960419L)
 						strcpy(boardfilename,oboardfilename);
 #endif
 						keystatus[1] = 0;
