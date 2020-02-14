@@ -1424,6 +1424,20 @@ static long dmval;
 	parm [esi][edi][ecx]\
 	modify exact [ecx esi edi]\
 
+#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+
+#pragma aux copybufbyte =\
+	"test cl, 1",\
+	"jz skip1",\
+	"movsb",\
+	"skip1: shr ecx, 2",\
+	"jnc skip2",\
+	"movsw",\
+	"skip2: rep movsd",\
+	parm [esi][edi][ecx]\
+
+#else // LIBVER_BUILDREV
+
 #pragma aux copybufbyte =\
 	"cmp ecx, 4",\
 	"jae longcopy",\
@@ -1453,6 +1467,8 @@ static long dmval;
 	"endit:",\
 	parm [esi][edi][ecx]\
 	modify [ebx]\
+
+#endif // LIBVER_BUILDREV
 
 #pragma aux copybufreverse =\
 	"shr ecx, 1",\

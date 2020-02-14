@@ -19,7 +19,7 @@ goto default
 del 19960305\a.obj
 del 19960419\build.obj
 del 19960305\cache1d.obj
-del 19960320\engine.obj
+del 19960305\engine.obj
 goto end
 :DN3D14
 del 19960724\cache1d.obj

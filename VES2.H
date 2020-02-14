@@ -109,6 +109,16 @@ static long backlinaddress = 0;  //Save address for free operation (0x801)
 	modify exact [eax edx]\
 
 #endif
+#if (LIBVER_BUILDREV < 19960319L)
+#define backupsegs()
+
+#pragma aux restoresegs =\
+	"cld",\
+	"mov ax, ds",\
+	"mov es, ax",\
+	modify [eax]\
+
+#else // LIBVER_BUILDREV
 short ods, oes, oss;
 #pragma aux backupsegs =\
 	"mov ods, ds",\
@@ -122,10 +132,12 @@ short ods, oes, oss;
 	"mov ss, oss",\
 	modify [eax]\
 
+#endif // LIBVER_BUILDREV
 #pragma aux setvmode =\
 	"int 0x10",\
 	parm [eax]\
 
+#if (LIBVER_BUILDREV >= 19960319L)
 #pragma aux copybufbyte =\
 	"cmp ecx, 4",\
 	"jae longcopy",\
@@ -156,6 +168,7 @@ short ods, oes, oss;
 	parm [esi][edi][ecx]\
 	modify [ebx]\
 
+#endif // LIBVER_BUILDREV
 /*   //64-bit copybufbyte
 #pragma aux copybufbyte =\
 	"cmp ecx, 8",\
@@ -431,7 +444,11 @@ setvesa(long x, long y)
 		if ((regs.x.ax != 0x004f) || (strncmp(vgaInfo.VESASignature,"VESA",4)))
 		{
 			printf("VESA not found!\n");
+#if (LIBVER_BUILDREV < 19960319L)
+			return;
+#else
 			return(-1);
+#endif
 		}
 
 			//LfbMapRealPointer
@@ -554,9 +571,18 @@ setvesa(long x, long y)
 			visualpagelookup[i][1] = (short)dived.quot;
 			j += imageSize;
 		}
+#if (LIBVER_BUILDREV < 19960319L)
+		return;
+#else
 		return(0);
+#endif
 	}
+#if (LIBVER_BUILDREV < 19960319L)
+	printf("VESA says that %ld*%ld is not currently supported.\n", x, y);
+	exit(0);
+#else
 	return(-1);
+#endif
 }
 
 setdacbits(long newdacbits)

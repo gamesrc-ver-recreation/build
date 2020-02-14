@@ -3,7 +3,9 @@
 // See the included license file "BUILDLIC.TXT" for license info.
 // This file has been modified from Ken Silverman's original release
 
+#if (LIBVER_BUILDREV >= 19960319L)
 #define SUPERBUILD
+#endif
 
 #define ENGINE
 #include <string.h>
@@ -209,7 +211,11 @@ static long swplc[MAXXDIM], lplc[MAXXDIM];
 static long swall[MAXXDIM], lwall[MAXXDIM+4];
 long xdimen = -1, xdimenrecip, halfxdimen, xdimenscale, xdimscale;
 long wx1, wy1, wx2, wy2, ydimen;
+#if (LIBVER_BUILDREV < 19960319L)
+long viewoffset;
+#else
 long viewoffset, frameoffset;
+#endif
 
 static long rxi[8], ryi[8], rzi[8], rxi2[8], ryi2[8], rzi2[8];
 static long xsi[8], ysi[8], *horizlookup, *horizlookup2, horizycent;
@@ -631,7 +637,9 @@ drawrooms(long daposx, long daposy, long daposz,
 #if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev
 	if (chainnumpages > 0) koutp(0x3c4,2);
 
+#if (LIBVER_BUILDREV >= 19960319L)
 	frameoffset = frameplace+viewoffset;
+#endif
 
 	clearbuf((long)(&gotsector[0]),(long)((numsectors+31)>>5),0L);
 #else
@@ -2037,6 +2045,7 @@ ceilscan (long x1, long x2, long sectnum)
 
 	sethlinesizes(picsiz[globalpicnum]&15,picsiz[globalpicnum]>>4,globalbufplc);
 
+#if (LIBVER_BUILDREV >= 19960319L)
 	globalx2 += globaly2*(x1-1);
 	globaly1 += globalx1*(x1-1);
 	globalx1 = mulscale16(globalx1,globalzd);
@@ -2095,6 +2104,7 @@ ceilscan (long x1, long x2, long sectnum)
 			break;
 	}
 #endif // LIBVER_BUILDREV
+#endif // LIBVER_BUILDREV
 
 	y1 = umost[x1]; y2 = y1;
 	for(x=x1;x<=x2;x++)
@@ -2118,10 +2128,16 @@ ceilscan (long x1, long x2, long sectnum)
 		else
 		{
 			while (y1 < y2-1) slowhline(x-1,++y1);
+#if (LIBVER_BUILDREV < 19960319L)
+			if (x == x2) break;
+#else
 			if (x == x2) { globalx2 += globaly2; globaly1 += globalx1; break; }
+#endif
 			y1 = umost[x+1]; y2 = y1;
 		}
+#if (LIBVER_BUILDREV >= 19960319L)
 		globalx2 += globaly2; globaly1 += globalx1;
+#endif
 	}
 	while (y1 < y2-1) slowhline(x2,++y1);
 	faketimerhandler();
@@ -2213,6 +2229,7 @@ florscan (long x1, long x2, long sectnum)
 
 	sethlinesizes(picsiz[globalpicnum]&15,picsiz[globalpicnum]>>4,globalbufplc);
 
+#if (LIBVER_BUILDREV >= 19960319L)
 	globalx2 += globaly2*(x1-1);
 	globaly1 += globalx1*(x1-1);
 	globalx1 = mulscale16(globalx1,globalzd);
@@ -2271,6 +2288,7 @@ florscan (long x1, long x2, long sectnum)
 			break;
 	}
 #endif // LIBVER_BUILDREV
+#endif // LIBVER_BUILDREV
 
 	y1 = max(dplc[x1],umost[x1]); y2 = y1;
 	for(x=x1;x<=x2;x++)
@@ -2294,10 +2312,16 @@ florscan (long x1, long x2, long sectnum)
 		else
 		{
 			while (y1 < y2-1) slowhline(x-1,++y1);
+#if (LIBVER_BUILDREV < 19960319L)
+			if (x == x2) break;
+#else
 			if (x == x2) { globalx2 += globaly2; globaly1 += globalx1; break; }
+#endif
 			y1 = max(dplc[x+1],umost[x+1]); y2 = y1;
 		}
+#if (LIBVER_BUILDREV >= 19960319L)
 		globalx2 += globaly2; globaly1 += globalx1;
+#endif
 	}
 	while (y1 < y2-1) slowhline(x2,++y1);
 	faketimerhandler();
@@ -2357,9 +2381,17 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 		if (chainstat != 0)
 			p = chainplace+((x+viewoffset)>>2);
 		else
+#if (LIBVER_BUILDREV < 19960319L)
+			p = x+frameplace+viewoffset;
+#else
 			p = x+frameoffset;
+#endif
 
+#if (LIBVER_BUILDREV < 19960319L)
+		for(;(x<=x2)&&(x&3);x+=xinc,p++)
+#else
 		for(;(x<=x2)&&(p&3);x+=xinc,p++)
+#endif
 		{
 			y1ve[0] = max(uwal[x],umost[x]);
 			y2ve[0] = min(dwal[x],dmost[x]);
@@ -2615,9 +2647,17 @@ maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 		if (chainstat != 0)
 			p = ((x+viewoffset)>>2)+chainplace;
 		else
+#if (LIBVER_BUILDREV < 19960319L)
+			p = x+frameplace+viewoffset;
+#else
 			p = x+frameoffset;
+#endif
 
+#if (LIBVER_BUILDREV < 19960319L)
+		for(;(x<=x2)&&(x&3);x+=xinc,p++)
+#else
 		for(;(x<=x2)&&(p&3);x+=xinc,p++)
+#endif
 		{
 			y1ve[0] = max(uwal[x],startumost[x+windowx1]-windowy1);
 			y2ve[0] = min(dwal[x],startdmost[x+windowx1]-windowy1);
@@ -3148,7 +3188,11 @@ setgamemode()
 	long i, j;
 
 	if (qsetmode == 200)
+#if (LIBVER_BUILDREV < 19960319L)
+		return;
+#else
 		return(0);
+#endif
 #else
 	long i, j, k, ostereomode;
 
@@ -3175,7 +3219,16 @@ setgamemode()
 		if (vidoption == 0)
 		{
 			setvmode(0x13);
+#if (LIBVER_BUILDREV < 19960319L)
+			if (setxmode(xdim,ydim) < 0)
+			{
+				setvmode(3);
+				printf("%ld * %ld chained mode not supported\n",xdim,ydim);
+				exit(0);
+			}
+#else
 			if (setxmode(xdim,ydim) < 0) return -1;
+#endif
 			chainplace = 0xa0000;
 			koutp(0x3c4,0x2);
 			if (chainstat != 0)
@@ -3185,7 +3238,11 @@ setgamemode()
 		}
 		if (vidoption == 1)
 		{
+#if (LIBVER_BUILDREV < 19960319L)
+			setvesa(xdim,ydim);
+#else
 			if (setvesa(xdim,ydim) < 0) return -1;
+#endif
 		}
 		if (vidoption == 2)
 		{
@@ -3364,7 +3421,9 @@ setgamemode()
 #endif
 
 	qsetmode = 200;
+#if (LIBVER_BUILDREV >= 19960319L)
 	return(0);
+#endif
 }
 
 
@@ -3377,9 +3436,15 @@ hline (long xr, long yp)
 #endif
 
 	xl = lastx[yp]; if (xl > xr) return;
+#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+	r = mulscale10(globalzd,horizlookup2[yp-globalhoriz+horizycent]);
+	asm1 = mulscale8(globalx1,r);
+	asm2 = mulscale8(globaly2,r);
+#else
 	r = horizlookup2[yp-globalhoriz+horizycent];
 	asm1 = globalx1*r;
 	asm2 = globaly2*r;
+#endif
 #if (LIBVER_BUILDREV >= 19970602L)
 	s = ((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8);
 #endif
@@ -3387,11 +3452,32 @@ hline (long xr, long yp)
 #if (LIBVER_BUILDREV < 19960427L)
 	if (chainstat == 0)
 	{
+#if (LIBVER_BUILDREV < 19960319L)
+		hlineasm4(xr-xl,0L,((long)getpalookup((long)mulscale18(klabs(r),globvis),globalshade)<<8),
+			mulscale8(globaly2*xl+globalx2,r)+globalypanning,mulscale8(globalx1*xl+globaly1,r)+globalxpanning,
+			ylookup[yp]+xl+frameplace+viewoffset);
+#else
 		hlineasm4(xr-xl,0L,((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8),
 			globalx2*r+globalypanning,globaly1*r+globalxpanning,
 			ylookup[yp]+xr+frameoffset);
+#endif
 		return;
 	}
+#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+	x = mulscale8(globalx1*xl + globaly1,r) + globalxpanning;
+	y = mulscale8(globaly2*xl + globalx2,r) + globalypanning;
+	shade = ((long)getpalookup((long)mulscale18(klabs(r),globvis),globalshade)<<8);
+	ox = asm1; asm1 <<= 2;
+	oy = asm2; asm2 <<= 2;
+	r = min(xr+1,xl+4); p = ylookup[yp]+chainplace;
+	setuphlineasm4(asm1,asm2);
+	while (xl < r)
+	{
+		koutp(0x3c5,pow2char[(xl+viewoffset)&3]);
+		hlineasm4((xr-xl)>>2,-1L,shade,y,x,p+((xl+viewoffset)>>2));
+		x += ox; y += oy; xl++;
+	}
+#else
 	x = globaly1*r+globalxpanning;
 	y = globalx2*r+globalypanning;
 	shade = ((long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8);
@@ -3406,6 +3492,7 @@ hline (long xr, long yp)
 		hlineasm4((xr-xl)>>2,-1L,shade,y,x,p+((xr+viewoffset)>>2));
 		x -= ox; y -= oy; xr--;
 	}
+#endif
 #else // LIBVER_BUILDREV (19960427L)
 #if (LIBVER_BUILDREV < 19970602L)
 	hlineasm4(xr-xl,0L,(long)getpalookup((long)mulscale16(r,globvis),globalshade)<<8,
@@ -3467,7 +3554,11 @@ transmaskvline (long x)
 		p = ylookup[y1v]+((x+viewoffset)>>2)+chainplace;
 	else
 #endif
+#if (LIBVER_BUILDREV < 19960319L)
+	p = ylookup[y1v]+x+frameplace+viewoffset;
+#else
 	p = ylookup[y1v]+x+frameoffset;
+#endif
 
 	tvlineasm1(vinc,palookupoffs,y2v-y1v,vplc,bufplc,p);
 
@@ -3522,7 +3613,11 @@ transmaskvline2 (long x)
 		i = ((x+viewoffset)>>2)+chainplace;
 	else
 #endif
+#if (LIBVER_BUILDREV < 19960319L)
+	i = x+frameplace+viewoffset;
+#else
 	i = x+frameoffset;
+#endif
 
 	if (y1ve[0] != y1ve[1])
 	{
@@ -4140,7 +4235,11 @@ loadpics(char *filename)
 				tilefileoffs[i] = offscount;
 				dasiz = (long)(tilesizx[i]*tilesizy[i]);
 				offscount += dasiz;
+#if (LIBVER_BUILDREV < 19960319L)
+				artsize += dasiz;
+#else
 				artsize += ((dasiz+15)&0xfffffff0);
+#endif
 			}
 			kclose(fil);
 
@@ -4159,7 +4258,11 @@ loadpics(char *filename)
 		cachesize -= 65536L;
 		if (cachesize < 65536) return(-1);
 	}
+#if (LIBVER_BUILDREV < 19960319L)
+	initcache(pic,cachesize);
+#else
 	initcache((FP_OFF(pic)+15)&0xfffffff0,(cachesize-((-FP_OFF(pic))&15))&0xfffffff0);
+#endif
 
 	for(i=0;i<MAXTILES;i++)
 	{
@@ -4485,7 +4588,9 @@ inside (long x, long y, short sectnum)
 {
 	walltype *wal;
 	long i, x1, y1, x2, y2;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION: From 95 rev.
+	char cnt;
+#elif (LIBVER_BUILDREV < 19960427L)
 	long cnt;
 #else
 	unsigned long cnt;
@@ -4502,7 +4607,12 @@ inside (long x, long y, short sectnum)
 		if ((y1^y2) < 0)
 		{
 			x1 = wal->x-x; x2 = wall[wal->point2].x-x;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960319L)
+			if ((x1^x2) < 0)
+				cnt ^= (x1*y2<x2*y1)^(y1<y2);
+			else if (x1 >= 0)
+				cnt ^= 1;
+#elif (LIBVER_BUILDREV < 19960427L)
 			if ((x1^x2) < 0)
 				cnt ^= (x1*y2-x2*y1)^(y1-y2);
 			else
@@ -4513,7 +4623,9 @@ inside (long x, long y, short sectnum)
 		}
 		wal++; i--;
 	} while (i);
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960319L)
+	return(cnt);
+#elif (LIBVER_BUILDREV < 19960427L)
 	return(cnt<0);
 #else
 	return(cnt>>31);
@@ -5002,9 +5114,11 @@ drawsprite (long snum)
 	yp = spritesy[snum];
 	tilenum = tspr->picnum;
 	spritenum = tspr->owner;
+#if (LIBVER_BUILDREV >= 19960319L)
 	cstat = tspr->cstat;
 
 	if ((cstat&48) != 48)
+#endif
 	{
 		if (picanm[tilenum]&192) tilenum += animateoffs(tilenum,spritenum+32768);
 		if ((tilesizx[tilenum] <= 0) || (tilesizy[tilenum] <= 0) || (spritenum < 0))
@@ -5013,6 +5127,9 @@ drawsprite (long snum)
 	if ((tspr->xrepeat <= 0) || (tspr->yrepeat <= 0)) return;
 
 	sectnum = tspr->sectnum; sec = &sector[sectnum];
+#if (LIBVER_BUILDREV < 19960319L)
+	cstat = tspr->cstat;
+#endif
 	globalpal = tspr->pal;
 	globalshade = tspr->shade;
 #if (LIBVER_BUILDREV < 20000614L)
@@ -6331,7 +6448,11 @@ ceilspritehline (long x2, long y)
 	}
 	else
 	{
+#if (LIBVER_BUILDREV < 19960319L)
+		p = ylookup[y]+x1+frameplace+viewoffset;
+#else
 		p = ylookup[y]+x1+frameoffset;
+#endif
 		if ((globalorientation&2) == 0)
 			mhline(globalbufplc,bx,(x2-x1)<<16,0L,by,p);
 		else
@@ -8738,7 +8859,11 @@ dosetaspect()
 		oxyaspect = xyaspect;
 #endif
 		j = xyaspect*320;
+#if (LIBVER_BUILDREV < 19960319L)
+		horizlookup2[horizycent-1] = divscale28(131072,j);
+#else
 		horizlookup2[horizycent-1] = divscale26(131072,j);
+#endif
 #if (LIBVER_BUILDREV < 19960427L)
 		for(i=ydim*3-1;i>=0;i--)
 #else
@@ -8747,7 +8872,11 @@ dosetaspect()
 			if (i != (horizycent-1))
 			{
 				horizlookup[i] = divscale28(1,i-(horizycent-1));
+#if (LIBVER_BUILDREV < 19960319L)
+				horizlookup2[i] = divscale16(klabs(horizlookup[i]),j);
+#else
 				horizlookup2[i] = divscale14(klabs(horizlookup[i]),j);
+#endif
 			}
 	}
 	if ((xdimen != oxdimen) || (viewingrange != oviewingrange))
@@ -10214,20 +10343,41 @@ fillpolygon(long npoints)
 			}
 			x1 = ptr[day1]; ptr[day1] = ptr[z];
 			x2 = ptr2[day2]-1; ptr2[day2] = ptr2[z];
+#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+			if (x1 <= x2)
+			{
+					//maphline
+				ox = x1+1-(xdim>>1);
+				bx = ox*asm1 + globalposx;
+				by = ox*asm2 - globalposy;
+#else
 			if (x1 > x2) continue;
-
+#endif
 			if (globalpolytype < 1)
 			{
+#if (LIBVER_BUILDREV >= 19960319L)
 					//maphline
 				ox = x2+1-(xdim>>1);
 				bx = ox*asm1 + globalposx;
 				by = ox*asm2 - globalposy;
+#endif
 
 #if (LIBVER_BUILDREV < 19960427L)
 				if (chainstat != 0)
 				{
 					ox = asm1; asm1 <<= 2;
 					oy = asm2; asm2 <<= 2;
+#if (LIBVER_BUILDREV < 19960319L)
+					r = min(x2+1,x1+4); p = ylookup[y]+chainplace;
+					while (x1 < r)
+					{
+						koutp(0x3c5,pow2char[x1&3]);
+						hlineasm4((x2-x1)>>2,-1L,globalshade<<8,by,bx,p+(x1>>2));
+						bx += ox;
+						by += oy;
+						x1++;
+					}
+#else
 					r = max(x1-1,x2-4);
 					p = ylookup[y]+chainplace;
 					while (x2 > r)
@@ -10238,13 +10388,18 @@ fillpolygon(long npoints)
 						by -= oy;
 						x2--;
 					}
+#endif
 					asm1 = ox;
 					asm2 = oy;
 				}
 				else
 				{
-#endif
+#endif // 19960427L
+#if (LIBVER_BUILDREV < 19960319L)
+				p = ylookup[y]+x1+frameplace;
+#else
 				p = ylookup[y]+x2+frameplace;
+#endif
 				hlineasm4(x2-x1,-1L,globalshade<<8,by,bx,p);
 #if (LIBVER_BUILDREV < 19960427L)
 				}
@@ -10252,10 +10407,12 @@ fillpolygon(long npoints)
 			}
 			else
 			{
+#if (LIBVER_BUILDREV >= 19960319L)
 					//maphline
 				ox = x1+1-(xdim>>1);
 				bx = ox*asm1 + globalposx;
 				by = ox*asm2 - globalposy;
+#endif
 
 #if (LIBVER_BUILDREV < 19960427L)
 				if (chainstat != 0)
@@ -10323,6 +10480,9 @@ fillpolygon(long npoints)
 				}
 #endif
 			}
+#if (LIBVER_BUILDREV < 19960319L)
+			}
+#endif
 		}
 		globalposx += globalx1;
 		globalposy += globaly2;
@@ -11646,7 +11806,11 @@ grouscan (long dax1, long dax2, long sectnum, char dastat)
 			}
 			else
 #endif
+#if (LIBVER_BUILDREV < 19960319L)
+			slopevlin(ylookup[y2]+x+frameplace+viewoffset,krecipasm(asm3>>3),(long)nptr2,y2-y1+1,globalx1,globaly1);
+#else
 			slopevlin(ylookup[y2]+x+frameoffset,krecipasm(asm3>>3),(long)nptr2,y2-y1+1,globalx1,globaly1);
+#endif
 
 			if ((x&15) == 0) faketimerhandler();
 		}
