@@ -3,7 +3,7 @@
 // See the included license file "BUILDLIC.TXT" for license info.
 // This file has been modified from Ken Silverman's original release
 
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960301L)
 #define SUPERBUILD
 #endif
 
@@ -3188,7 +3188,7 @@ setgamemode()
 	long i, j;
 
 	if (qsetmode == 200)
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960301L)
 		return;
 #else
 		return(0);
@@ -3219,7 +3219,7 @@ setgamemode()
 		if (vidoption == 0)
 		{
 			setvmode(0x13);
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960301L)
 			if (setxmode(xdim,ydim) < 0)
 			{
 				setvmode(3);
@@ -3238,7 +3238,7 @@ setgamemode()
 		}
 		if (vidoption == 1)
 		{
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960301L)
 			setvesa(xdim,ydim);
 #else
 			if (setvesa(xdim,ydim) < 0) return -1;
@@ -3421,7 +3421,7 @@ setgamemode()
 #endif
 
 	qsetmode = 200;
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960301L)
 	return(0);
 #endif
 }
@@ -3701,6 +3701,7 @@ initengine()
 #else
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<24)-1)/i;
 #endif
+#if (LIBVER_BUILDREV >= 19960319L)
 	for(i=0;i<MAXVOXELS;i++)
 		for(j=0;j<MAXVOXMIPS;j++)
 		{
@@ -3711,6 +3712,7 @@ initengine()
 			voxlock[i][j] = 200;
 		}
 #endif
+#endif // 19960319L
 
 	paletteloaded = 0;
 
@@ -4277,6 +4279,10 @@ loadpics(char *filename)
 	artfil = -1;
 	artfilnum = -1;
 	artfilplc = 0L;
+#if (LIBVER_BUILDREV >= 19960301L) && (LIBVER_BUILDREV < 19960319L)
+	qloadkvx(0L,"voxel000.kvx");
+	qloadkvx(1L,"voxel001.kvx");
+#endif
 
 	return(0);
 }
@@ -4293,7 +4299,12 @@ qloadkvx(long voxindex, char *filename)
 #endif
 	char *ptr;
 
+#if (LIBVER_BUILDREV < 19960319L)
+	if ((fil = open(filename,O_BINARY|O_RDWR,S_IREAD)) == -1) return;
+	allocache(&ptr,filelength(fil),&permanentlock);
+#else
 	if ((fil = kopen4load(filename,0)) == -1) return;
+#endif
 
 #if (LIBVER_BUILDREV >= 19960427L)
 	lengcnt = 0;
@@ -4304,6 +4315,12 @@ qloadkvx(long voxindex, char *filename)
 
 	for(i=0;i<MAXVOXMIPS;i++)
 	{
+#if (LIBVER_BUILDREV < 19960319L)
+		read(fil,&voxsiz[voxindex][i],4);
+		read(fil,ptr,voxsiz[voxindex][i]);
+		voxoff[voxindex][i] = (long)ptr;
+		ptr += voxsiz[voxindex][i];
+#else
 #if (LIBVER_BUILDREV < 19960427L)
 		kread(fil,&voxsiz[voxindex][i],4);
 #else
@@ -4325,8 +4342,13 @@ qloadkvx(long voxindex, char *filename)
 		if (lengcnt >= lengtot-768) break;
 #endif
 #endif // 19960427L
+#endif // 19960319L
 	}
+#if (LIBVER_BUILDREV < 19960319L)
+	close(fil);
+#else
 	kclose(fil);
+#endif
 }
 #endif
 
@@ -6328,7 +6350,11 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					if (z2 > dadmost[lx]) z2 = dadmost[lx];
 					z2 -= z1; if (z2 <= 0) continue;
 
+#if (LIBVER_BUILDREV < 19960319L)
+					drawslab(rx,yplc,z2,yinc,(long)&voxptr[3],ylookup[z1]+lx+frameplace+viewoffset);
+#else
 					drawslab(rx,yplc,z2,yinc,(long)&voxptr[3],ylookup[z1]+lx+frameoffset);
+#endif
 				}
 			}
 		}

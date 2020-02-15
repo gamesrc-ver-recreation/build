@@ -444,7 +444,7 @@ setvesa(long x, long y)
 		if ((regs.x.ax != 0x004f) || (strncmp(vgaInfo.VESASignature,"VESA",4)))
 		{
 			printf("VESA not found!\n");
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960301L)
 			return;
 #else
 			return(-1);
@@ -571,13 +571,13 @@ setvesa(long x, long y)
 			visualpagelookup[i][1] = (short)dived.quot;
 			j += imageSize;
 		}
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960301L)
 		return;
 #else
 		return(0);
 #endif
 	}
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960301L)
 	printf("VESA says that %ld*%ld is not currently supported.\n", x, y);
 	exit(0);
 #else
