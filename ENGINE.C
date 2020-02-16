@@ -5958,7 +5958,9 @@ drawsprite (long snum)
 			if (x == rx) return;
 		}
 
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960319L)
+		if ((tilenum<0) || (tilenum>2)) tilenum = 0;
+#elif (LIBVER_BUILDREV < 19960427L)
 		if (voxsiz[tilenum][0] == 0) return;
 #elif (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Had just 3 mipmaps
 		if (!voxoff[tilenum][0] || !voxoff[tilenum][1] || !voxoff[tilenum][2])
@@ -6169,6 +6171,9 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	yoff = ((klabs(gxinc)+klabs(gyinc))>>1);
 	longptr = (long *)davoxptr;
 	xyvoxoffs = ((daxsiz+1)<<2);
+#if (LIBVER_BUILDREV < 19960319L)
+	zx = frameplace+viewoffset;
+#endif
 
 	for(cnt=0;cnt<8;cnt++)
 	{
@@ -6351,7 +6356,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					z2 -= z1; if (z2 <= 0) continue;
 
 #if (LIBVER_BUILDREV < 19960319L)
-					drawslab(rx,yplc,z2,yinc,(long)&voxptr[3],ylookup[z1]+lx+frameplace+viewoffset);
+					drawslab(rx,yplc,z2,yinc,(long)&voxptr[3],ylookup[z1]+lx+zx);
 #else
 					drawslab(rx,yplc,z2,yinc,(long)&voxptr[3],ylookup[z1]+lx+frameoffset);
 #endif
