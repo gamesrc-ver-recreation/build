@@ -10974,11 +10974,11 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 #endif
 }
 
-// VERSIONS RSETORATION: The separate code for 19960427L is mostly matching
+// VERSIONS RSETORATION: The separate code for 19960320L is mostly matching
 // in size, although it still differs from the original in differing ways.
 // So, let's just offer both options
 
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV >= 19960319L) && (LIBVER_BUILDREV < 19960427L)
 
 completemirror()
 {
@@ -11136,7 +11136,7 @@ completemirror()
 {
 #if (LIBVER_BUILDREV < 19970212L)
 #if (LIBVER_BUILDREV < 19960427L)
-	long i, j, k, l, x1, y1, x2, y2, dx, dy, p;
+	long dx, i, j, k, l, x1, y1, x2, y2;
 #else
 	long i, j, k, l, x1, y1, x2, y2, dy, templong;
 #endif
@@ -11181,8 +11181,7 @@ completemirror()
 					dx = (x2+1-(x1+k)+3)>>2;
 					l = x1+k;
 					koutp(0x3cf,l&3);
-					ptr = chainplace+ylookup[i]+(l>>2);
-					copybufbyte(ptr,&tempbuf[j],dx);
+					copybufbyte((l>>2)+(ylookup[i]+chainplace),&tempbuf[j],dx);
 					j += dx;
 				}
 				j = 0;
@@ -11191,9 +11190,8 @@ completemirror()
 					dx = (x2+1-(x1+k)+3)>>2;
 					l = (windowx1+windowx2-(x1+k))-((dx-1)<<2);
 					koutp(0x3c5,pow2char[l&3]);
-					ptr = chainplace+ylookup[i]+(l>>2);
-					copybufreverse(&tempbuf[j+dx-1],ptr,dx);
 					j += dx;
+					copybufreverse(&tempbuf[j-1],(l>>2)+(ylookup[i]+chainplace),dx);
 				}
 				faketimerhandler();
 			}
@@ -11221,7 +11219,7 @@ completemirror()
 
 		ptr = (char *)frameplace+ylookup[windowy1]+windowx1;
 		y1 = windowx2-windowx1-x2; x2 -= x1; y2 = x2+1;
-		for(dy=windowy2-windowy1;dy>=0;dy--)
+		for(i=windowy2-windowy1;i>=0;i--)
 		{
 			copybufbyte(&ptr[x1+1],&tempbuf[0],y2);
 			tempbuf[x2] = tempbuf[x2-1];
