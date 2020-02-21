@@ -2018,6 +2018,7 @@ voxskipslab5:
 ;edi: |--------|--------|--------| vidplc |
 ;ebp: |--------|--------|--------|  hiinc |
 
+IF LIBVER_BUILDREV GE 19960419
 PUBLIC stretchhline_
 stretchhline_:
 	push ebp
@@ -2073,6 +2074,7 @@ loinc4: sub ecx, 88888888h
 
 	pop ebp
 	ret
+ENDIF
 
 CODE ENDS
 END
