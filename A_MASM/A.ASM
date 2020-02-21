@@ -41,13 +41,17 @@ sethlinesizes_:
 	mov byte ptr ds:[hxsiz1+2], al
 	mov byte ptr ds:[hxsiz2+2], al
 	mov byte ptr ds:[hxsiz3+2], al
+IF LIBVER_BUILDREV GE 19960319
 	mov byte ptr ds:[hxsiz4+2], al
+ENDIF
 	mov byte ptr ds:[machnegxbits1+2], al
 
 	mov byte ptr ds:[hysiz1+3], bl
 	mov byte ptr ds:[hysiz2+3], bl
 	mov byte ptr ds:[hysiz3+3], bl
+IF LIBVER_BUILDREV GE 19960319
 	mov byte ptr ds:[hysiz4+3], bl
+ENDIF
 	mov byte ptr ds:[hmach3a+2], bl
 	mov byte ptr ds:[hmach3b+2], bl
 	mov byte ptr ds:[hmach3c+2], bl
@@ -60,7 +64,9 @@ sethlinesizes_:
 	mov dword ptr ds:[hoffs5+2], ecx
 	mov dword ptr ds:[hoffs6+2], ecx
 	mov dword ptr ds:[hoffs7+2], ecx
+IF LIBVER_BUILDREV GE 19960319
 	mov dword ptr ds:[hoffs8+2], ecx
+ENDIF
 
 	mov edx, -1
 	mov cl, al
@@ -103,7 +109,9 @@ setpalookupaddress_:
 	mov dword ptr ds:[pal5+2], eax
 	mov dword ptr ds:[pal6+2], eax
 	mov dword ptr ds:[pal7+2], eax
+IF LIBVER_BUILDREV GE 19960319
 	mov dword ptr ds:[pal8+2], eax
+ENDIF
 	ret
 
 ALIGN 16
@@ -136,54 +144,93 @@ hlineasm4_:
 
 	lea ebp, [eax+1]
 
+IF LIBVER_BUILDREV LT 19960319
+	shr ebp, 1
+	jnc short skipthe1byte
+ELSE
 	cmp ebp, 8
 	jle shorthline
 
 	test edi, 1
 	jnz short skipthe1byte
+ENDIF
 
 	mov eax, esi
 hxsiz1: shr eax, 26
 hysiz1: shld eax, edx, 6
 hoffs1: mov cl, byte ptr [eax+88888888h]
 pal1: mov bl, byte ptr [ecx+88888888h]
+IF LIBVER_BUILDREV LT 19960319
+	add esi, _asm1
+	add edx, _asm2
+	mov byte ptr [edi], bl
+	inc edi
+ELSE
 	sub esi, _asm1
 	sub edx, _asm2
 	mov byte ptr [edi], bl
 	dec edi
 	dec ebp
+ENDIF
 
 skipthe1byte:
+IF LIBVER_BUILDREV LT 19960319
+	shr ebp, 1
+	jnc short skipthe2byte
+ELSE
 	test edi, 2
 	jnz short skipthe2byte
+ENDIF
 
 	mov eax, esi
 hxsiz2: shr eax, 26
 hysiz2: shld eax, edx, 6
 hoffs2: mov cl, byte ptr [eax+88888888h]
+IF LIBVER_BUILDREV LT 19960319
+pal2: mov bl, byte ptr [ecx+88888888h]
+	add esi, _asm1
+	add edx, _asm2
+ELSE
 pal2: mov bh, byte ptr [ecx+88888888h]
 	sub esi, _asm1
 	sub edx, _asm2
+ENDIF
 
 	mov eax, esi
 hxsiz3: shr eax, 26
 hysiz3: shld eax, edx, 6
 hoffs3: mov cl, byte ptr [eax+88888888h]
+IF LIBVER_BUILDREV LT 19960319
+pal3: mov bh, byte ptr [ecx+88888888h]
+	add esi, _asm1
+	add edx, _asm2
+	mov word ptr [edi], bx
+	add edi, 2
+ELSE
 pal3: mov bl, byte ptr [ecx+88888888h]
 	sub esi, _asm1
 	sub edx, _asm2
 	mov word ptr [edi-1], bx
 	sub edi, 2
 	sub ebp, 2
+ENDIF
 
 skipthe2byte:
+IF LIBVER_BUILDREV LT 19960319
+	test ebp, ebp
+	jz endshorthline
+ENDIF
 
 	mov eax, esi
 machxbits1: shl esi, 6                     ;xbits
 machnegxbits1: shr eax, 32-6               ;32-xbits
 	mov dl, al
 
+IF LIBVER_BUILDREV LT 19960319
+	sub edi, 4
+ELSE
 	inc edi
+ENDIF
 
 	add ebx, ebx
 	mov eax, edx
@@ -206,32 +253,54 @@ machxbits2: rol eax, 6                     ;xbits
 	mov eax, edx
 	jmp beginhline64
 ALIGN 16
+IF LIBVER_BUILDREV GE 19960319
 prebeginhline64:
 	mov dword ptr [edi], ebx
+ENDIF
 beginhline64:
 
 hmach3a: rol eax, 6
 hmach2a: and eax, 00008888h
+IF LIBVER_BUILDREV LT 19960319
+hmach4a: add esi, 88888888h
+hmach1a: adc edx, 88888888h
+	add edi, 4
+ELSE
 hmach4a: sub esi, 88888888h
 hmach1a: sbb edx, 88888888h
 	sub edi, 4
+ENDIF
 hoffs4: mov cl, byte ptr [eax+88888888h]
 	mov eax, edx
 
 hmach3b: rol eax, 6
 hmach2b: and eax, 00008888h
+IF LIBVER_BUILDREV LT 19960319
+hmach4b: add esi, 88888888h
+hmach1b: adc edx, 88888888h
+pal4: mov bl, byte ptr [ecx+88888888h]
+ELSE
 hmach4b: sub esi, 88888888h
 hmach1b: sbb edx, 88888888h
 pal4: mov bh, byte ptr [ecx+88888888h]
+ENDIF
 hoffs5: mov cl, byte ptr [eax+88888888h]
 	mov eax, edx
 
 hmach3c: rol eax, 6
+IF LIBVER_BUILDREV LT 19960319
+pal5: mov bh, byte ptr [ecx+88888888h]
+hmach2c: and eax, 00008888h
+	shl ebx, 16
+hmach4c: add esi, 88888888h
+hmach1c: adc edx, 88888888h
+ELSE
 pal5: mov bl, byte ptr [ecx+88888888h]
 hmach2c: and eax, 00008888h
 	shl ebx, 16
 hmach4c: sub esi, 88888888h
 hmach1c: sbb edx, 88888888h
+ENDIF
 hoffs6: mov cl, byte ptr [eax+88888888h]
 
 	mov eax, edx
@@ -239,11 +308,25 @@ hoffs6: mov cl, byte ptr [eax+88888888h]
 
 hmach3d: rol eax, 6
 hmach2d: and eax, 00008888h
+IF LIBVER_BUILDREV LT 19960319
+hmach4d: add esi, 88888888h
+hmach1d: adc edx, 88888888h
+pal6: mov bl, byte ptr [ecx+88888888h]
+ELSE
 hmach4d: sub esi, 88888888h
 hmach1d: sbb edx, 88888888h
 pal6: mov bh, byte ptr [ecx+88888888h]
+ENDIF
 hoffs7: mov cl, byte ptr [eax+88888888h]
 	mov eax, edx
+IF LIBVER_BUILDREV LT 19960319
+pal7: mov bh, byte ptr [ecx+88888888h]
+skipthe4byte:
+	rol ebx, 16
+	mov dword ptr [edi], ebx
+	dec ebp
+	jnz beginhline64
+ELSE
 	sub ebp, 4
 	nop
 pal7: mov bl, byte ptr [ecx+88888888h]
@@ -280,6 +363,7 @@ pal8: mov bl, byte ptr [ecx+88888888h]
 	dec edi
 	dec ebp
 	jnz begshorthline
+ENDIF
 endshorthline:
 	pop ebp
 	ret
@@ -293,6 +377,12 @@ setupvlineasm_:
 	mov byte ptr ds:[premach3a+2], al
 	mov byte ptr ds:[mach3a+2], al
 
+IF LIBVER_BUILDREV LT 19960319
+	mov byte ptr ds:[machvsh4+2], al
+	mov byte ptr ds:[machvsh3+2], al
+	mov byte ptr ds:[machvsh2+2], al
+	mov byte ptr ds:[machvsh1+2], al
+ELSE
 	push ecx
 	mov byte ptr ds:[machvsh1+2], al      ;32-shy
 	mov byte ptr ds:[machvsh3+2], al      ;32-shy
@@ -314,6 +404,7 @@ setupvlineasm_:
 	mov dword ptr ds:[machvsh2+2], eax    ;(1<<shy)-1
 	mov dword ptr ds:[machvsh4+2], eax    ;(1<<shy)-1
 	pop ecx
+ENDIF
 	ret
 
 ALIGN 16
@@ -481,6 +572,88 @@ fixchain1t: add edi, 320
 	mov eax, edx
 	ret
 
+IF LIBVER_BUILDREV LT 19960319
+ALIGN 16
+PUBLIC vlineasm4_
+vlineasm4_:
+	push ebp
+
+	mov eax, dword ptr _vince[0]
+	mov ebx, dword ptr _vince[4]
+	mov dword ptr ds:[machvinc1+2], eax
+	mov dword ptr ds:[machvinc2+2], ebx
+	mov eax, dword ptr _vince[8]
+	mov ebx, dword ptr _vince[12]
+	mov dword ptr ds:[machvinc4+2], eax
+	mov dword ptr ds:[machvinc3+2], ebx
+
+	mov eax, dword ptr _bufplce[0]
+	mov ebx, dword ptr _bufplce[4]
+	mov dword ptr ds:[machvbuf2+2], eax
+	mov dword ptr ds:[machvbuf1+2], ebx
+	mov eax, dword ptr _bufplce[8]
+	mov ebx, dword ptr _bufplce[12]
+	mov dword ptr ds:[machvbuf4+2], eax
+	mov dword ptr ds:[machvbuf3+2], ebx
+
+	mov eax, dword ptr _palookupoffse[0]
+	mov ebx, dword ptr _palookupoffse[4]
+	mov dword ptr ds:[machvpal2+2], eax
+	mov dword ptr ds:[machvpal1+2], ebx
+	mov eax, dword ptr _palookupoffse[8]
+	mov ebx, dword ptr _palookupoffse[12]
+	mov dword ptr ds:[machvpal4+2], eax
+	mov dword ptr ds:[machvpal3+2], ebx
+
+	mov eax, edi
+	xor edi, edi
+	sub edi, dword ptr _ylookup[ecx*4]
+	sub eax, edi
+	mov dword ptr ds:[machvline4end+2], eax
+
+	mov ecx, dword ptr _vplce[0]
+	mov edx, dword ptr _vplce[4]
+	mov esi, dword ptr _vplce[8]
+	mov ebp, dword ptr _vplce[12]
+	mov eax, edx
+	jmp short beginvlineasm4
+ALIGN 16
+beginvlineasm4:
+machvsh1: shr eax, 32
+	mov ebx, ecx
+machvsh2: shr ebx, 32
+machvinc1: add ecx, 88888888h
+machvbuf1: mov al, [eax+88888888h]
+machvinc2: add edx, 88888888h
+machvbuf2: mov bl, [ebx+88888888h]
+machvpal1: mov dl, [eax+88888888h]
+	mov eax, ebp
+machvsh3: shr eax, 32
+machvpal2: mov cl, [ebx+88888888h]
+	mov ebx, esi
+machvsh4: shr ebx, 32
+machvbuf3: mov al, [eax+88888888h]
+machvinc3: add ebp, 88888888h
+machvinc4: add esi, 88888888h
+machvbuf4: mov bl, [ebx+88888888h]
+machvpal3: mov ah, [eax+88888888h]
+machvpal4: mov al, [ebx+88888888h]
+	shl eax, 16
+	mov al, cl
+	mov ah, dl
+machvline4end: mov [edi+88888888h], eax
+	mov eax, edx
+fixchain2a: add edi, 320
+	jnc short beginvlineasm4
+
+	mov dword ptr _vplce[0], ecx
+	mov dword ptr _vplce[4], edx
+	mov dword ptr _vplce[8], esi
+	mov dword ptr _vplce[12], ebp
+
+	pop ebp
+	ret
+ELSE ; LIBVER_BUILDREV
 	;eax: -------temp1-------
 	;ebx: -------temp2-------
 	;ecx:  dat  dat  dat  dat
@@ -627,6 +800,7 @@ machvsh8: shl edx, 88h     ;16-sh
 
 	pop ebp
 	ret
+ENDIF ; LIBVER_BUILDREV
 
 
 ALIGN 16
