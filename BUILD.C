@@ -116,13 +116,15 @@ extern char textfont[128][8];
 static char pskysearch[MAXSECTORS];
 
 short temppicnum, tempcstat, templotag, temphitag, tempextra;
-#if (LIBVER_BUILDREV < 19960419L)
+#if (LIBVER_BUILDREV < 19960427L)
 char tempshade, temppal, tempvis;
-char somethingintab = 255;
-static char boardfilename[13];
 #else
 char tempshade, temppal, tempvis, tempxrepeat, tempyrepeat;
+#endif
 char somethingintab = 255;
+#if (LIBVER_BUILDREV < 19960419L)
+static char boardfilename[13];
+#else
 static char boardfilename[13], oboardfilename[13];
 #endif
 
@@ -324,7 +326,7 @@ showmouse()
 	}
 }
 
-#if (LIBVER_BUILDREV < 19960419L)
+#if (LIBVER_BUILDREV < 19960427L)
 char tempxrepeat, tempyrepeat;
 
 #endif
