@@ -4867,6 +4867,12 @@ drawmasks()
 							j -= 256;
 							if ((k<0) == (j>k)) break;
 						}
+#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION: HACK for adjusting code size
+#pragma aux noppragma =\
+	"nop",\
+
+						noppragma();
+#endif
 #else
 						if (klabs(tspriteptr[l]->z - globalposz) < klabs(tspriteptr[l+gap]->z - globalposz)) break;
 #endif
