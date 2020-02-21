@@ -80,7 +80,9 @@ void kloadvoxel(long voxindex);
 #else
 #define MAXVOXMIPS 5
 #endif
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960319L)
+long voxoff[MAXVOXELS][MAXVOXMIPS], voxsiz[MAXVOXELS][MAXVOXMIPS];
+#elif (LIBVER_BUILDREV < 19960427L)
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxsiz[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
 #else
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
