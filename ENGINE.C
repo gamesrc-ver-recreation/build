@@ -5967,7 +5967,7 @@ drawsprite (long snum)
 		}
 
 #if (LIBVER_BUILDREV < 19960319L)
-		if ((tilenum<0) || (tilenum>2)) tilenum = 0;
+		if ((tilenum<0) || (tilenum>=2)) tilenum = 0;
 #elif (LIBVER_BUILDREV < 19960427L)
 		if (voxsiz[tilenum][0] == 0) return;
 #elif (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - Had just 3 mipmaps
