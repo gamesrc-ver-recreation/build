@@ -45,7 +45,7 @@ a.obj : a_wasm\a.asm
 a.obj : a_masm\a.asm
 	cd $(BUILDREV)
 	copy ..\a_masm\a.asm .
-	masm a.asm;
+	masm /DLIBVER_BUILDREV=$(BUILDREV) a.asm;
 !endif
 	del a.asm
 	cd..
