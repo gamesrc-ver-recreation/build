@@ -18,18 +18,21 @@ Following the warning, a description of the ways in which the objects and
 executable were reproduced is given.
 
 With the right tools, this patched codebase can be used to reproduce any of
-the objects, or executable, as coming from the following original releases:
+the objects, or executable, as coming from the following original releases,
+with a few caveats for ENGINE.OBJ as used in the Build Editor for Duke3D 1.3d:
 
-- A.OBJ as presumably prepared on 19960501, and used
-in Duke3D 1.4-1.5 and SW 1.0-1.2.
+- A.OBJ, BUILD.OBJ, CACHE1D.OBJ and ENGINE.OBJ as used in the Build Editor
+for Duke3D 1.3d.
+- A.OBJ as presumably prepared on 19960501, and used in Duke3D 1.4-1.5 and
+SW 1.0-1.2, as well as the Build Editors for Duke3D 1.4 and SW 1.2
+(Duke3D 1.4's editor was reused for 1.5).
 - MMULTI.OBJ as prepared on 19960904 and used in Duke3D 1.4-1.5 and SW 1.0-1.2
 (*presumably* also in 2DRAW, as available from Ken's site and prepared on 99).
-- CACHE1D.OBJ as present in Duke3D 1.4 and its revision of the Build editor
-(the same editor was reused for Duke3D 1.5).
+- CACHE1D.OBJ as present in Duke3D 1.4 and its revision of the Build editor.
 - BUILD.OBJ and ENGINE.OBJ as present in Duke3D 1.4-1.5's Build Editor
-(ENGINE.OBJ has differences from the revision used in the Duke3D 1.4 game EXE).
+(ENGINE.OBJ has differences from the revision in the Duke3D 1.4 game EXE).
 - ENGINE.OBJ as present in Duke3D 1.4 (the game EXE).
-- An 19961012 revision of BUILD.OBJ and ENGINE.OBJ.
+- A 19961012 revision of BUILD.OBJ and ENGINE.OBJ.
 - CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.5; The latter was possibly
 prepared on 19961112, while the former was *maybe* prepared on 19961207.
 - BUILD.OBJ as used in SW 1.2's Build Editor, possibly prepared on 19961213
@@ -53,7 +56,7 @@ in the same EXE.
 In fact - there's evidence that this happened. Indeed, on the one hand,
 SW 1.0-1.2 seem to use the same A.OBJ, CACHE1D.OBJ and MMULTI.OBJ code as
 used in Duke3D 1.5 (Duke3D 1.4 is further matching on A.OBJ and MMULTI.OBJ).
-These CACHE1D.OBJ and MMULTI.OBJ files were probably made with Watcom C 10.5.
+The CACHE1D.OBJ and MMULTI.OBJ files were probably made with Watcom C 10.5.
 However, the ENGINE.OBJ files used for SW 1.0-1.2 were apparently made using
 Watcom C 10.6. In fact, a copy of the sources for ENGINE.OBJ as used
 for SW 1.1-1.2 was found alongside SW sources under a directory
@@ -64,7 +67,7 @@ You can still select one or a few files to build/clean at a time,
 using DOBUILD.BAT/DOCLEAN.BAT. A list of choices should be shown.
 
 Usually a single directory will be created with the corresponding file(s).
-There are exceptions for DN3D14, DN3D14B, DN3D14B and DN3D15.
+There are exceptions for DN3D14, DN3D14B, DN3D14G and DN3D15.
 In particular, DN3D15 refers to files in separate directories.
 
 How to identify code changes (and what's this BUILDREV thing)?
@@ -77,12 +80,12 @@ test game. Usually, this revision value is based on some *guessed* date
 (e.g., an original modification date of an OBJ file), but this does not
 have to be the case.
 
-Note that only C sources (and not ASM) are covered by the above. However,
-two revisions of A.ASM are included. One of them is the file as released
-on 2000, intended to be built with Watcom Assembler 11.0, at least for
-recreating GAME.EXE as originally prepared on 2000. The other A.ASM file
-is intended to be built with Macro Assembler 5.10, and should match A.OBJ
-as used in Duke3D 1.4-1.5 and SW 1.0-1.2.
+An exception is made for the A.ASM source, since there are two variants
+of it. One of them is the file as released on 2000, intended to be built
+with Watcom Assembler 11.0, at least for recreating GAME.EXE as originally
+prepared on 2000. The other A.ASM file is intended to be built with
+Macro Assembler 5.10, and should match earlier A.OBJ files,
+like the one used in Duke3D 1.4-1.5 and SW 1.0-1.2.
 
 These are two good reasons for using BUILDREV as described above, referring
 to similar work done for Wolfenstein 3D EXEs (built with Borland C++):
@@ -103,23 +106,52 @@ release of 2000 as a base. It also got a few (really) minor edits from 2002.
 Additional thanks go to Ken for his consent to let other Build engine sources
 become accessible under the same terms as of his 2000 release. Thus,
 additional files could be used for the recreation efforts.
-In particular, this included the sources for ENGINE.OBJ as used in SW 1.1-1.2,
-an October 1996 revision of ENGINE.OBJ, and older engine sources from 1995.
+In particular, this included the sources for ENGINE.OBJ as used
+in SW 1.1-1.2, earlier revisions of CACHE1D.OBJ and ENGINE.OBJ
+from 1996, and older engine sources from 1995.
+
+ENGINE.OBJ as used in SW 1.0 turned out to differ from 1.1-1.2's just by a few
+constants used for shifting values in drawmapview, clippoly and fillpolygon.
 
 Not long before the A.OBJ code used in Duke3D 1.4-1.5 and SW 1.0-1.2 was fully
 recreated, Nuke.YKT came in to recreate ENGINE.OBJ as used in Duke3D 1.5, with
 the assistance of the aforementioned SW 1.1-1.2 revision. In fact, originally
-he wanted to recreate the revision used in Redneck Rampage, only that it
-eventually turned out to match Duke3D 1.5's. CACHE1D.OBJ itself didn't
-need that much changes, while MMULTI.OBJ as used in Duke3D 1.4-1.5 and
-SW 1.0-1.2 essentially has the same code as in the public Ken-Build releases
+he started with Duke3D 1.3d's revision, assuming it was closer to the one used
+in Redneck Rampage. Reason is that there was evidence that RR, or at least
+its game code, was based on a revision of Duke3D in-between 1.3d and 1.4. One
+example is the available CON commands. He later found out that RR's ENGINE.OBJ
+code was actually matching Duke3D 1.5, and fully recreated it. CACHE1D.OBJ
+itself didn't need that much changes in order to match Duke3D 1.5 and
+SW 1.0-1.2, while MMULTI.OBJ as used in Duke3D 1.4-1.5 and SW 1.0-1.2
+essentially has the same code as in the public Ken-Build releases
 (although at least the 2000 release uses a more recent build of MMULTI.OBJ).
 
-Nuke.YKT also assisted with the recreation of Duke3D 1.4's revision of
-ENGINE.OBJ. As in the case of 1.5, CACHE1D.OBJ didn't need that much changes.
-The October 1996 revision of ENGINE.OBJ was initially used;
-It is really close to Duke3D 1.5's revision. Later,
-the 1995 sources were used for assistance.
+Later, Nuke.YKT separately assisted with the recreation of ENGINE.OBJ as
+used in Duke3D 1.4. As in the case of 1.5, CACHE1D.OBJ didn't need that
+much changes for 1.4. The 19961012 revision of ENGINE.OBJ, which
+is really close to Duke3D 1.5's revision, was initially used
+in order to assist with the recreation of 1.4's revision.
+Later, the 1995 sources were used as a reference.
+
+The Build Editor for Duke3D 1.4 (reused for 1.5) turned out to use a bit
+older ENGINE.OBJ, albeit it's quite similar to the game's.
+
+As stated above, during his work on RR, Nuke.YKT originally tried to
+recreate Duke3D 1.3d's ENGINE.OBJ. He also did this with other
+object files. While eventually found out that RR uses 1.5's revision,
+this work of him was later used in order to recreate the ENGINE.OBJ
+and CACHE1D.OBJ code used in the Build Editor for Duke3D 1.3d.
+19960213 and 19960320 revisions of ENGINE.OBJ, as well as a 19960319
+revision of CACHE1D.OBJ, were further used in this process.
+For A.OBJ, he did figure out that stretchhline was originally not present. More
+changes were later applied in order to match the aforementioned editor EXE.
+
+Generally, BUILD.OBJ didn't need a lot of changes in-between Duke3D v1.3d's
+editor and the Ken-Build revision from 2000. Most significant in terms of
+impacted code size are probably the functions loopnumofsector and setfirstwall
+moving at some point from BUILD.OBJ to ENGINE.OBJ, as mentioned
+in the BUILD Revision History entry for 9/6/96 within BUILD2.TXT.
+(Just setfirstwall was mentioned; It depends on loopnumofsector.)
 
 How was the makefile (and a bit more) modified from the original
 ----------------------------------------------------------------
@@ -132,8 +164,8 @@ Building the files
 
 Required tools:
 
-- For A.OBJ as presumably prepared on 19960501: MASM 5.10
-(and no other version).
+- For A.OBJ as presumably prepared on 19960501 and earlier
+revisions: MASM 5.10 (and no other version).
 - For the 19970212 (SW 1.0) and 19970522 (SW 1.1-1.2) revisions
 of ENGINE.OBJ: Watcom C 10.6 (and only this version).
 - For Ken-Build as released on 20000614: Watcom C 11.0. (Not 11.0a/b/c, etc.)
@@ -144,22 +176,31 @@ Notes before trying to build anything:
 - This may depend on luck. Even if the code is generally 100% matching,
 the OBJ files may still include data like original paths and timestamps
 of source files (including local or system headers).
+- In fact, it's known that a few functions won't perfectly match in
+layout for the 19960320 and earlier revisions of ENGINE.OBJ. The exact
+list of involved functions depends on the revision, but a few examples are
+wallscan, initengine, drawmasks and completemirror; Especially the latter.
 - Use DOBUILD.BAT to build the desired files (don't call wmake directly),
 or DOCLEAN.BAT to remove them.
 
 For reference, a list of such original paths in use is given here:
+
 - MMULTI.OBJ: C:\C\CPROG\2DRAW for local files, c:\watcom\h for system headers.
-- 19961207 (Duke3D 1.5) revision of CACHE1D.OBJ and 19970212 (SW 1.0)
-revision of ENGINE.OBJ: C:\C\CPROG\BUILD for local files,
-c:\watcom\h for system headers.
-- 19961012, 19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2) revisions
-of ENGINE.OBJ, as well as the 19961012 and 19961213 (SW 1.2 Build Editor)
-revisions of BUILD.OBJ: D: for local files, c:\watcom\h for system headers.
+- The 19961207 (Duke3D 1.5) revision of CACHE1D.OBJ and the 19960320 and
+19970212 (SW 1.0) revisions of ENGINE.OBJ: C:\C\CPROG\BUILD for
+local files, c:\watcom\h for system headers.
+- The 19960317, 19961012 and 19961213 (SW 1.2 Build Editor) revisions of
+BUILD.OBJ, the 19960319 revision of CACHE1D.OBJ and the 19960213, 19961012,
+19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2) revisions of ENGINE.OBJ:
+D: for local files, c:\watcom\h for system headers.
 
 Building the LIB
 ----------------
 
 1. Use DOBUILD.BAT, selecting the file(s) to create.
 2. If you're building Ken-Build, hopefully you should get exactly the
-original EXE. For all other choices, hopefully you should get perfectly
-matching OBJ files, in terms of the code that gets added to EXEs later.
+original EXE. For all other choices, except for the 19960320 and earlier
+revisions of ENGINE.OBJ, hopefully you should get perfectly matching
+OBJ files, in terms of the code that gets added to EXEs later.
+The aforementioned revisions of ENGINE.OBJ are expected
+to differ at least a bit in layout.
