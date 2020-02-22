@@ -109,7 +109,7 @@ static long backlinaddress = 0;  //Save address for free operation (0x801)
 	modify exact [eax edx]\
 
 #endif
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 #define backupsegs()
 
 #pragma aux restoresegs =\
@@ -137,7 +137,7 @@ short ods, oes, oss;
 	"int 0x10",\
 	parm [eax]\
 
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 #pragma aux copybufbyte =\
 	"cmp ecx, 4",\
 	"jae longcopy",\

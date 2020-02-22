@@ -80,7 +80,7 @@ void kloadvoxel(long voxindex);
 #else
 #define MAXVOXMIPS 5
 #endif
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxsiz[MAXVOXELS][MAXVOXMIPS];
 #elif (LIBVER_BUILDREV < 19960427L)
 long voxoff[MAXVOXELS][MAXVOXMIPS], voxsiz[MAXVOXELS][MAXVOXMIPS], voxlock[MAXVOXELS][MAXVOXMIPS];
@@ -213,7 +213,7 @@ static long swplc[MAXXDIM], lplc[MAXXDIM];
 static long swall[MAXXDIM], lwall[MAXXDIM+4];
 long xdimen = -1, xdimenrecip, halfxdimen, xdimenscale, xdimscale;
 long wx1, wy1, wx2, wy2, ydimen;
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 long viewoffset;
 #else
 long viewoffset, frameoffset;
@@ -639,7 +639,7 @@ drawrooms(long daposx, long daposy, long daposz,
 #if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - From '95 rev
 	if (chainnumpages > 0) koutp(0x3c4,2);
 
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 	frameoffset = frameplace+viewoffset;
 #endif
 
@@ -2047,7 +2047,7 @@ ceilscan (long x1, long x2, long sectnum)
 
 	sethlinesizes(picsiz[globalpicnum]&15,picsiz[globalpicnum]>>4,globalbufplc);
 
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 	globalx2 += globaly2*(x1-1);
 	globaly1 += globalx1*(x1-1);
 	globalx1 = mulscale16(globalx1,globalzd);
@@ -2130,14 +2130,14 @@ ceilscan (long x1, long x2, long sectnum)
 		else
 		{
 			while (y1 < y2-1) slowhline(x-1,++y1);
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 			if (x == x2) break;
 #else
 			if (x == x2) { globalx2 += globaly2; globaly1 += globalx1; break; }
 #endif
 			y1 = umost[x+1]; y2 = y1;
 		}
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 		globalx2 += globaly2; globaly1 += globalx1;
 #endif
 	}
@@ -2231,7 +2231,7 @@ florscan (long x1, long x2, long sectnum)
 
 	sethlinesizes(picsiz[globalpicnum]&15,picsiz[globalpicnum]>>4,globalbufplc);
 
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 	globalx2 += globaly2*(x1-1);
 	globaly1 += globalx1*(x1-1);
 	globalx1 = mulscale16(globalx1,globalzd);
@@ -2314,14 +2314,14 @@ florscan (long x1, long x2, long sectnum)
 		else
 		{
 			while (y1 < y2-1) slowhline(x-1,++y1);
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 			if (x == x2) break;
 #else
 			if (x == x2) { globalx2 += globaly2; globaly1 += globalx1; break; }
 #endif
 			y1 = max(dplc[x+1],umost[x+1]); y2 = y1;
 		}
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 		globalx2 += globaly2; globaly1 += globalx1;
 #endif
 	}
@@ -2383,13 +2383,13 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 		if (chainstat != 0)
 			p = chainplace+((x+viewoffset)>>2);
 		else
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 			p = x+frameplace+viewoffset;
 #else
 			p = x+frameoffset;
 #endif
 
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 		for(;(x<=x2)&&(x&3);x+=xinc,p++)
 #else
 		for(;(x<=x2)&&(p&3);x+=xinc,p++)
@@ -2649,13 +2649,13 @@ maskwallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 		if (chainstat != 0)
 			p = ((x+viewoffset)>>2)+chainplace;
 		else
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 			p = x+frameplace+viewoffset;
 #else
 			p = x+frameoffset;
 #endif
 
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 		for(;(x<=x2)&&(x&3);x+=xinc,p++)
 #else
 		for(;(x<=x2)&&(p&3);x+=xinc,p++)
@@ -3438,7 +3438,7 @@ hline (long xr, long yp)
 #endif
 
 	xl = lastx[yp]; if (xl > xr) return;
-#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+#if (LIBVER_BUILDREV < 19960320L) // VERSIONS RESTORATION - From 95 rev.
 	r = mulscale10(globalzd,horizlookup2[yp-globalhoriz+horizycent]);
 	asm1 = mulscale8(globalx1,r);
 	asm2 = mulscale8(globaly2,r);
@@ -3454,7 +3454,7 @@ hline (long xr, long yp)
 #if (LIBVER_BUILDREV < 19960427L)
 	if (chainstat == 0)
 	{
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 		hlineasm4(xr-xl,0L,((long)getpalookup((long)mulscale18(klabs(r),globvis),globalshade)<<8),
 			mulscale8(globaly2*xl+globalx2,r)+globalypanning,mulscale8(globalx1*xl+globaly1,r)+globalxpanning,
 			ylookup[yp]+xl+frameplace+viewoffset);
@@ -3465,7 +3465,7 @@ hline (long xr, long yp)
 #endif
 		return;
 	}
-#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+#if (LIBVER_BUILDREV < 19960320L) // VERSIONS RESTORATION - From 95 rev.
 	x = mulscale8(globalx1*xl + globaly1,r) + globalxpanning;
 	y = mulscale8(globaly2*xl + globalx2,r) + globalypanning;
 	shade = ((long)getpalookup((long)mulscale18(klabs(r),globvis),globalshade)<<8);
@@ -3556,7 +3556,7 @@ transmaskvline (long x)
 		p = ylookup[y1v]+((x+viewoffset)>>2)+chainplace;
 	else
 #endif
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	p = ylookup[y1v]+x+frameplace+viewoffset;
 #else
 	p = ylookup[y1v]+x+frameoffset;
@@ -3615,7 +3615,7 @@ transmaskvline2 (long x)
 		i = ((x+viewoffset)>>2)+chainplace;
 	else
 #endif
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	i = x+frameplace+viewoffset;
 #else
 	i = x+frameoffset;
@@ -3703,7 +3703,7 @@ initengine()
 #else
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<24)-1)/i;
 #endif
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 	for(i=0;i<MAXVOXELS;i++)
 		for(j=0;j<MAXVOXMIPS;j++)
 		{
@@ -3714,7 +3714,7 @@ initengine()
 			voxlock[i][j] = 200;
 		}
 #endif
-#endif // 19960319L
+#endif // 19960320L
 
 	paletteloaded = 0;
 
@@ -4239,7 +4239,7 @@ loadpics(char *filename)
 				tilefileoffs[i] = offscount;
 				dasiz = (long)(tilesizx[i]*tilesizy[i]);
 				offscount += dasiz;
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 				artsize += dasiz;
 #else
 				artsize += ((dasiz+15)&0xfffffff0);
@@ -4262,7 +4262,7 @@ loadpics(char *filename)
 		cachesize -= 65536L;
 		if (cachesize < 65536) return(-1);
 	}
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	initcache(pic,cachesize);
 #else
 	initcache((FP_OFF(pic)+15)&0xfffffff0,(cachesize-((-FP_OFF(pic))&15))&0xfffffff0);
@@ -4281,7 +4281,7 @@ loadpics(char *filename)
 	artfil = -1;
 	artfilnum = -1;
 	artfilplc = 0L;
-#if (LIBVER_BUILDREV >= 19960301L) && (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV >= 19960301L) && (LIBVER_BUILDREV < 19960320L)
 	qloadkvx(0L,"voxel000.kvx");
 	qloadkvx(1L,"voxel001.kvx");
 #endif
@@ -4301,7 +4301,7 @@ qloadkvx(long voxindex, char *filename)
 #endif
 	char *ptr;
 
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	if ((fil = open(filename,O_BINARY|O_RDWR,S_IREAD)) == -1) return;
 	allocache(&ptr,filelength(fil),&permanentlock);
 #else
@@ -4317,7 +4317,7 @@ qloadkvx(long voxindex, char *filename)
 
 	for(i=0;i<MAXVOXMIPS;i++)
 	{
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 		read(fil,&voxsiz[voxindex][i],4);
 		read(fil,ptr,voxsiz[voxindex][i]);
 		voxoff[voxindex][i] = (long)ptr;
@@ -4344,9 +4344,9 @@ qloadkvx(long voxindex, char *filename)
 		if (lengcnt >= lengtot-768) break;
 #endif
 #endif // 19960427L
-#endif // 19960319L
+#endif // 19960320L
 	}
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	close(fil);
 #else
 	kclose(fil);
@@ -4612,7 +4612,7 @@ inside (long x, long y, short sectnum)
 {
 	walltype *wal;
 	long i, x1, y1, x2, y2;
-#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION: From 95 rev.
+#if (LIBVER_BUILDREV < 19960320L) // VERSIONS RESTORATION: From 95 rev.
 	char cnt;
 #elif (LIBVER_BUILDREV < 19960427L)
 	long cnt;
@@ -4631,7 +4631,7 @@ inside (long x, long y, short sectnum)
 		if ((y1^y2) < 0)
 		{
 			x1 = wal->x-x; x2 = wall[wal->point2].x-x;
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 			if ((x1^x2) < 0)
 				cnt ^= (x1*y2<x2*y1)^(y1<y2);
 			else if (x1 >= 0)
@@ -4647,7 +4647,7 @@ inside (long x, long y, short sectnum)
 		}
 		wal++; i--;
 	} while (i);
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	return(cnt);
 #elif (LIBVER_BUILDREV < 19960427L)
 	return(cnt<0);
@@ -4867,7 +4867,7 @@ drawmasks()
 							j -= 256;
 							if ((k<0) == (j>k)) break;
 						}
-#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION: HACK for adjusting code size
+#if (LIBVER_BUILDREV < 19960320L) // VERSIONS RESTORATION: HACK for adjusting code size
 #pragma aux noppragma =\
 	"nop",\
 
@@ -5144,7 +5144,7 @@ drawsprite (long snum)
 	yp = spritesy[snum];
 	tilenum = tspr->picnum;
 	spritenum = tspr->owner;
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 	cstat = tspr->cstat;
 
 	if ((cstat&48) != 48)
@@ -5157,7 +5157,7 @@ drawsprite (long snum)
 	if ((tspr->xrepeat <= 0) || (tspr->yrepeat <= 0)) return;
 
 	sectnum = tspr->sectnum; sec = &sector[sectnum];
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	cstat = tspr->cstat;
 #endif
 	globalpal = tspr->pal;
@@ -5966,7 +5966,7 @@ drawsprite (long snum)
 			if (x == rx) return;
 		}
 
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 		if ((tilenum<0) || (tilenum>=2)) tilenum = 0;
 #elif (LIBVER_BUILDREV < 19960427L)
 		if (voxsiz[tilenum][0] == 0) return;
@@ -6179,7 +6179,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 	yoff = ((klabs(gxinc)+klabs(gyinc))>>1);
 	longptr = (long *)davoxptr;
 	xyvoxoffs = ((daxsiz+1)<<2);
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 	zx = frameplace+viewoffset;
 #endif
 
@@ -6363,7 +6363,7 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 					if (z2 > dadmost[lx]) z2 = dadmost[lx];
 					z2 -= z1; if (z2 <= 0) continue;
 
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 					drawslab(rx,yplc,z2,yinc,(long)&voxptr[3],ylookup[z1]+lx+zx);
 #else
 					drawslab(rx,yplc,z2,yinc,(long)&voxptr[3],ylookup[z1]+lx+frameoffset);
@@ -6487,7 +6487,7 @@ ceilspritehline (long x2, long y)
 	}
 	else
 	{
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 		p = ylookup[y]+x1+frameplace+viewoffset;
 #else
 		p = ylookup[y]+x1+frameoffset;
@@ -8898,7 +8898,7 @@ dosetaspect()
 		oxyaspect = xyaspect;
 #endif
 		j = xyaspect*320;
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 		horizlookup2[horizycent-1] = divscale28(131072,j);
 #else
 		horizlookup2[horizycent-1] = divscale26(131072,j);
@@ -8911,7 +8911,7 @@ dosetaspect()
 			if (i != (horizycent-1))
 			{
 				horizlookup[i] = divscale28(1,i-(horizycent-1));
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 				horizlookup2[i] = divscale16(klabs(horizlookup[i]),j);
 #else
 				horizlookup2[i] = divscale14(klabs(horizlookup[i]),j);
@@ -10382,7 +10382,7 @@ fillpolygon(long npoints)
 			}
 			x1 = ptr[day1]; ptr[day1] = ptr[z];
 			x2 = ptr2[day2]-1; ptr2[day2] = ptr2[z];
-#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+#if (LIBVER_BUILDREV < 19960320L) // VERSIONS RESTORATION - From 95 rev.
 			if (x1 <= x2)
 			{
 					//maphline
@@ -10394,7 +10394,7 @@ fillpolygon(long npoints)
 #endif
 			if (globalpolytype < 1)
 			{
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 					//maphline
 				ox = x2+1-(xdim>>1);
 				bx = ox*asm1 + globalposx;
@@ -10406,7 +10406,7 @@ fillpolygon(long npoints)
 				{
 					ox = asm1; asm1 <<= 2;
 					oy = asm2; asm2 <<= 2;
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 					r = min(x2+1,x1+4); p = ylookup[y]+chainplace;
 					while (x1 < r)
 					{
@@ -10434,7 +10434,7 @@ fillpolygon(long npoints)
 				else
 				{
 #endif // 19960427L
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 				p = ylookup[y]+x1+frameplace;
 #else
 				p = ylookup[y]+x2+frameplace;
@@ -10446,7 +10446,7 @@ fillpolygon(long npoints)
 			}
 			else
 			{
-#if (LIBVER_BUILDREV >= 19960319L)
+#if (LIBVER_BUILDREV >= 19960320L)
 					//maphline
 				ox = x1+1-(xdim>>1);
 				bx = ox*asm1 + globalposx;
@@ -10519,7 +10519,7 @@ fillpolygon(long npoints)
 				}
 #endif
 			}
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 			}
 #endif
 		}
@@ -10986,7 +10986,7 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 // in size, although it still differs from the original in differing ways.
 // So, let's just offer both options
 
-#if (LIBVER_BUILDREV >= 19960319L) && (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV >= 19960320L) && (LIBVER_BUILDREV < 19960427L)
 
 completemirror()
 {
@@ -11843,7 +11843,7 @@ grouscan (long dax1, long dax2, long sectnum, char dastat)
 			}
 			else
 #endif
-#if (LIBVER_BUILDREV < 19960319L)
+#if (LIBVER_BUILDREV < 19960320L)
 			slopevlin(ylookup[y2]+x+frameplace+viewoffset,krecipasm(asm3>>3),(long)nptr2,y2-y1+1,globalx1,globaly1);
 #else
 			slopevlin(ylookup[y2]+x+frameoffset,krecipasm(asm3>>3),(long)nptr2,y2-y1+1,globalx1,globaly1);

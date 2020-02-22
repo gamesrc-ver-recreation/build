@@ -1424,7 +1424,7 @@ static long dmval;
 	parm [esi][edi][ecx]\
 	modify exact [ecx esi edi]\
 
-#if (LIBVER_BUILDREV < 19960319L) // VERSIONS RESTORATION - From 95 rev.
+#if (LIBVER_BUILDREV < 19960317L) // VERSIONS RESTORATION - From 95 rev.
 
 #pragma aux copybufbyte =\
 	"test cl, 1",\
