@@ -66,17 +66,19 @@ typedef struct
 	short gametype;              //gametype: 1-serial,2-modem,3-net
 	short filler;
 	char buffer[MAXPACKETSIZE];
+#if (LIBVER_BUILDREV >= 19960427L)
 	long longcalladdress;
+#endif
 } gcomtype;
 static gcomtype *gcom;
 
 static union REGS regs;
 
+#if (LIBVER_BUILDREV >= 19960427L)
 #pragma aux longcall =\
 	"call eax",\
 	parm [eax]\
 
-#if (LIBVER_BUILDREV >= 19960427L)
 callcommit()
 {
 	if (gcom->intnum&0xff00)
