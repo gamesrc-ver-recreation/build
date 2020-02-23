@@ -1,5 +1,5 @@
 [1] DN3D13B (BUILD.EXE) - A.OBJ+BUILD.OBJ+CACHE1D.OBJ+ENGINE.OBJ (Watcom 10.5)
-[2] 19960319 - CACHE1D.OBJ (Watcom 10.5)
+[2] 199603 - BUILD.OBJ(19960317)+CACHE1D.OBJ(19)+ENGINE.OBJ(20) (Watcom 10.5)
 [3] A.OBJ as presumably prepared on 19960501 (MASM 5.10 + Watcom Make)
 [4] MMULTI.OBJ as prepared on 19960904 (Watcom 10.5)
 [5] DN3D14 - Matching CACHE1D.OBJ object (Watcom 10.5)

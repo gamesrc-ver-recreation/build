@@ -11,15 +11,21 @@ if ERRORLEVEL 8 goto default
 if ERRORLEVEL 7 goto DN3D14G
 if ERRORLEVEL 6 goto DN3D14B
 if ERRORLEVEL 5 goto DN3D14
-if ERRORLEVEL 2 goto default
+if ERRORLEVEL 3 goto default
+if ERRORLEVEL 2 goto 199603
 if ERRORLEVEL 1 goto DN3D13B
 goto default
 
 :DN3D13B
 del 19960305\a.obj
 del 19960419\build.obj
-del 19960305\cache1d.obj
+del 19960317\cache1d.obj
 del 19960305\engine.obj
+goto end
+:199603
+del 19960317\build.obj
+del 19960319\cache1d.obj
+del 19960320\engine.obj
 goto end
 :DN3D14
 del 19960724\cache1d.obj

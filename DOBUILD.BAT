@@ -16,7 +16,7 @@ if ERRORLEVEL 6 goto DN3D14B
 if ERRORLEVEL 5 goto DN3D14
 if ERRORLEVEL 4 goto 19960904
 if ERRORLEVEL 3 goto 19960501
-if ERRORLEVEL 2 goto 19960319
+if ERRORLEVEL 2 goto 199603
 if ERRORLEVEL 1 goto DN3D13B
 
 :DN3D13B
@@ -24,12 +24,16 @@ call bldhlpr a.obj 19960305
 if ERRORLEVEL 1 goto end
 call bldhlpr build.obj 19960419
 if ERRORLEVEL 1 goto end
-call bldhlpr cache1d.obj 19960305
+call bldhlpr cache1d.obj 19960317
 if ERRORLEVEL 1 goto end
 call bldhlpr engine.obj 19960305
 goto end
-:19960319
+:199603
+call bldhlpr build.obj 19960317
+if ERRORLEVEL 1 goto end
 call bldhlpr cache1d.obj 19960319
+if ERRORLEVEL 1 goto end
+call bldhlpr engine.obj 19960320
 goto end
 :19960501
 call bldhlpr a.obj 19960501
