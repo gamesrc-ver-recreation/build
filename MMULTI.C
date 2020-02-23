@@ -1,6 +1,7 @@
 // "Build Engine & Tools" Copyright (c) 1993-1997 Ken Silverman
 // Ken Silverman's official web site: "http://www.advsys.net/ken"
 // See the included license file "BUILDLIC.TXT" for license info.
+// This file has been modified from Ken Silverman's original release
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +20,10 @@
 
 #define updatecrc16(crc,dat) crc = (((crc<<8)&65535)^crctable[((((unsigned short)crc)>>8)&65535)^dat])
 
+#if (LIBVER_BUILDREV < 19960427L)
+static char incnt[MAXPLAYERS], outcntplc[MAXPLAYERS], outcntend[MAXPLAYERS];
+static char errorstate[MAXPLAYERS];
+#else
 static long incnt[MAXPLAYERS], outcntplc[MAXPLAYERS], outcntend[MAXPLAYERS];
 static char errorgotnum[MAXPLAYERS];
 static char errorfixnum[MAXPLAYERS];
@@ -26,14 +31,17 @@ static char errorresendnum[MAXPLAYERS];
 #if (PRINTERRORS)
 	static char lasterrorgotnum[MAXPLAYERS];
 #endif
+#endif
 
 long crctable[256];
 
 static char lastpacket[576], inlastpacket = 0;
 static short lastpacketfrom, lastpacketleng;
 
+#if (LIBVER_BUILDREV >= 19960427L)
 extern long totalclock;  //MUST EXTERN 1 ANNOYING VARIABLE FROM GAME
 static long timeoutcount = 60, resendagaincount = 4, lastsendtime[MAXPLAYERS];
+#endif
 
 static short bakpacketptr[MAXPLAYERS][256], bakpacketlen[MAXPLAYERS][256];
 static char bakpacketbuf[BAKSIZ];
@@ -68,6 +76,7 @@ static union REGS regs;
 	"call eax",\
 	parm [eax]\
 
+#if (LIBVER_BUILDREV >= 19960427L)
 callcommit()
 {
 	if (gcom->intnum&0xff00)
@@ -75,6 +84,7 @@ callcommit()
 	else
 		int386(gcom->intnum,&regs,&regs);
 }
+#endif
 
 initmultiplayers(char damultioption, char dacomrateoption, char dapriority)
 {
@@ -84,9 +94,15 @@ initmultiplayers(char damultioption, char dacomrateoption, char dapriority)
 	initcrc();
 	for(i=0;i<MAXPLAYERS;i++)
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		incnt[i] = 0;
+		outcntplc[i] = 0;
+		outcntend[i] = 0;
+#else
 		incnt[i] = 0L;
 		outcntplc[i] = 0L;
 		outcntend[i] = 0L;
+#endif
 		bakpacketlen[i][255] = -1;
 	}
 
@@ -110,7 +126,9 @@ initmultiplayers(char damultioption, char dacomrateoption, char dapriority)
 	for(i=0;i<numplayers-1;i++) connectpoint2[i] = i+1;
 	connectpoint2[numplayers-1] = -1;
 
+#if (LIBVER_BUILDREV >= 19960427L)
 	for(i=0;i<numplayers;i++) lastsendtime[i] = totalclock;
+#endif
 }
 
 initcrc()
@@ -132,6 +150,7 @@ initcrc()
 	}
 }
 
+#if (LIBVER_BUILDREV >= 19960427L)
 setpackettimeout(long datimeoutcount, long daresendagaincount)
 {
 	long i;
@@ -140,6 +159,7 @@ setpackettimeout(long datimeoutcount, long daresendagaincount)
 	resendagaincount = daresendagaincount;
 	for(i=0;i<numplayers;i++) lastsendtime[i] = totalclock;
 }
+#endif
 
 getcrc(char *buffer, short bufleng)
 {
@@ -174,9 +194,11 @@ getoutputcirclesize()
 	return(0);
 }
 
+#if (LIBVER_BUILDREV >= 19960427L)
 setsocket(short newsocket)
 {
 }
+#endif
 
 sendpacket(long other, char *bufptr, long messleng)
 {
@@ -185,6 +207,26 @@ sendpacket(long other, char *bufptr, long messleng)
 
 	if (numplayers < 2) return;
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (*bufptr == 250)
+	{
+		k = 0;
+		gcom->buffer[k++] = 255;
+		gcom->buffer[k++] = 252;
+		gcom->buffer[k++] = 0;
+		for (i = 0; i < messleng; i++)
+			gcom->buffer[k++] = bufptr[i];
+		dacrc = getcrc(gcom->buffer,k);
+		gcom->buffer[k++] = (dacrc&255);
+		gcom->buffer[k++] = (dacrc>>8);
+		gcom->other = other+1;
+		gcom->numbytes = k;
+		gcom->command = 1;
+		int386(gcom->intnum,&regs,&regs);
+		return;
+	}
+
+#endif
 	i = 0;
 	if (bakpacketlen[other][(outcntend[other]-1)&255] == messleng)
 	{
@@ -192,20 +234,34 @@ sendpacket(long other, char *bufptr, long messleng)
 		for(i=messleng-1;i>=0;i--)
 			if (bakpacketbuf[(i+j)&(BAKSIZ-1)] != bufptr[i]) break;
 	}
+#if (LIBVER_BUILDREV < 19960427L)
+	bakpacketlen[other][outcntend[other]] = messleng;
+#else
 	bakpacketlen[other][outcntend[other]&255] = messleng;
+#endif
 
 	if (i < 0)   //Point to last packet to save space on bakpacketbuf
+#if (LIBVER_BUILDREV < 19960427L)
+		bakpacketptr[other][outcntend[other]] = j;
+#else
 		bakpacketptr[other][outcntend[other]&255] = j;
+#endif
 	else
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		bakpacketptr[other][outcntend[other]] = bakpacketplc;
+#else
 		bakpacketptr[other][outcntend[other]&255] = bakpacketplc;
+#endif
 		for(i=0;i<messleng;i++)
 			bakpacketbuf[(bakpacketplc+i)&(BAKSIZ-1)] = bufptr[i];
 		bakpacketplc = ((bakpacketplc+messleng)&(BAKSIZ-1));
 	}
 	outcntend[other]++;
 
+#if (LIBVER_BUILDREV >= 19960427L)
 	lastsendtime[other] = totalclock;
+#endif
 	dosendpackets(other);
 }
 
@@ -224,15 +280,28 @@ dosendpackets(long other)
 	}
 #endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (((outcntplc[other]+1)&255) == outcntend[other])
+#else
 	if (outcntplc[other]+1 == outcntend[other])
+#endif
 	{     //Send 1 sub-packet
 		k = 0;
+#if (LIBVER_BUILDREV < 19960427L)
+		gcom->buffer[k++] = outcntplc[other];
+		gcom->buffer[k++] = errorstate[other];
+		gcom->buffer[k++] = incnt[other];
+
+		j = bakpacketptr[other][outcntplc[other]];
+		messleng = bakpacketlen[other][outcntplc[other]];
+#else
 		gcom->buffer[k++] = (outcntplc[other]&255);
 		gcom->buffer[k++] = (errorgotnum[other]&7)+((errorresendnum[other]&7)<<3);
 		gcom->buffer[k++] = (incnt[other]&255);
 
 		j = bakpacketptr[other][outcntplc[other]&255];
 		messleng = bakpacketlen[other][outcntplc[other]&255];
+#endif
 		for(i=0;i<messleng;i++)
 			gcom->buffer[k++] = bakpacketbuf[(i+j)&(BAKSIZ-1)];
 		outcntplc[other]++;
@@ -240,6 +309,24 @@ dosendpackets(long other)
 	else
 	{     //Send 2 sub-packets
 		k = 0;
+#if (LIBVER_BUILDREV < 19960427L)
+		gcom->buffer[k++] = outcntplc[other];
+		gcom->buffer[k++] = errorstate[other]|2;
+		gcom->buffer[k++] = incnt[other];
+
+			//First half-packet
+		j = bakpacketptr[other][outcntplc[other]];
+		messleng = bakpacketlen[other][outcntplc[other]];
+		gcom->buffer[k++] = (char)(messleng&255);
+		gcom->buffer[k++] = (char)(messleng>>8);
+		for(i=0;i<messleng;i++)
+			gcom->buffer[k++] = bakpacketbuf[(i+j)&(BAKSIZ-1)];
+		outcntplc[other]++;
+
+			//Second half-packet
+		j = bakpacketptr[other][outcntplc[other]];
+		messleng = bakpacketlen[other][outcntplc[other]];
+#else
 		gcom->buffer[k++] = (outcntplc[other]&255);
 		gcom->buffer[k++] = (errorgotnum[other]&7)+((errorresendnum[other]&7)<<3)+128;
 		gcom->buffer[k++] = (incnt[other]&255);
@@ -256,6 +343,7 @@ dosendpackets(long other)
 			//Second half-packet
 		j = bakpacketptr[other][outcntplc[other]&255];
 		messleng = bakpacketlen[other][outcntplc[other]&255];
+#endif
 		for(i=0;i<messleng;i++)
 			gcom->buffer[k++] = bakpacketbuf[(i+j)&(BAKSIZ-1)];
 		outcntplc[other]++;
@@ -279,16 +367,25 @@ dosendpackets(long other)
 	if (!(rand()&SIMULATEERRORS)) gcom->buffer[rand()%gcom->numbytes] = (rand()&255);
 	if (rand()&SIMULATEERRORS)
 #endif
+#if (LIBVER_BUILDREV < 19960427L)
+		{ gcom->command = 1; int386(gcom->intnum,&regs,&regs); }
+#else
 		{ gcom->command = 1; callcommit(); }
+#endif
 }
 
 short getpacket (short *other, char *bufptr)
 {
+#if (LIBVER_BUILDREV < 19960427L)
+	long i, messleng;
+#else
 	long i, j, messleng;
+#endif
 	unsigned short dacrc;
 
 	if (numplayers < 2) return(0);
 
+#if (LIBVER_BUILDREV >= 19960427L)
 	for(i=connecthead;i>=0;i=connectpoint2[i])
 		if (i != myconnectindex)
 		{
@@ -309,6 +406,7 @@ short getpacket (short *other, char *bufptr)
 			}
 		}
 
+#endif
 	if (inlastpacket != 0)
 	{
 			//2ND half of good double-packet
@@ -319,7 +417,11 @@ short getpacket (short *other, char *bufptr)
 	}
 
 	gcom->command = 2;
+#if (LIBVER_BUILDREV < 19960427L)
+	int386(gcom->intnum,&regs,&regs);
+#else
 	callcommit();
+#endif
 
 #if (SHOWGETPACKETS)
 	if (gcom->other != -1)
@@ -342,10 +444,25 @@ short getpacket (short *other, char *bufptr)
 #if (PRINTERRORS)
 		printf("\n%ld CRC",gcom->buffer[0]);
 #endif
+#if (LIBVER_BUILDREV < 19960427L)
+		errorstate[*other] = 1;
+#else
 		errorgotnum[*other] = errorfixnum[*other]+1;
+#endif
 		return(0);
 	}
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (gcom->buffer[1]&1)
+		outcntplc[*other] = gcom->buffer[2];
+
+	if (gcom->buffer[0] == 255 && gcom->buffer[1] == 252 && gcom->buffer[2] == 0)
+	{
+		messleng = gcom->numbytes-5;
+		memcpy(bufptr,&gcom->buffer[3],messleng);
+		return(messleng);
+	}
+#else
 	while ((errorfixnum[*other]&7) != ((gcom->buffer[1]>>3)&7))
 		errorfixnum[*other]++;
 
@@ -355,12 +472,21 @@ short getpacket (short *other, char *bufptr)
 		outcntplc[*other] = (outcntend[*other]&0xffffff00)+gcom->buffer[2];
 		if (outcntplc[*other] > outcntend[*other]) outcntplc[*other] -= 256;
 	}
+#endif
 
+#if (LIBVER_BUILDREV < 19960427L)
+	if (gcom->buffer[0] != incnt[*other])   //CNT check
+#else
 	if (gcom->buffer[0] != (incnt[*other]&255))   //CNT check
+#endif
 	{
 		if (((incnt[*other]-gcom->buffer[0])&255) > 32)
 		{
+#if (LIBVER_BUILDREV < 19960427L)
+			errorstate[*other] = 1;
+#else
 			errorgotnum[*other] = errorfixnum[*other]+1;
+#endif
 #if (PRINTERRORS)
 			printf("\n%ld CNT",gcom->buffer[0]);
 #endif
@@ -392,8 +518,14 @@ short getpacket (short *other, char *bufptr)
 		return(0);
 	}
 
+#if (LIBVER_BUILDREV < 19960427L)
+	errorstate[*other] = 0;
+
+	if ((gcom->buffer[1]&2) == 0)           //Single packet
+#else
 		//PACKET WAS GOOD!
 	if ((gcom->buffer[1]&128) == 0)           //Single packet
+#endif
 	{
 #if (PRINTERRORS)
 		printf("\n%ld û  ",gcom->buffer[0]);
@@ -425,18 +557,31 @@ short getpacket (short *other, char *bufptr)
 
 flushpackets()
 {
-	/*long i;
+	// VERSIONS RESTORATION - Conditionally re-enable code which got
+	// commented out at some point, possibly after modifications.
+#if (LIBVER_BUILDREV < 19960427L)
+	long i;
 
 	if (numplayers < 2) return;
 
 	do
 	{
 		gcom->command = 2;
+#if (LIBVER_BUILDREV < 19960427L)
+		int386(gcom->intnum,&regs,&regs);
+#else
 		callcommit();
+#endif
 	} while (gcom->other >= 0);
 
 	for(i=connecthead;i>=0;i=connectpoint2[i])
 	{
+#if (LIBVER_BUILDREV < 19960427L)
+		incnt[i] = 0;
+		outcntplc[i] = 0;
+		outcntend[i] = 0;
+		errorstate[i] = 0;
+#else
 		incnt[i] = 0L;
 		outcntplc[i] = 0L;
 		outcntend[i] = 0L;
@@ -444,7 +589,9 @@ flushpackets()
 		errorfixnum[i] = 0;
 		errorresendnum[i] = 0;
 		lastsendtime[i] = totalclock;
-	}*/
+#endif
+	}
+#endif
 }
 
 genericmultifunction(long other, char *bufptr, long messleng, long command)
@@ -455,5 +602,9 @@ genericmultifunction(long other, char *bufptr, long messleng, long command)
 	gcom->numbytes = min(messleng,MAXPACKETSIZE);
 	copybuf(bufptr,gcom->buffer,(gcom->numbytes+3)>>2);
 	gcom->other = other+1;
+#if (LIBVER_BUILDREV < 19960427L)
+	int386(gcom->intnum,&regs,&regs);
+#else
 	callcommit();
+#endif
 }
