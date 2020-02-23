@@ -6240,14 +6240,10 @@ drawvox(long dasprx, long daspry, long dasprz, long dasprang,
 				 else { dagxinc = -gxinc; dagyinc = -mulscale16(gyinc,viewingrangerecip); }
 #endif
 
-#if (LIBVER_BUILDREV < 19960427L)
 			//Fix for non 90 degree viewing ranges
-#if (LIBVER_BUILDREV < 19961012L)
-		nxoff = x2-x1;
-#else
+#if (LIBVER_BUILDREV >= 19961012L)
 		nxoff = mulscale16(x2-x1,viewingrangerecip);
 		x1 = mulscale16(x1,viewingrangerecip);
-#endif
 #endif
 
 		ggxstart = gxstart+ggyinc[ys];
