@@ -19,11 +19,11 @@ common_opt=/4r /s /or -DLIBVER_BUILDREV=$(BUILDREV)
 
 game.exe : game.obj engine.obj cache1d.obj multi.obj a.obj kdmeng.obj k.obj
 	cd $(BUILDREV)
-	wlink f game f engine f cache1d f multi f a f kdmeng f k
+	wlink f game f engine f cache1d f multi f a f kdmeng f k option map option statics
 	cd ..
 build.exe : build.obj engine.obj cache1d.obj a.obj bstub.obj
 	cd $(BUILDREV)
-	wlink f build f engine f cache1d f a f bstub
+	wlink f build f engine f cache1d f a f bstub option map option statics
 	cd ..
 
 game.obj : game.c build.h names.h pragmas.h
