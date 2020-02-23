@@ -439,7 +439,11 @@ short getpacket (short *other, char *bufptr)
 
 	dacrc = ((unsigned short)gcom->buffer[messleng-2]);
 	dacrc += (((unsigned short)gcom->buffer[messleng-1])<<8);
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - HACK
+	if (dacrc != getcrc(gcom->buffer,(short)(i=messleng-2)))        //CRC check
+#else
 	if (dacrc != getcrc(gcom->buffer,messleng-2))        //CRC check
+#endif
 	{
 #if (PRINTERRORS)
 		printf("\n%ld CRC",gcom->buffer[0]);
