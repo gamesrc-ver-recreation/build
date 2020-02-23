@@ -551,7 +551,11 @@ short getpacket (short *other, char *bufptr)
 	memcpy(bufptr,&gcom->buffer[5],messleng);
 	memcpy(lastpacket,&gcom->buffer[messleng+5],lastpacketleng);
 
+#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Unsure if hack or original
+	incnt[*other] = incnt[*other] + 2;
+#else
 	incnt[*other] += 2;
+#endif
 	return(messleng);
 }
 
