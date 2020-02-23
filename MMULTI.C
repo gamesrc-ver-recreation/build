@@ -117,7 +117,11 @@ initmultiplayers(char damultioption, char dacomrateoption, char dapriority)
 		connecthead = 0; connectpoint2[0] = -1;
 		return;
 	}
+#if (LIBVER_BUILDREV < 19960427L)
+	gcom = (gcomtype *)atoi(_argv[i+1]);
+#else
 	gcom = (gcomtype *)atol(_argv[i+1]);
+#endif
 
 	numplayers = gcom->numplayers;
 	myconnectindex = gcom->myconnectindex-1;
@@ -370,7 +374,7 @@ dosendpackets(long other)
 	if (rand()&SIMULATEERRORS)
 #endif
 #if (LIBVER_BUILDREV < 19960427L)
-		{ gcom->command = 1; int386(gcom->intnum,&regs,&regs); }
+		{ gcom->command = 1; int386(gcom->intnum,&regs,&regs); errorstate[other] = 0; }
 #else
 		{ gcom->command = 1; callcommit(); }
 #endif
