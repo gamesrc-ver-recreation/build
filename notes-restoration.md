@@ -153,6 +153,19 @@ moving at some point from BUILD.OBJ to ENGINE.OBJ, as mentioned
 in the BUILD Revision History entry for 9/6/96 within BUILD2.TXT.
 (Just setfirstwall was mentioned; It depends on loopnumofsector.)
 
+On another note, while working on the engine of Duke3D v1.3d's Build Editor,
+then in a few cases in which varying choices of some properties in a certain
+function were given (say, choosing a permutation of the local variables),
+a separate program was used in order to automatically try such choices,
+often one-by-one. Generally, not all possibilities were covered,
+but in at least a few ocassions, it was sufficient.
+
+Sometimes, a makefile was used. Otherwise, an alternative,
+like a call to xargs with multiple jobs, was rather used. The order
+in which such choices (e.g., permutations) were processed wasn't
+always linear; In fact, it got semi-randomized for the last
+tests done while working on the aforementioned engine revision.
+
 How was the makefile (and a bit more) modified from the original
 ----------------------------------------------------------------
 
