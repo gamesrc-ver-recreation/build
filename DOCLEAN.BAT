@@ -1,19 +1,14 @@
 @echo off
-cls
-type BATCHLST.TXT
-choice /C:123456789AaBbCcDd0 /N Please select what to clean:
-echo.
+set MSG=Please select what to clean:
+call REVSEL.BAT
 
-if ERRORLEVEL 18 goto end
-if ERRORLEVEL 10 goto default
-if ERRORLEVEL 9 goto DN3D15
-if ERRORLEVEL 8 goto default
-if ERRORLEVEL 7 goto DN3D14G
-if ERRORLEVEL 6 goto DN3D14B
-if ERRORLEVEL 5 goto DN3D14
-if ERRORLEVEL 3 goto default
-if ERRORLEVEL 2 goto 199603
-if ERRORLEVEL 1 goto DN3D13B
+if "%CHOICE%" == "" goto end
+if "%CHOICE%" == "DN3D13B" goto DN3D13B
+if "%CHOICE%" == "199603" goto 199603
+if "%CHOICE%" == "DN3D14" goto DN3D14
+if "%CHOICE%" == "DN3D14B" goto DN3D14B
+if "%CHOICE%" == "DN3D14G" goto DN3D14G
+if "%CHOICE%" == "DN3D15" goto DN3D15
 goto default
 
 :DN3D13B
@@ -43,15 +38,7 @@ del 19961207\*.*
 goto end
 
 :default
-if ERRORLEVEL 2 set DIR=19960319
-if ERRORLEVEL 3 set DIR=19960501
-if ERRORLEVEL 4 set DIR=19960904
-if ERRORLEVEL 8 set DIR=19961012
-if ERRORLEVEL 10 set DIR=19961213
-if ERRORLEVEL 12 set DIR=19970212
-if ERRORLEVEL 14 set DIR=19970522
-if ERRORLEVEL 16 set DIR=20000614
-
-del %DIR%\*.*
+del %CHOICE%\*.*
 
 :end
+set CHOICE=

@@ -1,23 +1,10 @@
 @echo off
-cls
-type BATCHLST.TXT
-choice /C:123456789AaBbCcDd0 /N Please select what to build:
-echo.
+set MSG=Please select what to build:
+call REVSEL.BAT
 
-if ERRORLEVEL 18 goto end
-if ERRORLEVEL 16 goto 20000614
-if ERRORLEVEL 14 goto 19970522
-if ERRORLEVEL 12 goto 19970212
-if ERRORLEVEL 10 goto 19961213
-if ERRORLEVEL 9 goto DN3D15
-if ERRORLEVEL 8 goto 19961012
-if ERRORLEVEL 7 goto DN3D14G
-if ERRORLEVEL 6 goto DN3D14B
-if ERRORLEVEL 5 goto DN3D14
-if ERRORLEVEL 4 goto 19960904
-if ERRORLEVEL 3 goto 19960501
-if ERRORLEVEL 2 goto 199603
-if ERRORLEVEL 1 goto DN3D13B
+if "%CHOICE%" == "" goto end
+REM bldhlpr is responsible for resetting %CHOICE%
+goto %CHOICE%
 
 :DN3D13B
 call bldhlpr a.obj 19960305

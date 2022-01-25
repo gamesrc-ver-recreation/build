@@ -1,6 +1,8 @@
 @echo off
 if "%1" == "" goto error
 if "%2" == "" goto error
+REM Reset var here so it won't impact compiler output
+set CHOICE=
 mkdir %2
 wmake %1 BUILDREV=%2
 goto end
