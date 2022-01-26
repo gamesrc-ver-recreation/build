@@ -1,0 +1,31 @@
+DN3D13B
+DN3D13B (BUILD.EXE) - A+BUILD+CACHE1D+ENGINE OBJs (MASM 5.10 + Watcom 10.5)
+199603
+199603 - BUILD.OBJ(19960317)+CACHE1D.OBJ(19)+ENGINE.OBJ(20) (Watcom 10.5)
+19960501
+A.OBJ as presumably prepared on 19960501 (MASM 5.10 + Watcom Make)
+19960904
+MMULTI.OBJ as prepared on 19960904 (Watcom 10.5)
+DN3D14
+DN3D14 - Matching CACHE1D.OBJ object (Watcom 10.5)
+DN3D14B
+DN3D14B (BUILD.EXE) - Matching BUILD.OBJ+ENGINE.OBJ objects (Watcom 10.5)
+DN3D14G
+DN3D14G (DUKE3D.EXE/GAME.EXE) - Matching ENGINE.OBJ object (Watcom 10.5)
+19961012
+19961012 - BUILD.OBJ and ENGINE.OBJ (Watcom 10.5)
+DN3D15
+DN3D15 (Game) - Matching CACHE1D.OBJ and ENGINE.OBJ objects (Watcom 10.5)
+19961213
+19961213 - BUILD.OBJ (Watcom 10.5)
+19970212
+19970212 - ENGINE.OBJ (Watcom 10.6)
+19970522
+19970522 - ENGINE.OBJ (Watcom 10.6)
+20000614
+20000614 - All of Ken-Build as prepared in June 2000 (Watcom 11.0)
+20021107
+20021107 - Ken-Build re-upload with minor patches (Watcom 11.0c beta*)
+
+* When building Ken-Build as uploaded in 2002, you should
+use binnt\wcc386.exe, rather than binw\wcc386.exe.
