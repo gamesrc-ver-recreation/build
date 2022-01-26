@@ -81,6 +81,7 @@ set CHOICE=19970522
 goto end
 :20000614
 set CHOICE=20000614
+goto end
 :20021107
 set CHOICE=20021107
 goto end
