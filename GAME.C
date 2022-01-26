@@ -5004,12 +5004,12 @@ uninitkeys()
 
 void __interrupt __far keyhandler()
 {
-#if (LIBVER_BUILDREV < 20021106L)
+#if (LIBVER_BUILDREV < 20021107L)
 	koutp(0x20,0x20);
 #endif
 	oldreadch = readch; readch = kinp(0x60);
 	keytemp = kinp(0x61); koutp(0x61,keytemp|128); koutp(0x61,keytemp&127);
-#if (LIBVER_BUILDREV >= 20021106L)
+#if (LIBVER_BUILDREV >= 20021107L)
 	koutp(0x20,0x20);
 #endif
 	if ((readch|1) == 0xe1) { extended = 128; return; }
