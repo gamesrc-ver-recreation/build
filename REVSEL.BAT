@@ -15,15 +15,20 @@ echo [A] 19961213 - BUILD.OBJ (Watcom 10.5)
 echo [B] 19970212 - ENGINE.OBJ (Watcom 10.6)
 echo [C] 19970522 - ENGINE.OBJ (Watcom 10.6)
 echo [D] 20000614 - All of Ken-Build as prepared in June 2000 (Watcom 11.0)
+echo [E] 20021107 - Ken-Build re-upload with minor patches (Watcom 11.0c beta*)
 echo.
 echo [0] Cancel and quit
 echo.
+echo * When building Ken-Build as uploaded in 2002, you should
+echo use binnt\wcc386.exe, rather than binw\wcc386.exe.
+echo.
 echo %MSG%
 set MSG=
-choice /C:123456789AaBbCcDd0 /N
+choice /C:123456789AaBbCcDdEe0 /N
 echo.
 
-if ERRORLEVEL 18 goto end
+if ERRORLEVEL 20 goto end
+if ERRORLEVEL 18 goto 20021107
 if ERRORLEVEL 16 goto 20000614
 if ERRORLEVEL 14 goto 19970522
 if ERRORLEVEL 12 goto 19970212
@@ -76,6 +81,8 @@ set CHOICE=19970522
 goto end
 :20000614
 set CHOICE=20000614
+:20021107
+set CHOICE=20021107
 goto end
 
 :error

@@ -1,5 +1,7 @@
 # A bit of a hack
-!ifeq BUILDREV 20000614
+!ifeq BUILDREV 20021107
+IS_LATE=1
+!else ifeq BUILDREV 20000614
 IS_LATE=1
 !else ifeq BUILDREV 19971004
 IS_LATE=1
@@ -19,7 +21,11 @@ common_opt=/4r /s /or -DLIBVER_BUILDREV=$(BUILDREV)
 
 game.exe : game.obj engine.obj cache1d.obj multi.obj a.obj kdmeng.obj k.obj
 	cd $(BUILDREV)
+!ifeq BUILDREV 20021107
+	wlink f game f engine f cache1d f multi f a f kdmeng f k option map option statics system dos4g
+!else
 	wlink f game f engine f cache1d f multi f a f kdmeng f k option map option statics
+!endif
 	cd ..
 build.exe : build.obj engine.obj cache1d.obj a.obj bstub.obj
 	cd $(BUILDREV)

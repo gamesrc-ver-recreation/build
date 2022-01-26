@@ -27,7 +27,7 @@ for Duke3D 1.3d.
 SW 1.0-1.2, as well as the Build Editors for Duke3D 1.4 and SW 1.2
 (Duke3D 1.4's editor was reused for 1.5).
 - MMULTI.OBJ as prepared on 19960904 and used in Duke3D 1.4-1.5 and SW 1.0-1.2
-(*presumably* also in 2DRAW, as available from Ken's site and prepared on 99).
+(*presumably* also in 2DRAW, as available from Ken's site and prepared in 99).
 - CACHE1D.OBJ as present in Duke3D 1.4 and its revision of the Build editor.
 - BUILD.OBJ and ENGINE.OBJ as present in Duke3D 1.4-1.5's Build Editor
 (ENGINE.OBJ has differences from the revision in the Duke3D 1.4 game EXE).
@@ -40,8 +40,8 @@ prepared on 19961112, while the former was *maybe* prepared on 19961207.
 - ENGINE.OBJ as used in SW 1.0, possibly prepared on 19970212.
 - ENGINE.OBJ as used in SW 1.1-1.2 and 1.2's Build Editor,
 possibly prepared on 19970522.
-- The Ken-Build GAME.EXE file as originally prepared on 2000
-(not to be confused with an updated EXE from 2002).
+- The Ken-Build GAME.EXE file as originally prepared in 2000.
+- An updated Ken-Build GAME.EXE file, uploaded in 2002.
 
 List of releases by LIB/directory file names
 --------------------------------------------
@@ -81,9 +81,9 @@ test game. Usually, this revision value is based on some *guessed* date
 have to be the case.
 
 An exception is made for the A.ASM source, since there are two variants
-of it. One of them is the file as released on 2000, intended to be built
-with Watcom Assembler 11.0, at least for recreating GAME.EXE as originally
-prepared on 2000. The other A.ASM file is intended to be built with
+of it. One of them is the file as released in 2000, intended to be built
+with Watcom Assembler, in order to recreate GAME.EXE as uploaded in
+2000 or 2002. The other A.ASM file is intended to be built with
 Macro Assembler 5.10, and should match earlier A.OBJ files,
 like the one used in Duke3D 1.4-1.5 and SW 1.0-1.2.
 
@@ -153,6 +153,9 @@ moving at some point from BUILD.OBJ to ENGINE.OBJ, as mentioned
 in the BUILD Revision History entry for 9/6/96 within BUILD2.TXT.
 (Just setfirstwall was mentioned; It depends on loopnumofsector.)
 
+At some later point, it was Ken who figured out how to perfectly
+recreate GAME.EXE as uploaded in 2002.
+
 On another note, while working on the engine of Duke3D v1.3d's Build Editor,
 then in a few cases in which varying choices of some properties in a certain
 function were given (say, choosing a permutation of the local variables),
@@ -182,6 +185,9 @@ revisions: MASM 5.10 (and no other version).
 - For the 19970212 (SW 1.0) and 19970522 (SW 1.1-1.2) revisions
 of ENGINE.OBJ: Watcom C 10.6 (and only this version).
 - For Ken-Build as released on 20000614: Watcom C 11.0. (Not 11.0a/b/c, etc.)
+- For the 20021107 revision of Ken-Build: Watcom C 11.0c beta Windows binaries.
+Not any other version in the 11.0 series, and also not binw\wcc386.exe.
+It's binnt\wcc386.exe which should rather be used.
 - For anything else: Watcom C 10.5.
 
 Notes before trying to build anything:
@@ -207,11 +213,11 @@ BUILD.OBJ, the 19960319 revision of CACHE1D.OBJ and the 19960213, 19961012,
 19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2) revisions of ENGINE.OBJ:
 D: for local files, c:\watcom\h for system headers.
 
-Building the LIB
-----------------
+Building a specific set of files
+--------------------------------
 
 1. Use DOBUILD.BAT, selecting the file(s) to create.
-2. If you're building Ken-Build, hopefully you should get exactly the
+2. If you're building Ken-Build, you should hopefully get exactly the
 original EXE. For all other choices, except for the 19960320 and earlier
 revisions of ENGINE.OBJ, hopefully you should get perfectly matching
 OBJ files, in terms of the code that gets added to EXEs later.

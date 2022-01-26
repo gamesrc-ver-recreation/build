@@ -61,5 +61,8 @@ goto end
 :20000614
 call bldhlpr game.exe 20000614
 goto end
+:20021107
+call bldhlpr game.exe 20021107
+goto end
 
 :end
