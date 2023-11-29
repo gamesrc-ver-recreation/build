@@ -24,7 +24,7 @@ echo use binnt\wcc386.exe, rather than binw\wcc386.exe.
 echo.
 echo %MSG%
 set MSG=
-choice /C:123456789AaBbCcDdEe0 /N
+choice /S /C:123456789AaBbCcDdEe0 /N
 echo.
 
 if ERRORLEVEL 20 goto end
