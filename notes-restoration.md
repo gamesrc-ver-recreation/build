@@ -23,15 +23,19 @@ with a few caveats for ENGINE.OBJ as used in the Build Editor for Duke3D 1.3d:
 
 - A.OBJ, BUILD.OBJ, CACHE1D.OBJ and ENGINE.OBJ as used in the Build Editor
 for Duke3D 1.3d.
-- A.OBJ as presumably prepared on 19960501, and used in Duke3D 1.4-1.5 and
-SW 1.0-1.2, as well as the Build Editors for Duke3D 1.4 and SW 1.2
-(Duke3D 1.4's editor was reused for 1.5).
-- MMULTI.OBJ as prepared on 19960904 and used in Duke3D 1.4-1.5 and SW 1.0-1.2
-(*presumably* also in 2DRAW, as available from Ken's site and prepared in 99).
+- A.OBJ as presumably prepared on 19960501, and used in Duke3D 1.4-1.5,
+SW 1.0-1.2 and Blood 0.91-1.21, as well as the Build Editors for Duke3D 1.4,
+SW 1.2 and Blood 1.0-1.21 (Duke3D 1.4's editor was reused for 1.5).
+- MMULTI.OBJ as prepared on 19960904 and used in Duke3D 1.4-1.5, SW 1.0-1.2
+and Blood 0.91-1.21 (*presumably* also in 2DRAW, as available from Ken's site
+and prepared in 99).
 - CACHE1D.OBJ as present in Duke3D 1.4 and its revision of the Build editor.
 - BUILD.OBJ and ENGINE.OBJ as present in Duke3D 1.4-1.5's Build Editor
 (ENGINE.OBJ has differences from the revision in the Duke3D 1.4 game EXE).
 - ENGINE.OBJ as present in Duke3D 1.4 (the game EXE).
+- A 19960925 revision of BUILD.OBJ used in the Build Editors for Blood 1.0-1.21.
+- ENGINE.OBJ (19961006) and CACHE1D.obj (19960925) used in Blood 0.91-1.21
+as well as the Build Editors for Blood 1.0-1.21.
 - A 19961012 revision of BUILD.OBJ and ENGINE.OBJ.
 - CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.5; The latter was possibly
 prepared on 19961112, while the former was *maybe* prepared on 19961207.
@@ -208,9 +212,10 @@ For reference, a list of such original paths in use is given here:
 - The 19961207 (Duke3D 1.5) revision of CACHE1D.OBJ and the 19960320 and
 19970212 (SW 1.0) revisions of ENGINE.OBJ: C:\C\CPROG\BUILD for
 local files, c:\watcom\h for system headers.
-- The 19960317, 19961012 and 19961213 (SW 1.2 Build Editor) revisions of
-BUILD.OBJ, the 19960319 revision of CACHE1D.OBJ and the 19960213, 19961012,
-19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2) revisions of ENGINE.OBJ:
+- The 19960317, 19961006 (Blood), 19961012 and 19961213 (SW 1.2 Build Editor)
+revisions of BUILD.OBJ, the 19960319 revision of CACHE1D.OBJ and the 19960213,
+19960925 (Blood), 19961012, 19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2)
+revisions of ENGINE.OBJ:
 D: for local files, c:\watcom\h for system headers.
 
 Building a specific set of files

@@ -213,7 +213,7 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 #else
 	cacnum++; if (cacnum > MAXCACHEOBJECTS) reportandexit("Too many objects in cache! (cacnum > MAXCACHEOBJECTS)");
 #endif
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960925L)
 	for(z=cacnum-1;z>bestz;z--)
 	{
 		CAC_HAND(z) = CAC_HAND(z-1);
@@ -227,7 +227,7 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	CAC_LOCK(bestz) = &zerochar;
 }
 
-#if (LIBVER_BUILDREV >= 19961012L)
+#if (LIBVER_BUILDREV >= 19960925L)
 suckcache (long *suckptr)
 {
 	long i;
