@@ -195,7 +195,7 @@ main(short int argc,char **argv)
 	strcpy(kensig,"BUILD by Ken Silverman");
 	initcrc();
 
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (changed sigs)
+#if (LIBVER_BUILDREV < 19960925L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (changed sigs)
 	if (setgamemode() < 0)
 #else
 	if (setgamemode(vidoption,xdim,ydim) < 0)
@@ -1907,7 +1907,7 @@ editinput()
 				if (searchstat != 3)
 				{
 					setfirstwall(searchsector,searchwall);
-#if (LIBVER_BUILDREV >= 19961012L)
+#if (LIBVER_BUILDREV >= 19960925L)
 					asksave = 1;
 #endif
 				}
@@ -2826,7 +2826,7 @@ overheadeditor()
 				if (linehighlight >= 0)
 				{
 					setfirstwall(sectorofwall(linehighlight),linehighlight);
-#if (LIBVER_BUILDREV >= 19961012L)
+#if (LIBVER_BUILDREV >= 19960925L)
 					asksave = 1;
 #endif
 					printmessage16("This wall now sector's first wall (sector[].wallptr)");
@@ -5218,7 +5218,7 @@ overheadeditor()
 
 	fixspritesectors();
 
-#if (LIBVER_BUILDREV < 19961012L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (changed sigs)
+#if (LIBVER_BUILDREV < 19960925L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (changed sigs)
 	if (setgamemode() < 0)
 #else
 	if (setgamemode(vidoption,xdim,ydim) < 0)
@@ -5709,7 +5709,7 @@ numloopsofsector(short sectnum)
 		if (wall[i].point2 < i) numloops++;
 	return(numloops);
 }
-#if (LIBVER_BUILDREV < 19961012L)
+#if (LIBVER_BUILDREV < 19960925L)
 
 /* VERSIONS RESTORATION - See BUILD2.TXT, 9/6/96 (moved functions).
 Note that at some point, possibly for the same revision, the
@@ -5790,7 +5790,7 @@ setfirstwall(short sectnum, short newfirstwall)
 	// VERSIONS RESTORATION (when it's a part of the editor code)
 	asksave = 1;
 }
-#endif // LIBVER_BUILDREV < 19961012L
+#endif // LIBVER_BUILDREV < 19960925L
 
 getnumber16(char namestart[80], short num, long maxnumber)
 {

@@ -39,6 +39,13 @@ goto end
 :DN3D14G
 call bldhlpr engine.obj 19960820
 goto end
+:BLOOD
+call bldhlpr build.obj 19960925
+if ERRORLEVEL 1 goto end
+call bldhlpr engine.obj 19961006
+if ERRORLEVEL 1 goto end
+call bldhlpr cache1d.obj 19960925
+goto end
 :19961012
 call bldhlpr build.obj 19961012
 if ERRORLEVEL 1 goto end
