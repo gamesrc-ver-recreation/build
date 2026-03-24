@@ -4,29 +4,27 @@
 ; This file has been modified from Ken Silverman's original release
 
 .386P
-.8087
 
-EXTRN _vince : near
-EXTRN _vplce : near
-
-EXTRN _ebpbak : dword
-EXTRN _espbak : dword
-
-EXTRN _fpuasm : dword
-EXTRN _bufplce : near
-EXTRN _palookupoffse : near
-
-EXTRN _ylookup : near
-EXTRN _globalx3 : dword
-EXTRN _globaly3 : dword
-
-EXTRN _pow2char : near
-EXTRN _pow2long : near
 EXTRN _asm1 : dword
 EXTRN _asm2 : dword
 EXTRN _asm3 : dword
 EXTRN _asm4 : dword
 EXTRN _reciptable : near
+EXTRN _fpuasm : dword
+EXTRN _globalx3 : dword
+EXTRN _globaly3 : dword
+EXTRN _ylookup : near
+
+EXTRN _vplce : near
+EXTRN _vince : near
+EXTRN _palookupoffse : near
+EXTRN _bufplce : near
+
+EXTRN _ebpbak : dword
+EXTRN _espbak : dword
+
+EXTRN _pow2char : near
+EXTRN _pow2long : near
 
 CODE SEGMENT PUBLIC USE32 'CODE'
 ASSUME cs:CODE
@@ -218,7 +216,7 @@ ENDIF
 skipthe2byte:
 IF LIBVER_BUILDREV LT 19960319
 	test ebp, ebp
-	jz endshorthline
+	jz skipthe4byte
 ENDIF
 
 	mov eax, esi
@@ -321,11 +319,11 @@ hoffs7: mov cl, byte ptr [eax+88888888h]
 	mov eax, edx
 IF LIBVER_BUILDREV LT 19960319
 pal7: mov bh, byte ptr [ecx+88888888h]
-skipthe4byte:
 	rol ebx, 16
 	mov dword ptr [edi], ebx
 	dec ebp
 	jnz beginhline64
+skipthe4byte:
 ELSE
 	sub ebp, 4
 	nop
@@ -363,12 +361,10 @@ pal8: mov bl, byte ptr [ecx+88888888h]
 	dec edi
 	dec ebp
 	jnz begshorthline
-ENDIF
 endshorthline:
+ENDIF
 	pop ebp
 	ret
-
-
 
 ALIGN 16
 PUBLIC setupvlineasm_
@@ -801,7 +797,6 @@ machvsh8: shl edx, 88h     ;16-sh
 	pop ebp
 	ret
 ENDIF ; LIBVER_BUILDREV
-
 
 ALIGN 16
 PUBLIC mvlineasm4_
