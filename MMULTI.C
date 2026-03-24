@@ -313,7 +313,7 @@ dosendpackets(long other)
 		k = 0;
 #if (LIBVER_BUILDREV < 19960427L)
 		gcom->buffer[k++] = outcntplc[other];
-		gcom->buffer[k++] = errorstate[other]|2;
+		gcom->buffer[k++] = (errorstate[other]|2);
 		gcom->buffer[k++] = incnt[other];
 
 			//First half-packet
@@ -370,7 +370,9 @@ dosendpackets(long other)
 	if (rand()&SIMULATEERRORS)
 #endif
 #if (LIBVER_BUILDREV < 19960427L)
-		{ gcom->command = 1; int386(gcom->intnum,&regs,&regs); errorstate[other] = 0; }
+		{ gcom->command = 1; int386(gcom->intnum,&regs,&regs); }
+
+	errorstate[other] = 0;
 #else
 		{ gcom->command = 1; callcommit(); }
 #endif
@@ -455,9 +457,7 @@ short getpacket (short *other, char *bufptr)
 	}
 
 #if (LIBVER_BUILDREV < 19960427L)
-	if (gcom->buffer[1]&1)
-		outcntplc[*other] = gcom->buffer[2];
-
+	if (gcom->buffer[1]&1) outcntplc[*other] = gcom->buffer[2];
 	if (gcom->buffer[0] == 255 && gcom->buffer[1] == 252 && gcom->buffer[2] == 0)
 	{
 		messleng = gcom->numbytes-5;
@@ -520,12 +520,11 @@ short getpacket (short *other, char *bufptr)
 		return(0);
 	}
 
+		//PACKET WAS GOOD!
 #if (LIBVER_BUILDREV < 19960427L)
 	errorstate[*other] = 0;
-
 	if ((gcom->buffer[1]&2) == 0)           //Single packet
 #else
-		//PACKET WAS GOOD!
 	if ((gcom->buffer[1]&128) == 0)           //Single packet
 #endif
 	{
