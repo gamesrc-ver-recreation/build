@@ -441,11 +441,7 @@ short getpacket (short *other, char *bufptr)
 
 	dacrc = ((unsigned short)gcom->buffer[messleng-2]);
 	dacrc += (((unsigned short)gcom->buffer[messleng-1])<<8);
-#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - HACK
-	if (dacrc != getcrc(gcom->buffer,(short)(i=messleng-2)))        //CRC check
-#else
 	if (dacrc != getcrc(gcom->buffer,messleng-2))        //CRC check
-#endif
 	{
 #if (PRINTERRORS)
 		printf("\n%ld CRC",gcom->buffer[0]);
@@ -557,8 +553,8 @@ short getpacket (short *other, char *bufptr)
 	memcpy(bufptr,&gcom->buffer[5],messleng);
 	memcpy(lastpacket,&gcom->buffer[messleng+5],lastpacketleng);
 
-#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Unsure if hack or original
-	incnt[*other] = incnt[*other] + 2;
+#if (LIBVER_BUILDREV < 19960626L)
+	incnt[*other] = ((incnt[*other]+2)&255);
 #else
 	incnt[*other] += 2;
 #endif
