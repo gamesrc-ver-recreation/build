@@ -35,7 +35,7 @@
 //           After calling uninitcache, it is still ok to call allocache
 //           without first calling initcache.
 
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 #define MAXCACHEOBJECTS 4096
 #elif (LIBVER_BUILDREV < 20000614L)
 #define MAXCACHEOBJECTS 6144
@@ -43,7 +43,7 @@
 #define MAXCACHEOBJECTS 9216
 #endif
 
-#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Convenience macros
+#if (LIBVER_BUILDREV < 19960724L) // VERSIONS RESTORATION - Convenience macros
 #define CAC_HAND(i) handptr[i]
 #define CAC_LENG(i) cacleng[i]
 #define CAC_LOCK(i) lockptr[i]
@@ -52,13 +52,13 @@
 #define CAC_LENG(i) cac[i].leng
 #define CAC_LOCK(i) cac[i].lock
 #endif
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 long cachecount = 0;
 static char zerochar = 0;
 static long cachestart = 0, cachesize = 0, cacnum = 0, agecount = 0;
-static long *handptr[MAXCACHEOBJECTS];
 static long cacleng[MAXCACHEOBJECTS];
 static char *lockptr[MAXCACHEOBJECTS];
+static long *handptr[MAXCACHEOBJECTS];
 #else
 static long cachesize = 0;
 long cachecount = 0;
@@ -76,7 +76,7 @@ static long lockrecip[200];
 
 initcache(long dacachestart, long dacachesize)
 {
-#if (LIBVER_BUILDREV >= 19960427L)
+#if (LIBVER_BUILDREV >= 19960724L)
 	long i;
 
 	for(i=1;i<200;i++) lockrecip[i] = (1<<28)/(200-i);
@@ -115,7 +115,7 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	}
 
 		//Find best place
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	bestval = 0x7fffffff; o1 = 0;
 	for(z=0;z<cacnum;z++)
 #else
@@ -123,24 +123,25 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	for(z=cacnum-1;z>=0;z--)
 #endif
 	{
-#if (LIBVER_BUILDREV < 19960427L)
-		o2 = o1+newbytes; if (o2 > cachesize) break;
+#if (LIBVER_BUILDREV < 19960724L)
+		o2 = o1+newbytes;
+		if (o2 > cachesize) break;
 #else
 		o1 -= CAC_LENG(z);
 		o2 = o1+newbytes; if (o2 > cachesize) continue;
 #endif
 
-		daval = 0;
-#if (LIBVER_BUILDREV < 19960427L)
-		i=o1;zz=z;
-		while(i<o2)
+#if (LIBVER_BUILDREV < 19960724L)
+		i = o1; daval = 0; zz = z;
+		while (i < o2)
 		{
 			if (*CAC_LOCK(zz) >= 200) { daval = 0x7fffffff; break; }
 			if (*CAC_LOCK(zz) > 0)
 				daval += divscale4((CAC_LENG(zz)>>10)+64,200-*CAC_LOCK(zz));
-			i+=CAC_LENG(zz);zz++;
+			i += CAC_LENG(zz); zz++;
 		}
 #else
+		daval = 0;
 		for(i=o1,zz=z;i<o2;i+=CAC_LENG(zz++))
 		{
 			if (*CAC_LOCK(zz) == 0) continue;
@@ -152,11 +153,11 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 		if (daval < bestval)
 		{
 			bestval = daval; besto = o1; bestz = z;
-#if (LIBVER_BUILDREV >= 19960427L)
+#if (LIBVER_BUILDREV >= 19960724L)
 			if (bestval == 0) break;
 #endif
 		}
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 		o1 += CAC_LENG(z);
 #endif
 	}
@@ -172,7 +173,7 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 
 		//Remove all blocks except 1
 	suckz -= (bestz+1); cacnum -= suckz;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	for(z=bestz;z<cacnum;z++)
 	{
 		CAC_HAND(z) = CAC_HAND(z+suckz);
@@ -213,7 +214,12 @@ allocache (long *newhandle, long newbytes, char *newlockptr)
 	cacnum++; if (cacnum > MAXCACHEOBJECTS) reportandexit("Too many objects in cache! (cacnum > MAXCACHEOBJECTS)");
 #endif
 #if (LIBVER_BUILDREV < 19961012L)
-	for(z=cacnum-1;z>bestz;z--) { CAC_HAND(z) = CAC_HAND(z-1); CAC_LENG(z) = CAC_LENG(z-1); CAC_LOCK(z) = CAC_LOCK(z-1); }
+	for(z=cacnum-1;z>bestz;z--)
+	{
+		CAC_HAND(z) = CAC_HAND(z-1);
+		CAC_LENG(z) = CAC_LENG(z-1);
+		CAC_LOCK(z) = CAC_LOCK(z-1);
+	}
 #else
 	for(z=cacnum-1;z>bestz;z--) cac[z] = cac[z-1];
 #endif
@@ -228,7 +234,11 @@ suckcache (long *suckptr)
 
 		//Can't exit early, because invalid pointer might be same even though lock = 0
 	for(i=0;i<cacnum;i++)
+#if (LIBVER_BUILDREV < 20000614L)
+		if ((*CAC_HAND(i)) == suckptr)
+#else
 		if ((long)(*CAC_HAND(i)) == (long)suckptr)
+#endif
 		{
 			if (*CAC_LOCK(i)) *CAC_HAND(i) = 0;
 			CAC_LOCK(i) = &zerochar;
@@ -306,15 +316,13 @@ reportandexit(char *errormessage)
 #include <sys\types.h>
 #include <sys\stat.h>
 
-#if (LIBVER_BUILDREV >= 19960427L)
+#if (LIBVER_BUILDREV >= 19960724L)
 #define MAXGROUPFILES 4     //Warning: Fix groupfil if this is changed
 #endif
 #define MAXOPENFILES 64     //Warning: Fix filehan if this is changed
 
-#if (LIBVER_BUILDREV < 19960427L)
-static long numfiles;
-static long groupfil = -1;
-static long groupfilpos;
+#if (LIBVER_BUILDREV < 19960724L)
+static long numfiles, groupfil = -1, groupfilpos;
 static char *filelist;
 static long *fileoffs;
 #else
@@ -346,12 +354,12 @@ static char *gfilelist[MAXGROUPFILES];
 static long *gfileoffs[MAXGROUPFILES];
 #endif // LIBVER_BUILDREV
 
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 #define filehan filehandle // VERSIONS RESTORATION - Convenience macro
 #else
 static char filegrp[MAXOPENFILES];
-#endif
 static long filepos[MAXOPENFILES];
+#endif
 static long filehan[MAXOPENFILES] =
 {
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -359,13 +367,16 @@ static long filehan[MAXOPENFILES] =
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 };
+#if (LIBVER_BUILDREV < 19960724L)
+static long filepos[MAXOPENFILES];
+#endif
 
 initgroupfile(char *filename)
 {
 	char buf[16];
 	long i, j, k;
 
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	uninitgroupfile();
 
 	groupfil = open(filename,O_BINARY|O_RDWR,S_IREAD);
@@ -377,7 +388,7 @@ initgroupfile(char *filename)
 	if (groupfil[numgroupfiles] != -1)
 #endif
 	{
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 		groupfilpos = 0;
 		read(groupfil,buf,16);
 #else
@@ -389,7 +400,7 @@ initgroupfile(char *filename)
 			 (buf[6] != 'v') || (buf[7] != 'e') || (buf[8] != 'r') ||
 			 (buf[9] != 'm') || (buf[10] != 'a') || (buf[11] != 'n'))
 		{
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 			close(groupfil);
 			groupfil = -1;
 #else
@@ -398,8 +409,8 @@ initgroupfile(char *filename)
 #endif
 			return(-1);
 		}
-#if (LIBVER_BUILDREV < 19960427L)
-		numfiles = (buf[12])+(buf[13]<<8)+(buf[14]<<16)+(buf[15]<<24);
+#if (LIBVER_BUILDREV < 19960724L)
+		numfiles = ((long)buf[12])+(((long)buf[13])<<8)+(((long)buf[14])<<16)+(((long)buf[15])<<24);
 
 		if ((filelist = (char *)kmalloc(numfiles<<4)) == 0)
 			{ printf("Not enough memory for file grouping system\n"); exit(0); }
@@ -419,13 +430,10 @@ initgroupfile(char *filename)
 #endif
 
 		j = 0;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 		for(i=0;i<numfiles;i++)
 		{
-			k = (filelist[(i<<4)+12])
-			  + (filelist[(i<<4)+13]<<8)
-			  + (filelist[(i<<4)+14]<<16)
-			  + (filelist[(i<<4)+15]<<24);
+			k = ((long)filelist[(i<<4)+12])+(((long)filelist[(i<<4)+13])<<8)+(((long)filelist[(i<<4)+14])<<16)+(((long)filelist[(i<<4)+15])<<24);
 			filelist[(i<<4)+12] = 0;
 			fileoffs[i] = j;
 			j += k;
@@ -442,7 +450,7 @@ initgroupfile(char *filename)
 		gfileoffs[numgroupfiles][gnumfiles[numgroupfiles]] = j;
 #endif
 	}
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	return(groupfil);
 #else
 	numgroupfiles++;
@@ -452,11 +460,10 @@ initgroupfile(char *filename)
 
 uninitgroupfile()
 {
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	if (groupfil != -1)
 	{
-		kfree(filelist);
-		kfree(fileoffs);
+		kfree(filelist); kfree(fileoffs);
 		close(groupfil);
 		groupfil = -1;
 	}
@@ -476,7 +483,7 @@ uninitgroupfile()
 
 kopen4load(char *filename, char searchfirst)
 {
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	long i, j, fil, newhandle;
 	char ch1, ch2, bad;
 #else
@@ -498,7 +505,7 @@ kopen4load(char *filename, char searchfirst)
 	if (searchfirst == 0)
 		if ((fil = open(filename,O_BINARY|O_RDONLY)) != -1)
 		{
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 			filehan[newhandle] = fil;
 			filepos[newhandle] = -1;
 #else
@@ -508,28 +515,23 @@ kopen4load(char *filename, char searchfirst)
 #endif
 			return(newhandle);
 		}
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	if (groupfil != -1)
 	{
 		for(i=numfiles-1;i>=0;i--)
 		{
 			j = 0; bad = 0;
-			while (filename[j]!=0&&j<13)
+			while ((filename[j] != 0) && (j < 13))
 			{
-				ch1 = filename[j];
-				if (ch1 >= 'a' && ch1 <= 'z'+1)
-					ch1 -= 32;
-				ch2 = filelist[(i<<4)+j];
-				if (ch2 >= 'a' && ch2 <= 'z'+1)
-					ch2 -= 32;
-				if (ch1 != ch2)
-					{ bad = 1; break; }
+				ch1 = filename[j]; if ((ch1 >= 97) && (ch1 <= 123)) ch1 -= 32;
+				ch2 = filelist[(i<<4)+j]; if ((ch2 >= 97) && (ch2 <= 123)) ch2 -= 32;
+				if (ch1 != ch2) { bad = 1; break; }
 				j++;
 			}
-			if (bad) continue;
+			if (bad != 0) continue;
 
-			filehan[newhandle] = i;
 			filepos[newhandle] = 0;
+			filehan[newhandle] = i;
 			return(newhandle);
 		}
 	}
@@ -565,8 +567,8 @@ kopen4load(char *filename, char searchfirst)
 
 kread(long handle, void *buffer, long leng)
 {
-#if (LIBVER_BUILDREV < 19960427L)
-	long i, j, filenum;
+#if (LIBVER_BUILDREV < 19960724L)
+	long i, filenum;
 
 	filenum = filehan[handle];
 	if (filepos[handle] < 0) return(read(filenum,buffer,leng));
@@ -613,7 +615,7 @@ kread(long handle, void *buffer, long leng)
 
 klseek(long handle, long offset, long whence)
 {
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	long i;
 
 	if (filepos[handle] < 0) return(lseek(filehan[handle],offset,whence));
@@ -631,7 +633,7 @@ klseek(long handle, long offset, long whence)
 		{
 			case SEEK_SET: filepos[handle] = offset; break;
 			case SEEK_END: i = filehan[handle];
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 								filepos[handle] = (fileoffs[i+1]-fileoffs[i])+offset;
 #else
 								filepos[handle] = (gfileoffs[groupnum][i+1]-gfileoffs[groupnum][i])+offset;
@@ -646,7 +648,7 @@ klseek(long handle, long offset, long whence)
 
 kfilelength(long handle)
 {
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	long i;
 
 	if (filepos[handle] < 0) return(filelength(filehan[handle]));
@@ -665,7 +667,7 @@ kfilelength(long handle)
 kclose(long handle)
 {
 	if (handle < 0) return;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 	if (filepos[handle] < 0) close(filehan[handle]);
 #else
 	if (filegrp[handle] == 255) close(filehan[handle]);
@@ -678,7 +680,7 @@ kclose(long handle)
 
 	//Internal LZW variables
 #define LZWSIZE 16384           //Watch out for shorts!
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960319L)
 static char *lzwbuf1;
 static short *lzwbuf2, *lzwbuf3;
 static char *lzwbuf4, *lzwbuf5, lzwbuflock[5];
@@ -806,19 +808,26 @@ dfwrite(void *buffer, size_t dasizeof, size_t count, FILE *fil)
 compress(char *lzwinbuf, long uncompleng, char *lzwoutbuf)
 {
 	long i, addr, newaddr, addrcnt, zx, *longptr;
+#if (LIBVER_BUILDREV < 19960427L)
+	long bytecnt1, bytecnt2, numbits, oneupnumbits;
+	short *shortptr;
+	char bitcnt = 0;
+#elif (LIBVER_BUILDREV < 19960724L)
+	long bytecnt1, bytecnt2, numbits, oneupnumbits;
+	short *shortptr;
+	char bitcnt;
+#else
 	long bytecnt1, bitcnt, numbits, oneupnumbits;
 	short *shortptr;
-#if (LIBVER_BUILDREV < 19960427L)
-	char bitcnt2 = 0;
 #endif
 
 	for(i=255;i>=0;i--) { lzwbuf1[i] = i; lzwbuf3[i] = (i+1)&255; }
 	clearbuf(FP_OFF(lzwbuf2),256>>1,0xffffffff);
 	clearbuf(FP_OFF(lzwoutbuf),((uncompleng+15)+3)>>2,0L);
 
-#if (LIBVER_BUILDREV < 19960427L)
-	addrcnt = 256; bytecnt1 = 0; bitcnt = 4;
-	numbits = 9; bitcnt2 = 0; oneupnumbits = (1<<9);
+#if (LIBVER_BUILDREV < 19960724L)
+	addrcnt = 256; bytecnt1 = 0; bytecnt2 = 4; bitcnt = 0;
+	numbits = 9; oneupnumbits = (1<<9);
 #else
 	addrcnt = 256; bytecnt1 = 0; bitcnt = (4<<3);
 	numbits = 8; oneupnumbits = (1<<8);
@@ -845,12 +854,10 @@ compress(char *lzwinbuf, long uncompleng, char *lzwoutbuf)
 		lzwbuf2[addrcnt] = -1;
 		lzwbuf3[addrcnt] = -1;
 
-#if (LIBVER_BUILDREV < 19960427L)
-		longptr = (long *)&lzwoutbuf[bitcnt];
-		longptr[0] |= (addr<<bitcnt2);
-		bitcnt2 += numbits;
-		bitcnt += (bitcnt2>>3);
-		bitcnt2 &= 7;
+#if (LIBVER_BUILDREV < 19960724L)
+		longptr = (long *)&lzwoutbuf[bytecnt2];
+		longptr[0] |= (addr<<bitcnt);
+		bitcnt += numbits; bytecnt2 += (bitcnt>>3); bitcnt &= 7;
 #else
 		longptr = (long *)&lzwoutbuf[bitcnt>>3];
 		longptr[0] |= (addr<<(bitcnt&7));
@@ -860,19 +867,22 @@ compress(char *lzwinbuf, long uncompleng, char *lzwoutbuf)
 #endif
 
 		addrcnt++;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 		if (addrcnt == oneupnumbits) { numbits++; oneupnumbits <<= 1; }
-	} while ((bytecnt1 < uncompleng) && (bitcnt < uncompleng));
+	} while ((bytecnt1 < uncompleng) && (bytecnt2 < uncompleng));
 #else
 		if (addrcnt > oneupnumbits) { numbits++; oneupnumbits <<= 1; }
 	} while ((bytecnt1 < uncompleng) && (bitcnt < (uncompleng<<3)));
 #endif
 
 #if (LIBVER_BUILDREV < 19960427L)
-	longptr = (long *)&lzwoutbuf[bitcnt];
-	longptr[0] |= (addr<<bitcnt2);
-	bitcnt2 += numbits;
-	bitcnt += (bitcnt2>>3);
+	longptr = (long *)&lzwoutbuf[bytecnt2];
+	longptr[0] |= (addr<<bitcnt);
+	bitcnt += numbits; bytecnt2 += (bitcnt>>3);
+#elif (LIBVER_BUILDREV < 19960724L)
+	longptr = (long *)&lzwoutbuf[bytecnt2];
+	longptr[0] |= (addr<<bitcnt);
+	bitcnt += numbits; bytecnt2 += (bitcnt>>3); bitcnt &= 7;
 #else
 	longptr = (long *)&lzwoutbuf[bitcnt>>3];
 	longptr[0] |= (addr<<(bitcnt&7));
@@ -883,11 +893,11 @@ compress(char *lzwinbuf, long uncompleng, char *lzwoutbuf)
 
 	shortptr = (short *)lzwoutbuf;
 	shortptr[0] = (short)uncompleng;
-#if (LIBVER_BUILDREV < 19960427L)
-	if (bitcnt < uncompleng)
+#if (LIBVER_BUILDREV < 19960724L)
+	if (bytecnt2 < uncompleng)
 	{
 		shortptr[1] = (short)addrcnt;
-		return(bitcnt);
+		return(bytecnt2);
 	}
 #else
 	if (((bitcnt+7)>>3) < uncompleng)
@@ -904,10 +914,13 @@ compress(char *lzwinbuf, long uncompleng, char *lzwoutbuf)
 uncompress(char *lzwinbuf, long compleng, char *lzwoutbuf)
 {
 	long strtot, currstr, numbits, oneupnumbits;
+#if (LIBVER_BUILDREV < 19960724L)
+	long i, dat, leng, inbytecnt, outbytecnt, *longptr;
+	short *shortptr;
+	char bitcnt;
+#else
 	long i, dat, leng, bitcnt, outbytecnt, *longptr;
 	short *shortptr;
-#if (LIBVER_BUILDREV < 19960427L)
-	char bitcnt2;
 #endif
 
 	shortptr = (short *)lzwinbuf;
@@ -918,8 +931,8 @@ uncompress(char *lzwinbuf, long compleng, char *lzwoutbuf)
 		return((long)shortptr[0]); //uncompleng
 	}
 	for(i=255;i>=0;i--) { lzwbuf2[i] = i; lzwbuf3[i] = i; }
-#if (LIBVER_BUILDREV < 19960427L)
-	bitcnt2 = 0; currstr = 256; bitcnt = 4; outbytecnt = 0;
+#if (LIBVER_BUILDREV < 19960724L)
+	bitcnt = 0; currstr = 256; inbytecnt = 4; outbytecnt = 0;
 	numbits = 9; oneupnumbits = (1<<9);
 #else
 	currstr = 256; bitcnt = (4<<3); outbytecnt = 0;
@@ -927,12 +940,10 @@ uncompress(char *lzwinbuf, long compleng, char *lzwoutbuf)
 #endif
 	do
 	{
-#if (LIBVER_BUILDREV < 19960427L)
-		longptr = (long *)&lzwinbuf[bitcnt];
-		dat = ((longptr[0]>>bitcnt2) & (oneupnumbits-1));
-		bitcnt2 += numbits;
-		bitcnt += (bitcnt2>>3);
-		bitcnt2 &= 7;
+#if (LIBVER_BUILDREV < 19960724L)
+		longptr = (long *)&lzwinbuf[inbytecnt];
+		dat = ((longptr[0]>>bitcnt) & (oneupnumbits-1));
+		bitcnt += numbits; inbytecnt += (bitcnt>>3); bitcnt &= 7;
 #else
 		longptr = (long *)&lzwinbuf[bitcnt>>3];
 		dat = ((longptr[0]>>(bitcnt&7)) & (oneupnumbits-1));
@@ -951,7 +962,7 @@ uncompress(char *lzwinbuf, long compleng, char *lzwoutbuf)
 
 		lzwbuf2[currstr-1] = dat; lzwbuf2[currstr] = dat;
 		currstr++;
-#if (LIBVER_BUILDREV < 19960427L)
+#if (LIBVER_BUILDREV < 19960724L)
 		if (currstr >= oneupnumbits) { numbits++; oneupnumbits <<= 1; }
 #else
 		if (currstr > oneupnumbits) { numbits++; oneupnumbits <<= 1; }
