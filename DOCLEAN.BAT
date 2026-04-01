@@ -8,6 +8,7 @@ if "%CHOICE%" == "199603" goto 199603
 if "%CHOICE%" == "DN3D14" goto DN3D14
 if "%CHOICE%" == "DN3D14B" goto DN3D14B
 if "%CHOICE%" == "DN3D14G" goto DN3D14G
+if "%CHOICE%" == "BLOOD" goto BLOOD
 if "%CHOICE%" == "DN3D15" goto DN3D15
 goto default
 
@@ -32,6 +33,10 @@ goto end
 :DN3D14G
 del 19960820\engine.obj
 goto end
+:BLOOD
+del 19960925\build.obj
+del 19960925\cache1d.obj
+del 19961012\engine.obj
 :DN3D15
 del 19961112\*.*
 del 19961207\*.*
