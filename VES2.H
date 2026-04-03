@@ -9,7 +9,7 @@
 #include <conio.h>
 #include <dos.h>
 
-#if (LIBVER_BUILDREV >= 19971004L)
+#if (LIBVER_BUILDREV >= 19970716L)
 #pragma pack(push,1);
 
 #endif
@@ -53,17 +53,17 @@ typedef struct
 	short flags, es, ds, fs, gs, ip, cs, sp, ss;
 } _RMREGS;
 
-#if (LIBVER_BUILDREV >= 19971004L)
+#if (LIBVER_BUILDREV >= 19970716L)
 #pragma pack(pop);
 
 #endif
-#if (LIBVER_BUILDREV < 19970602L)
+#if (LIBVER_BUILDREV < 19970720L)
 long VESABuf_len = 1024, VESABuf_sel = 0, VESABuf_rseg;
 #else
 long VESABuf_sel = 0, VESABuf_rseg;
 #endif
-#if (LIBVER_BUILDREV < 19961006L)
-#define modelist modeList // VERSIONS RESTORATION (HACK) - Original name from misc. debugging symbols
+#if (LIBVER_BUILDREV < 19960925L)
+#define modelist modeList // VERSIONS RESTORATION - Convenience macro
 #endif
 short modelist[256];
 static char *screen = NULL, vesachecked = 0;
@@ -77,7 +77,7 @@ static long ves2lastx[MAXYDIM];
 static long davesapageshift;
 static VBE_vgaInfo vgaInfo;
 long globlinplace;
-#if (LIBVER_BUILDREV >= 19970602L)
+#if (LIBVER_BUILDREV >= 19970720L)
 static long backlinaddress = 0;  //Save address for free operation (0x801)
 #endif
 
@@ -109,7 +109,7 @@ static long backlinaddress = 0;  //Save address for free operation (0x801)
 	modify exact [eax edx]\
 
 #endif
-#if (LIBVER_BUILDREV < 19960320L)
+#if (LIBVER_BUILDREV < 19960316L)
 #define backupsegs()
 
 #pragma aux restoresegs =\
@@ -137,7 +137,7 @@ short ods, oes, oss;
 	"int 0x10",\
 	parm [eax]\
 
-#if (LIBVER_BUILDREV >= 19960320L)
+#if (LIBVER_BUILDREV >= 19960316L)
 #pragma aux copybufbyte =\
 	"cmp ecx, 4",\
 	"jae longcopy",\
@@ -292,7 +292,7 @@ void VBE_callESDI(RMREGS *regs, void *buffer, long size)
 
 	if (!VESABuf_sel)  //Init Real mode buffer
 	{
-#if (LIBVER_BUILDREV < 19970602L)
+#if (LIBVER_BUILDREV < 19970720L)
 		r.w.ax = 0x100; r.w.bx = (VESABuf_len+15)>>4;
 #else
 		r.w.ax = 0x100; r.w.bx = 1024>>4;
@@ -339,7 +339,7 @@ GetPtrToLFB(long physAddr)
 	r.w.si = LIMIT>>16; r.w.di = LIMIT&0xffff;
 	backupsegs(); int386(0x31,&r,&r); restoresegs();
 	if (r.x.cflag) { printf("DPMI_mapPhysicalToLinear() failed!\n"); exit(0); }
-#if (LIBVER_BUILDREV < 19970602L)
+#if (LIBVER_BUILDREV < 19970720L)
 	globlinplace = ((long)r.w.bx<<16)+r.w.cx;
 #else
 	backlinaddress = globlinplace = ((long)r.w.bx<<16)+r.w.cx;
@@ -356,7 +356,7 @@ GetPtrToLFB(long physAddr)
 	if (r.x.cflag) { printf("DPMI_setSelectorLimit() failed!\n"); exit(0); }
 }
 
-#if (LIBVER_BUILDREV >= 19961006L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (getvalidvesamodes)
+#if (LIBVER_BUILDREV >= 19960925L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (getvalidvesamodes)
 getvalidvesamodes()
 {
 	long i, j, k;
@@ -423,7 +423,7 @@ getvalidvesamodes()
 setvesa(long x, long y)
 {
 	div_t dived;
-#if (LIBVER_BUILDREV < 19961006L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
+#if (LIBVER_BUILDREV < 19960925L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
 	long i, j;
 #else
 	long i, j, k;
@@ -433,8 +433,8 @@ setvesa(long x, long y)
 	RMREGS regs;
 	RMSREGS sregs;
 
-#if (LIBVER_BUILDREV < 19961006L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
-	if (!vesachecked)
+#if (LIBVER_BUILDREV < 19960925L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
+	if (vesachecked == 0)
 	{
 		vesachecked = 1;
 
@@ -462,15 +462,14 @@ setvesa(long x, long y)
 #endif
 
 	xres = x; yres = y;
-#if (LIBVER_BUILDREV < 19961006L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
+#if (LIBVER_BUILDREV < 19960925L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
 	for(p=modelist;*p!=-1;p++)
+		if (VBE_getModeInfo(*p, &modeInfo))
 #else
 	for(k=0;k<validmodecnt;k++)
 #endif
 	{
-#if (LIBVER_BUILDREV < 19961006L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
-		if (!VBE_getModeInfo(*p, &modeInfo)) continue;
-#else
+#if (LIBVER_BUILDREV >= 19960925L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
 		regs.x.ax = 0x4f01; regs.x.cx = validmode[k];
 		VBE_callESDI(&regs,&modeInfo,sizeof(VBE_modeInfo));
 		if (regs.x.ax != 0x004f) continue;
@@ -487,7 +486,7 @@ setvesa(long x, long y)
 		maxpages = min(modeInfo.NumberOfImagePages+1,64);
 
 		regs.x.ax = 0x4f02;
-#if (LIBVER_BUILDREV < 19961006L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
+#if (LIBVER_BUILDREV < 19960925L) // VERSIONS RESTORATION - getvalidvesamodes (9/25/96)
 		regs.x.bx = (*p) | ((modeInfo.ModeAttributes&128)<<7);
 #else
 		regs.x.bx = validmode[k] | ((modeInfo.ModeAttributes&128)<<7);
@@ -517,7 +516,7 @@ setvesa(long x, long y)
 			linearmode = 1;
 			buffermode = (maxpages<=1);
 			imageSize = bytesperline*yres;
-#if (LIBVER_BUILDREV < 19970602L)
+#if (LIBVER_BUILDREV < 19970720L)
 			frameplace = globlinplace;
 
 #else
@@ -751,7 +750,7 @@ void setvisualpage(long dapagenum)
 		if (setvisualentry)
 		{
 #if (LIBVER_BUILDREV < 19960427L)
-			i = imageSize*(dapagenum);
+			i = imageSize*dapagenum;
 #else
 			i = imageSize*(dapagenum&0x7fffffff);
 #endif
@@ -801,7 +800,7 @@ void setvisualpage(long dapagenum)
 
 uninitvesa()
 {
-#if (LIBVER_BUILDREV < 19970602L)
+#if (LIBVER_BUILDREV < 19970720L)
 	VESABuf_len = 1024;
 #else
 	if (backlinaddress)
@@ -819,6 +818,7 @@ uninitvesa()
 	vesachecked = 0;
 }
 
+#if (LIBVER_BUILDREV >= 19961004L)
 #pragma aux setpalettequick =\
 	"mov edx, 0x3c8",\
 	"out dx, al",\
@@ -829,11 +829,12 @@ uninitvesa()
 	parm [eax][ecx][esi]\
 	modify exact [ecx edx esi]\
 
+#endif
 VBE_setPalette(long start, long num, char *dapal)
 {
 	RMREGS regs;
 	long i, j, k;
-#if (LIBVER_BUILDREV >= 19961006L)
+#if (LIBVER_BUILDREV >= 19960925L)
 	char palquick[768];
 #endif
 
@@ -856,25 +857,7 @@ VBE_setPalette(long start, long num, char *dapal)
 #endif
 	if ((vgacompatible) || (vgaInfo.VESAVersion < 0x200) || (vidoption != 1))
 	{
-		// VERSIONS RESTORATION - Using earlier VES2.H code as a base
-#if (LIBVER_BUILDREV < 19961006L)
-		//setpalettequick(start,num,palquick);
-		koutp(0x3c8,start);
-		for(i=(num>>1);i>0;i--)
-		{
-			koutp(0x3c9,dapal[2]);
-			while (kinp(0x3da)&1); while (!(kinp(0x3da)&1));
-										  koutp(0x3c9,dapal[1]); koutp(0x3c9,dapal[0]);
-			koutp(0x3c9,dapal[6]); koutp(0x3c9,dapal[5]); koutp(0x3c9,dapal[4]);
-			dapal += 8;
-		}
-		if (num&1)
-		{
-			koutp(0x3c9,dapal[2]);
-			while (kinp(0x3da)&1); while (!(kinp(0x3da)&1));
-										  koutp(0x3c9,dapal[1]); koutp(0x3c9,dapal[0]);
-		}
-#else // LIBVER_BUILDREV
+#if (LIBVER_BUILDREV >= 19960925L)
 		j = 0; k = (start<<2);
 		for(i=0;i<num;i++)
 		{
@@ -883,10 +866,14 @@ VBE_setPalette(long start, long num, char *dapal)
 			palquick[j+2] = dapal[k];
 			j += 3; k += 4;
 		}
-#if (LIBVER_BUILDREV < 19970212L)
+#endif
+#if (LIBVER_BUILDREV >= 19961004L && LIBVER_BUILDREV < 19970212L)
+		// VERSIONS RESTORATION: Seemed to be temporarily used in
+		// Oct 4 1996 revision while commenting out the following
+		// code block, before reverting to that code block and
+		// commenting out the call to setpalettequick later on.
 		setpalettequick(start,num,palquick);
 #else
-		//setpalettequick(start,num,palquick);
 		koutp(0x3c8,start);
 		for(i=(num>>1);i>0;i--)
 		{
@@ -902,8 +889,7 @@ VBE_setPalette(long start, long num, char *dapal)
 			while (kinp(0x3da)&1); while (!(kinp(0x3da)&1));
 										  koutp(0x3c9,dapal[1]); koutp(0x3c9,dapal[0]);
 		}
-#endif /* LIBVER_BUILDREV */
-#endif /* LIBVER_BUILDREV */
+#endif // LIBVER_BUILDREV
 		return(1);
 	}
 
