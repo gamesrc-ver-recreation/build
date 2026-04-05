@@ -2334,7 +2334,7 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 #if (LIBVER_BUILDREV < 19960427L)
 	long i, x, xinc, xinc3, startx, xnice, ynice, fpalookup, shade;
 	long y1ve[4], y2ve[4], u4, d4, dax, z, p, tsizx, tsizy;
-	char bad, startplane, plane;
+	char startplane, plane, bad;
 #else
 	long i, x, xnice, ynice, fpalookup, shade;
 	long y1ve[4], y2ve[4], u4, d4, dax, z, tsizx, tsizy;
@@ -2351,12 +2351,12 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 	if (waloff[globalpicnum] == 0) loadtile(globalpicnum);
 
 #if (LIBVER_BUILDREV < 19960427L)
-	if (chainstat != 0)
+	if (chainstat)
 	{
 		xinc = 4; xinc3 = 12;
-		plane = pow2char[(viewoffset+x1)&3];
+		plane = pow2char[(x1+viewoffset)&3];
 		startplane = plane;
-		if (x2-x1 < 4) startplane = pow2char[(x2+1+viewoffset)&3];
+		if ((x2-x1) < 4) startplane = pow2char[(x2+1+viewoffset)&3];
 		koutp(0x3c5,plane);
 	}
 	else
@@ -2364,6 +2364,7 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 		xinc = 1; xinc3 = 3;
 	}
 	startx = x1;
+
 #endif
 	xnice = (pow2long[picsiz[globalpicnum]&15] == tsizx);
 	if (xnice) tsizx--;
@@ -2380,13 +2381,11 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 		x = startx;
 		while ((umost[x] > dmost[x]) && (x <= x2)) x += xinc;
 
-		if (chainstat != 0)
-			p = chainplace+((x+viewoffset)>>2);
-		else
+		if (chainstat) p = ((x+viewoffset)>>2)+chainplace;
 #if (LIBVER_BUILDREV < 19960320L)
-			p = x+frameplace+viewoffset;
+					 else p = x+frameplace+viewoffset;
 #else
-			p = x+frameoffset;
+					 else p = x+frameoffset;
 #endif
 
 #if (LIBVER_BUILDREV < 19960320L)
@@ -2410,7 +2409,7 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 			vlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],p+ylookup[y1ve[0]]);
 		}
-		for(;x<=x2-xinc3;x+=(xinc<<2),p += 4)
+		for(;x<=x2-xinc3;x+=(xinc<<2),p+=4)
 		{
 			bad = 0;
 			for(z=3,dax=x+xinc3;z>=0;z--,dax-=xinc)
@@ -2440,7 +2439,7 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 			else
 			{
 				palookupoffse[1] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc],globvis),globalshade)<<8);
-				palookupoffse[2] = fpalookup+(getpalookup((long)mulscale16(swal[x+xinc*2],globvis),globalshade)<<8);
+				palookupoffse[2] = fpalookup+(getpalookup((long)mulscale16(swal[x+(xinc<<1)],globvis),globalshade)<<8);
 			}
 
 			u4 = max(max(y1ve[0],y1ve[1]),max(y1ve[2],y1ve[3]));
@@ -2485,15 +2484,15 @@ wallscan(long x1, long x2, short *uwal, short *dwal, long *swal, long *lwal)
 
 			vlineasm1(vince[0],palookupoffse[0],y2ve[0]-y1ve[0]-1,vplce[0],bufplce[0]+waloff[globalpicnum],p+ylookup[y1ve[0]]);
 		}
-		if (chainstat != 0)
+
+		if (chainstat)
 		{
-			plane <<= 1;
-			if (plane == 16)
-				plane = 1;
+			plane <<= 1; if (plane == 16) plane = 1;
 			koutp(0x3c5,plane);
 			startx++;
 		}
-	} while (xinc == 4 && plane != startplane);
+	}
+	while ((xinc == 4) && (plane != startplane));
 #else // LIBVER_BUILDREV
 	x = x1;
 	while ((umost[x] > dmost[x]) && (x <= x2)) x++;

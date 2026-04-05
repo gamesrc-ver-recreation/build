@@ -202,7 +202,7 @@ of source files (including local or system headers).
 - In fact, it's known that a few functions won't perfectly match in
 layout for the 19960320 and earlier revisions of ENGINE.OBJ. The exact
 list of involved functions depends on the revision, but a few examples are
-wallscan, initengine, drawmasks and completemirror; Especially the latter.
+initengine, drawmasks and completemirror; Especially the latter.
 - Use DOBUILD.BAT to build the desired files (don't call wmake directly),
 or DOCLEAN.BAT to remove them.
 
