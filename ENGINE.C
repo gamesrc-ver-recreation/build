@@ -3671,19 +3671,11 @@ initengine()
 	loadtables();
 
 #if (LIBVER_BUILDREV < 19960427L)
-	if ((horizlookup = (long*)kkmalloc((ydim*3)*sizeof(long))) == NULL)
-	{
-		printf("OUT OF MEMORY\n");
-		exit(0);
-	}
-
-	if ((horizlookup2 = (long*)kkmalloc((ydim*3)*sizeof(long))) == NULL)
-	{
-		printf("OUT OF MEMORY\n");
-		exit(0);
-	}
-
-	horizycent = (ydim*3)>>1;
+	if ((horizlookup = (long *)kkmalloc(ydim*3*sizeof(long))) == NULL)
+		{ printf("OUT OF MEMORY\n"); exit(0); }
+	if ((horizlookup2 = (long *)kkmalloc(ydim*3*sizeof(long))) == NULL)
+		{ printf("OUT OF MEMORY\n"); exit(0); }
+	horizycent = ((ydim*3)>>1);
 
 #endif
 	xyaspect = -1;
@@ -3694,25 +3686,25 @@ initengine()
 	showinvisibility = 0;
 
 #ifdef SUPERBUILD
-#if (LIBVER_BUILDREV < 19960820L)
+  #if (LIBVER_BUILDREV < 19960820L)
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<16)-1)/i;
-#if (LIBVER_BUILDREV < 19960427L)
+    #if (LIBVER_BUILDREV < 19960427L)
 	for(i=1;i<4096;i++) distrecip[i] = divscale14(320,i);
-#endif
-#else
+    #endif
+  #else
 	for(i=1;i<1024;i++) lowrecip[i] = ((1<<24)-1)/i;
-#endif
-#if (LIBVER_BUILDREV >= 19960320L)
+  #endif
+  #if (LIBVER_BUILDREV >= 19960320L)
 	for(i=0;i<MAXVOXELS;i++)
 		for(j=0;j<MAXVOXMIPS;j++)
 		{
 			voxoff[i][j] = 0L;
-#if (LIBVER_BUILDREV < 19960427L)
+    #if (LIBVER_BUILDREV < 19960427L)
 			voxsiz[i][j] = 0L;
-#endif
+    #endif
 			voxlock[i][j] = 200;
 		}
-#endif
+  #endif
 #endif // 19960320L
 
 	paletteloaded = 0;
@@ -3745,51 +3737,25 @@ initengine()
 	parallaxvisibility = 512;
 
 #if (LIBVER_BUILDREV < 19960427L)
-	chainnumpages = 0;
-	chainstat = 0;
+	chainnumpages = 0; chainstat = 0;
 #endif
 #if (LIBVER_BUILDREV < 19961006L) // VERSIONS RESTORATION - See BUILD2.TXT, 9/25/96 (Modified signature + removed modes)
 	switch(vidoption)
 	{
-#if (LIBVER_BUILDREV < 19960427L)
+  #if (LIBVER_BUILDREV < 19960427L)
 		case 0:
-	// VERSIONS RESTORATION: HACK
-#pragma aux testpragma =\
-	"imul eax, edx",\
-	"sar eax, 2",\
-	"add eax, 0xff",\
-	parm nomemory [eax] [edx]\
-	modify exact [eax]\
-
-#if 0 // BETTER? (For usage of regs before this block.)
-			chainplace = 0xa0000;
-			chainsiz = xdim*ydim;
-			chainsiz >>= 2;
-			chainsiz += 255;
-			chainsiz &= 0xffffff00;
-			chainnumpages = 65536/chainsiz;
-#elif 1 // Match filesize
-			chainsiz = testpragma(xdim,ydim)&0xffffff00;
-			chainplace = 0xa0000;
-			chainnumpages = 65536/chainsiz;
-#else // Code from 95
 			chainplace = 0xa0000;
 			chainsiz = ((((xdim*ydim)>>2)+255)&0xffffff00);
 			chainnumpages = 65536/chainsiz;
-#endif
-			if (chainnumpages >= 2)
-				chainstat = 1;
+			if (chainnumpages >= 2) chainstat = 1;
 			if (chainnumpages == 1)
 			{
-				if ((screen = (char *)kkmalloc(xdim*ydim)) == NULL)
-				{
-					printf("Not enough memory for screen allocation\n");
-					exit(0);
-				}
+				screen = (char *)kkmalloc(xdim*ydim);
+				if (screen == NULL) { printf("Not enough memory for screen allocation\n"); exit(0); }
 				frameplace = FP_OFF(screen);
 			}
 			break;
-#endif // LIBVER_BUILDREV
+  #endif // LIBVER_BUILDREV
 		case 1:
 			if ((screen = (char *)kkmalloc((xdim+8)*ydim)) == NULL)
 			{
@@ -3798,50 +3764,52 @@ initengine()
 			}
 			frameplace = FP_OFF(screen);
 			break;
-#if (LIBVER_BUILDREV < 19960427L)
+  #if (LIBVER_BUILDREV < 19960427L)
 		case 2:
-			if ((screen = (char*)kkmalloc(xdim*ydim)) == NULL)
-			{
-				printf("Not enough memory for screen allocation\n");
-				exit(0);
-			}
+			screen = (char *)kkmalloc(xdim*ydim);
+			if (screen == NULL) { printf("Not enough memory for screen allocation\n"); exit(0); }
 			frameplace = FP_OFF(screen);
 			break;
-#endif
+		case 3:
+			frameplace = 0xa0000;
+			break;
+		case 4:
+			frameplace = 0xa0000;
+			break;
+		case 5:
+			frameplace = 0xa0000;
+			break;
+		case 6:
+			screen = (char *)kkmalloc(65536);
+			if (screen == NULL) { printf("Not enough memory for screen allocation\n"); exit(0); }
+			frameplace = FP_OFF(screen);
+			ooption0 = vidoption; vidoption = 2;
+			stereofps = 1;
+			break;
+  #else
 		case 3:
 		case 4:
 		case 5:
 			frameplace = 0xa0000;
 			break;
-#if (LIBVER_BUILDREV < 19960427L)
-		case 6:
-			if ((screen = (char*)kkmalloc(0x10000)) == NULL)
-			{
-				printf("Not enough memory for screen allocation\n");
-				exit(0);
-			}
-			frameplace = FP_OFF(screen);
-			ooption0 = vidoption;
-			vidoption = 2;
-			stereofps = 1;
-			break;
+  #endif
+  #if (LIBVER_BUILDREV < 19960427L)
 		case 7:
-#else
+  #else
 		case 6:
-#endif
+  #endif
 			if ((screen = (char *)kkmalloc(0x20000)) == NULL)
 			{
 				printf("Not enough memory for screen allocation\n");
 				exit(0);
 			}
 			frameplace = FP_OFF(screen);
-#if (LIBVER_BUILDREV < 19960427L)
-			ooption0 = vidoption;
-			vidoption = 2;
+  #if (LIBVER_BUILDREV < 19960427L)
+			ooption0 = vidoption; vidoption = 2;
 			stereofps = 1;
-#endif
+  #endif
 			break;
-#if (LIBVER_BUILDREV >= 19960427L)
+  #if (LIBVER_BUILDREV >= 19960427L)
 		default:
 			xdim = 320; ydim = 200;
 			if ((screen = (char *)kkmalloc(xdim*ydim)) == NULL)
@@ -3851,10 +3819,10 @@ initengine()
 			}
 			frameplace = FP_OFF(screen);
 			break;
-#endif
+  #endif
 	}
 
-#if (LIBVER_BUILDREV >= 19960427L)
+  #if (LIBVER_BUILDREV >= 19960427L)
 	if ((horizlookup = (long *)kkmalloc(ydim*16)) == NULL)
 	{
 		printf("OUT OF MEMORY\n");
@@ -3866,7 +3834,7 @@ initengine()
 		exit(0);
 	}
 	horizycent = ((ydim*4)>>1);  //HACK for switching to this mode
-#endif // LIBVER_BUILDREV >= 19960427L
+  #endif // LIBVER_BUILDREV >= 19960427L
 #endif // LIBVER_BUILDREV < 19961006L
 	loadpalette();
 }
