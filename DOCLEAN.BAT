@@ -36,7 +36,7 @@ goto end
 :BLOOD
 del 19960925\build.obj
 del 19960925\cache1d.obj
-del 19961012\engine.obj
+del 19961006\engine.obj
 :DN3D15
 del 19961112\*.*
 del 19961207\*.*
