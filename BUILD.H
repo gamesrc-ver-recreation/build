@@ -33,7 +33,7 @@
 	#define EXTERN extern
 #endif
 
-#if (LIBVER_BUILDREV >= 19971004L)
+#if (LIBVER_BUILDREV >= 19970709L)
 #pragma pack(push,1);
 
 #endif
@@ -124,7 +124,7 @@ typedef struct
 	short ang, owner, xvel, yvel, zvel;
 	short lotag, hitag, extra;
 } spritetype;
-#if (LIBVER_BUILDREV >= 19971004L)
+#if (LIBVER_BUILDREV >= 19970709L)
 
 #pragma pack(pop);
 #endif
