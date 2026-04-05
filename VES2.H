@@ -9,7 +9,7 @@
 #include <conio.h>
 #include <dos.h>
 
-#if (LIBVER_BUILDREV >= 19970716L)
+#if (LIBVER_BUILDREV >= 19970709L)
 #pragma pack(push,1);
 
 #endif
@@ -53,7 +53,7 @@ typedef struct
 	short flags, es, ds, fs, gs, ip, cs, sp, ss;
 } _RMREGS;
 
-#if (LIBVER_BUILDREV >= 19970716L)
+#if (LIBVER_BUILDREV >= 19970709L)
 #pragma pack(pop);
 
 #endif
