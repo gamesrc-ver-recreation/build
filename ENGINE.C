@@ -324,7 +324,7 @@ static long mirrorsx1, mirrorsy1, mirrorsx2, mirrorsy2;
 #endif
 long totalclocklock;
 
-#if (LIBVER_BUILDREV < 19971004L)
+#if (LIBVER_BUILDREV < 19970718L)
 extern long setbytesperline(long);
 #pragma aux setbytesperline parm [eax];
 #else // VERSIONS RESTORATION - See BUILD2.TXT, 10/4/97 (MMX support)
@@ -3665,7 +3665,7 @@ initengine()
 	vidoption = davidoption;
 	xdim = daxdim;
 	ydim = daydim;
-#elif (LIBVER_BUILDREV >= 19971004L) // VERSIONS RESTORATION - See BUILD2.TXT, 10/4/97 (MMX support)
+#elif (LIBVER_BUILDREV >= 19970718L) // VERSIONS RESTORATION - See BUILD2.TXT, 10/4/97 (MMX support)
 	if (dommxoverlay) mmxoverlay();
 
 #endif
