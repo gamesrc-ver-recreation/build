@@ -199,10 +199,9 @@ Notes before trying to build anything:
 - This may depend on luck. Even if the code is generally 100% matching,
 the OBJ files may still include data like original paths and timestamps
 of source files (including local or system headers).
-- In fact, it's known that a few functions won't perfectly match in
-layout for the 19960320 and earlier revisions of ENGINE.OBJ. The exact
-list of involved functions depends on the revision, but a few examples are
-drawmasks and completemirror; Especially the latter.
+- In fact, it's known that at least a few subsets of code won't perfectly
+match in layout for the 19960320 and earlier revisions of ENGINE.OBJ.
+A notable example is the function drawmasks.
 - Use DOBUILD.BAT to build the desired files (don't call wmake directly),
 or DOCLEAN.BAT to remove them.
 

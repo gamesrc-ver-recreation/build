@@ -10945,264 +10945,9 @@ preparemirror(long dax, long day, long daz, short daang, long dahoriz, short daw
 #endif
 }
 
-// VERSIONS RSETORATION: The separate code for 19960320L is mostly matching
-// in size, although it still differs from the original in differing ways.
-// So, let's just offer both options
-
-#if (LIBVER_BUILDREV >= 19960320L) && (LIBVER_BUILDREV < 19960427L)
-
 completemirror()
 {
-	long i, j, k, l, x1, y1, x2, y2, dx, dy, p;
-//	char *ptr;
-
-// All choices of ordered subsets of 3 elements of specific local variable
-#define CM_I j
-#define CM_J p
-#define CM_K l
-#define CM_L i
-//#define CM_X1 x1
-//#define CM_X2 x2
-#define CM_DX k
-//#define CM_P ptr
-#define CM_P dx
-// Additional choices for code flow
-#define CM_PART1 0
-#define CM_PART2 0
-#define CM_PART3 0
-#define CM_PART4 0
-	if (chainstat != 0)
-	{
-		koutp(0x3ce,4);
-		koutp(0x3c4,2);
-		x1 = windowx1;
-		x2 = windowx2;
-		if (mirbakdaz > sector[mirbakdasector].ceilingz && mirbakdaz < sector[mirbakdasector].floorz)
-		{
-			while (x2 >= x1)
-			{
-				koutp(0x3cf,x1&3);
-//				if (*(char*)(ylookup[mirthoriz]+chainplace+(x1>>2)) != 255)
-//				if (*(char*)(ylookup[mirthoriz]+(x1>>2)+chainplace) != 255)
-				if (*(char*)(chainplace+ylookup[mirthoriz]+(x1>>2)) != 255)
-					break;
-				x1++;
-			}
-			while (x2 >= x1)
-			{
-				koutp(0x3cf,x2&3);
-//				if (*(char*)(ylookup[mirthoriz]+chainplace+(x2>>2)) != 255)
-//				if (*(char*)(ylookup[mirthoriz]+(x2>>2)+chainplace) != 255)
-				if (*(char*)(chainplace+ylookup[mirthoriz]+(x2>>2)) != 255)
-					break;
-				x2--;
-			}
-			if (x1 > windowx1)
-				x1--;
-			if (x2 < windowx2)
-				x2++;
-		}
-		if (x2 >= x1)
-		{
-			transarea += (x2-x1)*(windowy2-windowy1);
-			for(CM_I=windowy1;CM_I<=windowy2;CM_I++)
-			{
-				CM_J = 0;
-				for(CM_K=min(x2-x1,3);CM_K>=0;CM_K--)
-				{
-#if CM_PART1
-					CM_DX = (x2+1-(CM_K+x1)+3)>>2;
-#else
-					CM_DX = (x2+1-(x1+CM_K)+3)>>2;
-#endif
-#if CM_PART2
-					CM_L = CM_K+x1;
-#else
-					CM_L = x1+CM_K;
-#endif
-					koutp(0x3cf,CM_L&3);
-//					CM_P = ylookup[CM_I]+chainplace+(CM_L>>2);
-//					CM_P = ylookup[CM_I]+(CM_L>>2)+chainplace;
-					CM_P = (CM_L>>2)+ylookup[CM_I]+chainplace;
-//					CM_P = chainplace+ylookup[CM_I]+(CM_L>>2);
-//					CM_P = chainplace+(CM_L>>2)+ylookup[CM_I];
-					copybufbyte(CM_P,&tempbuf[CM_J],CM_DX);
-					CM_J += CM_DX;
-				}
-				CM_J = 0;
-				for(CM_K=min(x2-x1,3);CM_K>=0;CM_K--)
-				{
-#if CM_PART1
-					CM_DX = (x2+1-(CM_K+x1)+3)>>2;
-#else
-					CM_DX = (x2+1-(x1+CM_K)+3)>>2;
-#endif
-#if CM_PART3 >= 3
-					CM_L = (windowx1+windowx2)-(CM_K+x1)-((CM_DX-1)<<2);
-#elif CM_PART3 >= 2
-					CM_L = (windowx1+windowx2)-(x1+CM_K)-((CM_DX-1)<<2);
-#elif CM_PART3 >= 1
-					CM_L = (windowx1+windowx2-(CM_K+x1))-((CM_DX-1)<<2);
-#else
-					CM_L = (windowx1+windowx2-(x1+CM_K))-((CM_DX-1)<<2);
-#endif
-					koutp(0x3c5,pow2char[CM_L&3]);
-//					CM_P = ylookup[CM_I]+chainplace+(CM_L>>2);
-//					CM_P = ylookup[CM_I]+(CM_L>>2)+chainplace;
-					CM_P = (CM_L>>2)+ylookup[CM_I]+chainplace;
-//					CM_P = chainplace+ylookup[CM_I]+(CM_L>>2);
-//					CM_P = chainplace+(CM_L>>2)+ylookup[CM_I];
-#if CM_PART4
-					copybufreverse(&tempbuf[CM_DX+CM_J-1],CM_P,CM_DX);
-#else
-					copybufreverse(&tempbuf[CM_J+CM_DX-1],CM_P,CM_DX);
-#endif
-					CM_J += CM_DX;
-				}
-				faketimerhandler();
-			}
-		}
-	}
-	else
-	{
-		//Get pink pixels on horizon to get mirror l&r bounds.
-	x1 = 0; x2 = windowx2-windowx1;
-	if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
-	{
-		p = frameplace+ylookup[mirthoriz]+windowx1;
-		while ((*(char *)p == 255) && (x2 >= x1)) x1++;
-		while ((*(char *)p == 255) && (x2 >= x1)) x2--;
-		if (x1 > 0) x1--;
-		if (x2 < windowx2-windowx1) x2++;
-		x2 |= 3;
-		if (x2 > windowx2-windowx1) x2 = windowx2-windowx1;
-	}
-
-	if (x2 >= x1)  //Flip window x-wise
-	{
-		transarea += (x2-x1)*(windowy2-windowy1);
-
-		p = frameplace+ylookup[windowy1]+windowx1;
-		y1 = windowx2-windowx1-x2; x2 -= x1; y2 = x2+1;
-		for(dy=windowy2-windowy1;dy>=0;dy--)
-		{
-			copybufbyte(p+x1+1,&tempbuf[0],y2);
-			tempbuf[x2] = tempbuf[x2-1];
-			copybufreverse(&tempbuf[x2],p+y1,y2);
-#if (LIBVER_BUILDREV < 19960427L)
-			faketimerhandler();
-#endif
-			p += ylookup[1];
-#if (LIBVER_BUILDREV >= 19960427L)
-			faketimerhandler();
-#endif
-		}
-	}
-	}
-}
-
-#else /* LIBVER_BUILDREV >= 19960427L */
-
-completemirror()
-{
-#if (LIBVER_BUILDREV < 19970212L)
-#if (LIBVER_BUILDREV < 19960427L)
-	long dx, i, j, k, l, x1, y1, x2, y2;
-#else
-	long i, j, k, l, x1, y1, x2, y2, dy, templong;
-#endif
-	char *ptr;
-
-#if (LIBVER_BUILDREV < 19960427L)
-	if (chainstat != 0)
-	{
-		koutp(0x3ce,4);
-		koutp(0x3c4,2);
-		x1 = windowx1;
-		x2 = windowx2;
-		if (mirbakdaz > sector[mirbakdasector].ceilingz && mirbakdaz < sector[mirbakdasector].floorz)
-		{
-			while (x2 >= x1)
-			{
-				koutp(0x3cf,x1&3);
-				if (*(char*)(chainplace+ylookup[mirthoriz]+(x1>>2)) != 255)
-					break;
-				x1++;
-			}
-			while (x2 >= x1)
-			{
-				koutp(0x3cf,x2&3);
-				if (*(char*)(chainplace+ylookup[mirthoriz]+(x2>>2)) != 255)
-					break;
-				x2--;
-			}
-			if (x1 > windowx1)
-				x1--;
-			if (x2 < windowx2)
-				x2++;
-		}
-		if (x2 >= x1)
-		{
-			transarea += (x2-x1)*(windowy2-windowy1);
-			for(i=windowy1;i<=windowy2;i++)
-			{
-				j = 0;
-				for(k=min(x2-x1,3);k>=0;k--)
-				{
-					dx = (x2+1-(x1+k)+3)>>2;
-					l = x1+k;
-					koutp(0x3cf,l&3);
-					copybufbyte((l>>2)+(ylookup[i]+chainplace),&tempbuf[j],dx);
-					j += dx;
-				}
-				j = 0;
-				for(k=min(x2-x1,3);k>=0;k--)
-				{
-					dx = (x2+1-(x1+k)+3)>>2;
-					l = (windowx1+windowx2-(x1+k))-((dx-1)<<2);
-					koutp(0x3c5,pow2char[l&3]);
-					j += dx;
-					copybufreverse(&tempbuf[j-1],(l>>2)+(ylookup[i]+chainplace),dx);
-				}
-				faketimerhandler();
-			}
-		}
-	}
-	else
-	{
-#endif
-		//Get pink pixels on horizon to get mirror l&r bounds.
-	x1 = 0; x2 = windowx2-windowx1;
-	if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
-	{
-		ptr = (char *)frameplace+ylookup[mirthoriz]+windowx1;
-		while ((ptr[x1] == 255) && (x2 >= x1)) x1++;
-		while ((ptr[x2] == 255) && (x2 >= x1)) x2--;
-		if (x1 > 0) x1--;
-		if (x2 < windowx2-windowx1) x2++;
-		x2 |= 3;
-		if (x2 > windowx2-windowx1) x2 = windowx2-windowx1;
-	}
-
-	if (x2 >= x1)  //Flip window x-wise
-	{
-		transarea += (x2-x1)*(windowy2-windowy1);
-
-		ptr = (char *)frameplace+ylookup[windowy1]+windowx1;
-		y1 = windowx2-windowx1-x2; x2 -= x1; y2 = x2+1;
-		for(i=windowy2-windowy1;i>=0;i--)
-		{
-			copybufbyte(&ptr[x1+1],&tempbuf[0],y2);
-			tempbuf[x2] = tempbuf[x2-1];
-			copybufreverse(&tempbuf[x2],&ptr[y1],y2);
-			ptr += ylookup[1];
-			faketimerhandler();
-		}
-	}
-#if (LIBVER_BUILDREV < 19960427L)
-	}
-#endif
-#else /* LIBVER_BUILDREV */
+#if (LIBVER_BUILDREV >= 19970212L)
 	long i, dy, p;
 
 		//Can't reverse with uninitialized data
@@ -11223,10 +10968,102 @@ completemirror()
 		p += ylookup[1];
 		faketimerhandler();
 	}
-#endif /* LIBVER_BUILDREV */
-}
+#else // LIBVER_BUILDREV < 19970212L
+	long i, j, k, l, x1, y1, x2, y2, dy, templong;
+	char *ptr;
 
-#endif /* LIBVER_BUILDREV */
+  #if (LIBVER_BUILDREV < 19960427L)
+	if (chainstat)
+	{
+			//Get pink pixels on horizon to get mirror l&r bounds.
+		koutp(0x3ce,4); koutp(0x3c4,2);
+		x1 = windowx1; x2 = windowx2;
+		if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
+		{
+			while (x2 >= x1)
+			{
+				koutp(0x3cf,x1&3);
+				ptr = (char *)chainplace+ylookup[mirthoriz]+(x1>>2);
+				if (ptr[0] != 255) break;
+				x1++;
+			}
+			while (x2 >= x1)
+			{
+				koutp(0x3cf,x2&3);
+				ptr = (char *)chainplace+ylookup[mirthoriz]+(x2>>2);
+				if (ptr[0] != 255) break;
+				x2--;
+			}
+			if (x1 > windowx1) x1--;
+			if (x2 < windowx2) x2++;
+		}
+
+		if (x2 >= x1)  //Flip window x-wise
+		{
+			transarea += (x2-x1)*(windowy2-windowy1);
+
+			for(dy=windowy1;dy<=windowy2;dy++)
+			{
+				k = 0;
+				for(l=min(x2-x1,3);l>=0;l--)
+				{
+					j = ((x2+1-(x1+l)+3)>>2);
+					templong = x1+l;
+					koutp(0x3cf,templong&3);
+					ptr = (char *)chainplace+ylookup[dy]+(templong>>2);
+					copybufbyte(ptr,&tempbuf[k],j);
+					k += j;
+				}
+				k = 0;
+				for(l=min(x2-x1,3);l>=0;l--)
+				{
+					j = ((x2+1-(x1+l)+3)>>2);
+					templong = windowx1+windowx2-(x1+l)-((j-1)<<2);
+					koutp(0x3c5,pow2char[templong&3]);
+					ptr = (char *)chainplace+ylookup[dy]+(templong>>2);
+					copybufreverse(&tempbuf[k+j-1],ptr,j);
+					k += j;
+				}
+				faketimerhandler();
+			}
+		}
+	}
+	else
+	{
+  #endif
+		//Get pink pixels on horizon to get mirror l&r bounds.
+	x1 = 0; x2 = windowx2-windowx1;
+	if ((mirbakdaz > sector[mirbakdasector].ceilingz) && (mirbakdaz < sector[mirbakdasector].floorz))
+	{
+		ptr = (char *)frameplace+ylookup[mirthoriz]+windowx1;
+		while ((ptr[x1] == 255) && (x2 >= x1)) x1++;
+		while ((ptr[x2] == 255) && (x2 >= x1)) x2--;
+		if (x1 > 0) x1--;
+		if (x2 < windowx2-windowx1) x2++;
+		x2 |= 3;
+		if (x2 > windowx2-windowx1) x2 = windowx2-windowx1;
+	}
+
+	if (x2 >= x1)  //Flip window x-wise
+	{
+		transarea += (x2-x1)*(windowy2-windowy1);
+
+		ptr = (char *)frameplace+ylookup[windowy1]+windowx1;
+		y1 = windowx2-windowx1-x2; x2 -= x1; y2 = x2+1;
+		for(dy=windowy2-windowy1;dy>=0;dy--)
+		{
+			copybufbyte(&ptr[x1+1],&tempbuf[0],y2);
+			tempbuf[x2] = tempbuf[x2-1];
+			copybufreverse(&tempbuf[x2],&ptr[y1],y2);
+			ptr += ylookup[1];
+			faketimerhandler();
+		}
+	}
+  #if (LIBVER_BUILDREV < 19960427L)
+	}
+  #endif
+#endif // LIBVER_BUILDREV
+}
 
 sectorofwall(short theline)
 {
