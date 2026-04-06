@@ -4730,19 +4730,10 @@ copytilepiece(long tilenume1, long sx1, long sy1, long xsiz, long ysiz,
 
 drawmasks()
 {
-#if (LIBVER_BUILDREV < 19960427L) // VERSIONS RESTORATION - Mostly matching order
+#if (LIBVER_BUILDREV < 19960427L)
+	spritetype *ts1, *ts2;
 	spritetype *tempts;
-	spritetype *ts2;
-	long k;
-	long yp;
-	spritetype *ts1;
-	long ys;
-	long l;
-	long i;
-	long xs;
-	long j;
-	long xp;
-	long gap;
+	long i, j, k, l, gap, templong, xs, ys, zs, xp, yp, zp;
 #elif (LIBVER_BUILDREV < 19961006L)
 	long i, j, k, l, gap, xs, ys, xp, yp;
 #else
@@ -4804,21 +4795,21 @@ drawmasks()
 #if (LIBVER_BUILDREV < 19961006L)
 				j = spritesy[l] - spritesy[l+gap];
 				if (j < 0) break;
-#if (LIBVER_BUILDREV < 19960427L)
+  #if (LIBVER_BUILDREV < 19960427L)
 				ts1 = &tsprite[l];
 				ts2 = &tsprite[l+gap];
-#endif
+  #endif
 				if (j == 0)
 				{
-#if (LIBVER_BUILDREV < 19960427L)
+  #if (LIBVER_BUILDREV < 19960427L)
 					j = ts1->statnum - ts2->statnum;
-#else
+  #else
 					j = tspriteptr[l]->statnum - tspriteptr[l+gap]->statnum;
-#endif
+  #endif
 	    				if (j < 0) break;
 	    				if (j == 0)
 					{
-#if (LIBVER_BUILDREV < 19960427L)
+  #if (LIBVER_BUILDREV < 19960427L)
 						if ((ts1->cstat&48) == 32)
 						{
 							j = ts1->z-globalposz;
@@ -4829,20 +4820,13 @@ drawmasks()
 						}
 						else if((ts2->cstat&48) == 32)
 						{
-							j = ts1->z-globalposz;
+							j = ts1->z-globalposz-256;
 							k = ts2->z-globalposz;
-							j -= 256;
 							if ((k<0) == (j>k)) break;
 						}
-#if (LIBVER_BUILDREV < 19960320L) // VERSIONS RESTORATION: HACK for adjusting code size
-#pragma aux noppragma =\
-	"nop",\
-
-						noppragma();
-#endif
-#else
+  #else
 						if (klabs(tspriteptr[l]->z - globalposz) < klabs(tspriteptr[l+gap]->z - globalposz)) break;
-#endif
+  #endif
 					}
 				}
 #else // LIBVER_BUILDREV
@@ -4852,8 +4836,8 @@ drawmasks()
 				copybufbyte(ts1,tempts,sizeof(spritetype));
 				copybufbyte(ts2,ts1,sizeof(spritetype));
 				copybufbyte(tempts,ts2,sizeof(spritetype));
-				j = spritesx[l]; spritesx[l] = spritesx[l+gap]; spritesx[l+gap] = j;
-				j = spritesy[l]; spritesy[l] = spritesy[l+gap]; spritesy[l+gap] = j;
+				templong = spritesx[l]; spritesx[l] = spritesx[l+gap]; spritesx[l+gap] = templong;
+				templong = spritesy[l]; spritesy[l] = spritesy[l+gap]; spritesy[l+gap] = templong;
 #else
 				swaplong(&tspriteptr[l],&tspriteptr[l+gap]);
 				swaplong(&spritesx[l],&spritesx[l+gap]);
