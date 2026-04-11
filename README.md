@@ -24,14 +24,15 @@ and prepared in 99).
 - BUILD.OBJ and ENGINE.OBJ as present in Duke3D 1.4-1.5's Build Editor
 (ENGINE.OBJ has differences from the revision in the Duke3D 1.4 game EXE).
 - ENGINE.OBJ as present in Duke3D 1.4 (the game EXE).
-- A 19960925 revision of BUILD.OBJ used in the Build Editors for Blood 1.0-1.21.
+- A 19960925 revision of BUILD.OBJ used in the Build Editors for Blood 1.0-1.11.
 - ENGINE.OBJ (19961006) and CACHE1D.obj (19960925) used in Blood 0.91-1.21
 as well as the Build Editors for Blood 1.0-1.21.
 - A 19961012 revision of BUILD.OBJ and ENGINE.OBJ.
 - CACHE1D.OBJ and ENGINE.OBJ as present in Duke3D 1.5; The latter was possibly
 prepared on 19961112, while the former was *maybe* prepared on 19961207.
-- BUILD.OBJ as used in SW 1.2's Build Editor, possibly prepared on 19961213
-(it has just one minor difference from the 19961012 revision).
+- A 19961213 revision of BUILD.OBJ used in Blood 1.20-1.21 and SW 1.2's
+Build Editors, with just one minor difference from the 19961012 revision
+(documented in BUILD2.TXT for 12/13/96, related to '>' key use in 3D EDIT MODE).
 - ENGINE.OBJ as used in SW 1.0, possibly prepared on 19970212.
 - ENGINE.OBJ as used in SW 1.1-1.2 and 1.2's Build Editor,
 possibly prepared on 19970522.
@@ -95,9 +96,10 @@ For reference, a list of such original paths in use is given here:
 - The 19961207 (Duke3D 1.5) revision of CACHE1D.OBJ and the 19960320 and
 19970212 (SW 1.0) revisions of ENGINE.OBJ: C:\C\CPROG\BUILD for
 local files, c:\watcom\h for system headers.
-- The 19960317, 19961006 (Blood), 19961012 and 19961213 (SW 1.2 Build Editor)
-revisions of BUILD.OBJ, the 19960319 revision of CACHE1D.OBJ and the 19960213,
-19960925 (Blood), 19961012, 19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2)
+- The 19960317, 19960925 (Blood 1.0-1.11), 19961012 and 19961213
+(Blood 1.20-1.21 and SW 1.2) Build Editor revisions of BUILD.OBJ,
+the 19960319 revision of CACHE1D.OBJ and the 19960213, 19961006 (Blood),
+19961012, 19961112 (Duke3D 1.5) and 19970522 (SW 1.1-1.2)
 revisions of ENGINE.OBJ:
 D: for local files, c:\watcom\h for system headers.
 

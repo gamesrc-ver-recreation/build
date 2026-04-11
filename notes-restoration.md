@@ -116,6 +116,14 @@ through an update in 2026 using buil1995.zip and BUILDBAK.ZIP's revisions,
 as brought up further above in the context of Duke3D v1.3d's Build Editor.
 The aforementioned 19960320 revision of ENGINE.OBJ was useful again.
 
+About a year earlier, Nuke.YKT also added the option
+to build engine-side object files matching multiple versions
+of Blood and the bundled Build Editor (MapEdit). The Build-side code
+had already been there in the sources, but Nuke.YKT adjusted MAKEFILE,
+version check macros in sources and other files. Later in 2026, it
+turned out that the Build Editors from SW 1.2 and Blood 1.20-1.21
+used the same 19961213 revision of BUILD.OBJ.
+
 How was the makefile (and a bit more) modified from the original
 ----------------------------------------------------------------
 
